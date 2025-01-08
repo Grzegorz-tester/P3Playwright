@@ -1,11 +1,13 @@
 import test from '../utils/Pages'
+import { products } from "../utils/products/products";
+import {kooltech} from "@utils/testUsers";
+
 
 let productPrice_1
 
 // We can use Steps like in Cucumber format as shown below
-test(`Verify User's e2e PLP to Checkout flow: Deliver.`, async ({
+test(`Verify User's e2e PLP to Checkout flow: Delivery.`, async ({
     page,
-    loginPage,
     accountPage,
     homePage,
     productListPage,
@@ -14,17 +16,20 @@ test(`Verify User's e2e PLP to Checkout flow: Deliver.`, async ({
     checkoutPage,
     checkoutSuccessPage,
 }) => {
+
+    const user = Object.assign({}, kooltech.accountTestUser_1)
+
     await test.step(`Validate Account page`, async () => {
         await accountPage.waitForLoginToBeCompleted()
         await accountPage.navigateToAccountPage()
-        //await accountPage.validateAccountPage()
+        await accountPage.validateAccountPage()
     })
     await test.step(`Navigate to Category PLP`, async () => {
         await homePage.navigateToHomePage()
-        await homePage.chooseMenuCategory('Floor Care')
+        await homePage.chooseMenuCategory('AC')
     })
     await test.step(`Choose an Item from the list and proceed to it's PDP`, async () => {
-        await productListPage.clickOnFirstItemToProceedToPDP()
+        await productListPage.clickOnAProductToProceedToPDP(products.MUZ_INVERTER_OUTDOOR_AC.title)
     })
     await test.step(
         `Open PDP, validate price, add to basket, validate basket counter`,
@@ -36,11 +41,11 @@ test(`Verify User's e2e PLP to Checkout flow: Deliver.`, async ({
     await test.step(`Proceed to Basket and through Checkout`, async () => {
         await basketPage.proceedToSecureCheckout()
         await checkoutPage.chooseDeliveryOption('Delivery')
-        await checkoutPage.chooseDeliveryAddress()
+        await checkoutPage.chooseDeliveryAddress(1)
         await checkoutPage.chooseBillingAddressSameAsDelivery()
         await checkoutPage.payOnAccount()
     })
     await test.step(`Proceed to Thank You page`, async () => {
-        await checkoutSuccessPage.verifyThankYouPage()
+        await checkoutSuccessPage.verifyThankYouPage(user.email)
     })
 })
