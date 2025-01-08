@@ -1,28 +1,28 @@
 import { test as baseTest } from '@playwright/test'
-import { LoginPage } from '../pages/LoginPage'
-import { AccountPage } from '../pages/AccountPage'
+import { LoginPage } from '../../carbon/pages/LoginPage'
+import { KooltechAccountPage } from '../pages/KooltechAccountPage'
 import { KooltechHomePage } from '../pages/KooltechHomePage'
-import { ProductListPage } from '../pages/ProductListPage'
-import { ProductDetailPage } from '../pages/ProductDetailPage'
-import { BasketPage } from '../pages/BasketPage'
-import { CheckoutPage } from '../pages/CheckoutPage'
-import { CheckoutSuccessPage } from '../pages/CheckoutSuccessPage'
+import { ProductListPage } from '../../carbon/pages/ProductListPage'
+import { ProductDetailPage } from '../../carbon/pages/ProductDetailPage'
+import { BasketPage } from '../../carbon/pages/BasketPage'
+import { CheckoutPage } from '../../carbon/pages/CheckoutPage'
+import { CheckoutSuccessPage } from '../../carbon/pages/CheckoutSuccessPage'
 
 const test = baseTest.extend<{
     loginPage: LoginPage
-    accountPage: AccountPage
-    homePage: KooltechHomePage
     productListPage: ProductListPage
     productDetailPage: ProductDetailPage
     basketPage: BasketPage
     checkoutPage: CheckoutPage
     checkoutSuccessPage: CheckoutSuccessPage
+    homePage: KooltechHomePage
+    accountPage: KooltechAccountPage
 }>({
     loginPage: async ({ page }, use) => {
         await use(new LoginPage(page))
     },
     accountPage: async ({ page }, use) => {
-        await use(new AccountPage(page))
+        await use(new KooltechAccountPage(page))
     },
     homePage: async ({ page }, use) => {
         await use(new KooltechHomePage(page))

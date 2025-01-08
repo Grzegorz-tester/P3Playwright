@@ -12,8 +12,8 @@ export class CheckoutSuccessPage {
         this.orderDetailsEmailString = page.locator('[data-testid="order-details"] > div > div > div >div > p:nth-child(2) > b')
     }
 
-    async verifyThankYouPage(): Promise<void> {
+    async verifyThankYouPage(username: string): Promise<void> {
         await expect(this.thankYouHeader).toHaveText("Thank you for your order")
-        await expect(this.orderDetailsEmailString).toHaveText(`${testConfig.username}`)
+        await expect(this.orderDetailsEmailString).toHaveText(`${username}`)
     }
 }

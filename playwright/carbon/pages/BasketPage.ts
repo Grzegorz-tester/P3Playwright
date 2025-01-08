@@ -1,7 +1,7 @@
 import {expect, Page} from '@playwright/test'
 import { Locator } from '@playwright/test'
-import { promotions } from "@utils/promotions/promotions";
-import { products } from "@utils/products/products";
+//import { promotions } from "@utils/promotions/promotions";
+import { products } from "../utils/products/products";
 
 export class BasketPage {
     readonly page: Page

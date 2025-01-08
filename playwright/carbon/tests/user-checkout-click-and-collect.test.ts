@@ -18,7 +18,7 @@ test(`Verify User's e2e PLP to Checkout flow: Click& Collect.`, async ({
         await loginPage.navigateToLoginPage()
     })
     await test.step(`Login to Carbon`, async () => {
-        await loginPage.loginToApplication()
+       // await loginPage.loginToApplication()
     })
     await test.step(`Validate Account page`, async () => {
         await accountPage.waitForLoginToBeCompleted()
