@@ -1,4 +1,6 @@
 import test from '../utils/Pages'
+import { products } from "../utils/products/products";
+import {kooltech, mipa} from "@utils/testUsers";
 
 let productPrice_1
 
@@ -14,16 +16,12 @@ test(`Verify User's e2e PLP to Checkout flow: Click& Collect.`, async ({
     checkoutPage,
     checkoutSuccessPage,
 }) => {
-    await test.step(`Navigate to Carbon Home Page`, async () => {
-        await loginPage.navigateToLoginPage()
-    })
-    await test.step(`Login to Carbon`, async () => {
-        await loginPage.loginToApplication()
-    })
-    await test.step(`Validate Account page`, async () => {
-        await accountPage.waitForLoginToBeCompleted()
+
+    const user = Object.assign({}, mipa.accountTestUser_1)
+
+    await test.step(`Navigate and Validate Account page`, async () => {
         await accountPage.navigateToAccountPage()
-        //await accountPage.validateAccountPage()
+        await accountPage.validateAccountPage()
     })
     await test.step(`Navigate to Category PLP`, async () => {
         await homePage.navigateToHomePage()

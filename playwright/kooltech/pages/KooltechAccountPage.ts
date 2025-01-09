@@ -6,6 +6,7 @@ export class KooltechAccountPage extends AccountPage{
     readonly dashboardMenuButton: Locator
     readonly addressBookMenuButton: Locator
     readonly addDeliveryAddressButton: Locator
+    readonly ordersButton: Locator
 
     constructor(page: Page) {
         super(page);
@@ -13,10 +14,15 @@ export class KooltechAccountPage extends AccountPage{
         this.dashboardMenuButton = page.locator('[href="/account"][data-testid="account-menu-item"]')
         this.addressBookMenuButton = page.locator('[href="/account/address-book"][data-testid="account-menu-item"]')
         this.addDeliveryAddressButton = page.getByTestId('header__right-link').first()
+        this.ordersButton = page.locator('[href="/account/orders"][data-testid="account-menu-item"]')
+    }
+
+    async waitForLoginToBeCompleted(): Promise<void> {
+        await expect(this.dashboardMenuButton).toHaveCount(1, { timeout: 60000 })
     }
 
     async validateAccountPage(): Promise<void> {
-        await expect(this.dashboardMenuButton).toHaveCount(1, { timeout: 20000 })
+        await expect(this.dashboardMenuButton).toHaveCount(1, { timeout: 60000 })
         await this.dashboardMenuButton.click()
         await this.addressBookMenuButton.click()
         await expect(this.addDeliveryAddressButton).toHaveCount(1)

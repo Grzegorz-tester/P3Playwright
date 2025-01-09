@@ -8,6 +8,7 @@ export class KooltechHomePage extends HomePage{
     constructor(page: Page) {
         super(page);
         this.page = page;
+        this.menuNavBarButton = page.locator('[href="#"]');
 
     }
 }

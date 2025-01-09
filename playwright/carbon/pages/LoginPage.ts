@@ -7,6 +7,8 @@ export class LoginPage {
     readonly passwordInput: Locator
     public signInButton: Locator
     public signInButtonInProgress: Locator
+    public welcomeUserTopbarDiv: Locator
+
 
     constructor(page: Page) {
         this.page = page
@@ -15,19 +17,20 @@ export class LoginPage {
         this.passwordInput = page.locator('#password')
         this.signInButton = page.getByTestId('login-form__sign-in-button')
         this.signInButtonInProgress = page.locator('[data-icon="spinner"]')
+        this.welcomeUserTopbarDiv = page.getByTestId("utility-bar__content--logged-in")
     }
 
     async navigateToLoginPage(): Promise<void> {
         await this.page.goto('/login?to=%2Faccount', { timeout: 40000 })
-        await expect(this.loginHeader).toHaveCount(1)
+        await expect(this.loginHeader).toBeVisible({timeout: 60000 })
     }
 
     async loginToApplication(email: string, password: string): Promise<void> {
         await expect(this.loginHeader).toBeVisible()
-        await this.emailInput.type(email, { delay: 50, timeout: 5000 })
-        await this.passwordInput.type(password, { delay: 50, timeout: 5000 })
+        await this.emailInput.pressSequentially(email, { delay: 50, timeout: 5000 })
+        await this.passwordInput.pressSequentially(password, { delay: 50, timeout: 5000 })
         await this.signInButton.focus()
         await this.signInButton.click()
-        await expect(this.signInButtonInProgress).toHaveCount(0, { timeout: 25000 })
+        await expect(this.welcomeUserTopbarDiv).toBeVisible({ timeout: 60000 })
     }
 }

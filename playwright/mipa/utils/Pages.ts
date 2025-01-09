@@ -1,43 +1,43 @@
 import { test as baseTest } from '@playwright/test'
-import { KooltechAccountPage } from '../pages/KooltechAccountPage'
-import { KooltechHomePage } from '../pages/KooltechHomePage'
+import { LoginPage } from '../../carbon/pages/LoginPage'
+import { AccountPage } from '../../carbon/pages/AccountPage'
+import { HomePage } from '../../carbon/pages/HomePage'
 import { ProductListPage } from '../../carbon/pages/ProductListPage'
+import { ProductDetailPage } from '../../carbon/pages/ProductDetailPage'
 import { BasketPage } from '../../carbon/pages/BasketPage'
+import { CheckoutPage } from '../../carbon/pages/CheckoutPage'
 import { CheckoutSuccessPage } from '../../carbon/pages/CheckoutSuccessPage'
-import {KooltechPDPage} from "../pages/KooltechPDPage";
-import {KooltechCheckoutPage} from "../pages/KooltechCheckoutPage";
-import {KooltechLoginPage} from "../pages/KooltechLoginPage";
 
 const test = baseTest.extend<{
-    loginPage: KooltechLoginPage
+    loginPage: LoginPage
+    accountPage: AccountPage
+    homePage: HomePage
     productListPage: ProductListPage
-    productDetailPage: KooltechPDPage
+    productDetailPage: ProductDetailPage
     basketPage: BasketPage
-    checkoutPage: KooltechCheckoutPage
+    checkoutPage: CheckoutPage
     checkoutSuccessPage: CheckoutSuccessPage
-    homePage: KooltechHomePage
-    accountPage: KooltechAccountPage
 }>({
     loginPage: async ({ page }, use) => {
-        await use(new KooltechLoginPage(page))
+        await use(new LoginPage(page))
     },
     accountPage: async ({ page }, use) => {
-        await use(new KooltechAccountPage(page))
+        await use(new AccountPage(page))
     },
     homePage: async ({ page }, use) => {
-        await use(new KooltechHomePage(page))
+        await use(new HomePage(page))
     },
     productListPage: async ({ page }, use) => {
         await use(new ProductListPage(page))
     },
     productDetailPage: async ({ page }, use) => {
-        await use(new KooltechPDPage(page))
+        await use(new ProductDetailPage(page))
     },
     basketPage: async ({ page }, use) => {
         await use(new BasketPage(page))
     },
     checkoutPage: async ({ page }, use) => {
-        await use(new KooltechCheckoutPage(page))
+        await use(new CheckoutPage(page))
     },
     checkoutSuccessPage: async ({ page }, use) => {
         await use(new CheckoutSuccessPage(page))

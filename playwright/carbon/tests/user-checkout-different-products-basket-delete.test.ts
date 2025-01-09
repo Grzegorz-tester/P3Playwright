@@ -1,5 +1,6 @@
 import test from '../utils/Pages'
-import { products } from "@utils/products/products";
+import { products } from "../utils/products/products";
+import {carbon} from "@utils/testUsers";
 
 // We can use Steps like in Cucumber format as shown below
 test(`Verify User's e2e PLP to Checkout flow: Different products.`, async ({
@@ -13,12 +14,9 @@ test(`Verify User's e2e PLP to Checkout flow: Different products.`, async ({
     checkoutPage,
     checkoutSuccessPage,
 }) => {
-    await test.step(`Navigate to Carbon Home Page`, async () => {
-        await loginPage.navigateToLoginPage()
-    })
-    await test.step(`Login to Carbon`, async () => {
-       // await loginPage.loginToApplication()
-    })
+
+    const user = Object.assign({}, carbon.testUser_1)
+
     await test.step(`Validate Account page`, async () => {
         await accountPage.waitForLoginToBeCompleted()
         await accountPage.navigateToAccountPage()
@@ -64,6 +62,6 @@ test(`Verify User's e2e PLP to Checkout flow: Different products.`, async ({
         await checkoutPage.payOnAccount()
     })
     await test.step(`Proceed to Thank You page`, async () => {
-        await checkoutSuccessPage.verifyThankYouPage()
+        await checkoutSuccessPage.verifyThankYouPage(user.email)
     })
 })

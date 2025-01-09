@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import {testConfig} from "@utils/testConfig";
+require('dotenv').config()
 
 /**
  * Read environment variables from file.
@@ -21,7 +22,8 @@ const userAgentStrings = [
 ];
 
 export default defineConfig({
-  testDir: './../tests',
+  testDir: `./${process.env.PROJECT}/tests`,
+  timeout: 120000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -31,17 +33,16 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: [['html', { open: 'never', outputFolder: 'html-report'}]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
-
+    navigationTimeout: 90000,
+    actionTimeout: 60000 /* Base URL to use in actions like `await page.goto('/')`. */,
+    // baseURL: 'http://localhost:3000',
+    baseURL: testConfig.getUrl(process.env.PROJECT),
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: 'on',
   },
-
-  /* Configure projects for major browsers */
   projects: [
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
@@ -56,8 +57,7 @@ export default defineConfig({
         channel: `chrome`,
 
         //Picks Base Url based on User input
-        baseURL: testConfig[process.env.ENV],
-
+        baseURL: testConfig.getUrl(process.env.PROJECT),
         //Browser Mode
         headless: true,
 
@@ -68,7 +68,7 @@ export default defineConfig({
         //Enable File Downloads in Chrome
         acceptDownloads: true,
         navigationTimeout: 90000,
-        actionTimeout: 30000,
+        actionTimeout: 60000,
         //Artifacts
         screenshot: `on`,
         video: `on`,

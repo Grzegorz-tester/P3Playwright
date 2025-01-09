@@ -1,21 +1,18 @@
 import {envs} from "./testEnvs";
 
-let storefrontUrl: string
-let storefrontApi: string
 
 function getUrl (projectName: string) {
-    storefrontUrl = envs[projectName[process.env.ENV].url]
-    return storefrontUrl
+    return envs[projectName][process.env.ENV].url
 }
 
 function getApi (projectName: string) {
-    storefrontApi = envs[projectName[process.env.ENV].api]
-    return storefrontApi
+    return envs[projectName][process.env.ENV].api
+
 }
 
 export const testConfig = {
-    storefrontUrl: getUrl,
-    storefrontApi: getApi,
+    getUrl,
+    getApi,
     waitForElement: 30000
 }
 

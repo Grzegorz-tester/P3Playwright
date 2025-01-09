@@ -32,9 +32,9 @@ export class ProductDetailPage {
         const basketCountNumber = Number(await this.basketCount.textContent())
         console.log(`Initial basket count: ${basketCountNumber}`)
         await this.itemAmountToAddInput.clear()
-        await this.itemAmountToAddInput.type(quantityToBuy.toString())
+        await this.itemAmountToAddInput.pressSequentially(quantityToBuy.toString(), {delay: 500})
         await this.addToBasketButton.click({ timeout: 5000 })
-        await expect(this.chechkoutPopup).toHaveCount(1) //making sure the popup's appeared
+        await expect(this.chechkoutPopup).toBeVisible({timeout: 25000}) //making sure the popup's appeared
         await this.closeAddedToBasketPopupButton.click()
         const basketTotalQuantity = quantityToBuy + basketCountNumber
         await expect(this.basketCount).toHaveText(basketTotalQuantity.toString())

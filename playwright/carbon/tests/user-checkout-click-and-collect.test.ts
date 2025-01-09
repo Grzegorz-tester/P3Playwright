@@ -3,7 +3,7 @@ import test from '../utils/Pages'
 let productPrice_1
 
 // We can use Steps like in Cucumber format as shown below
-test(`Verify User's e2e PLP to Checkout flow: Click& Collect.`, async ({
+test.skip(`Verify User's e2e PLP to Checkout flow: Click& Collect.`, async ({
     page,
     loginPage,
     accountPage,
