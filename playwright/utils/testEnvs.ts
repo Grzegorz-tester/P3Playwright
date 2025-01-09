@@ -1,6 +1,24 @@
-export const envs = {
+interface Envs {
+    [key:string]: {
+        stage: {
+            url: string;
+            api: string;
+        },
+        prod?: {
+            url: string;
+            api: string;
+        }
+    }
+}
+
+export const envs: Envs = {
     carbon: {
-        stage: "https://staging.peracto3carbon.pub"
+        stage:
+            {
+                url: "https://staging.peracto3carbon.pub",
+                api: "https://staging.peracto3carbon.pub"
+            }
+
     },
      mipa: {
          stage:

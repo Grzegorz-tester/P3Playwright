@@ -11,5 +11,7 @@
   },
   "dependencies": {
   },
-  "scripts": {}
+  "scripts": {
+    "test:kooltech:stage": "ENV=stage PROJECT=kooltech npx playwright test --project=Chrome"
+  }
 }

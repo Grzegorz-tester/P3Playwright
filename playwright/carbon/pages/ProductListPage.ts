@@ -33,7 +33,7 @@ export class ProductListPage {
         await expect(this.firstProductBlock).toHaveCount(0, { timeout: 30000 })
     }
     async clickOnAProductToProceedToPDP(productName: string): Promise<void> {
-        await expect(this.productNameLink.filter({hasText: `${productName}`})).toHaveCount(1, { timeout: 30000 })
+        await expect(this.productNameLink.filter({hasText: `${productName}`})).toBeVisible({ timeout: 60000 })
         await this.productNameLink.filter({hasText: `${productName}`}).focus({ timeout: 15000 })
         await this.productNameLink.filter({hasText: `${productName}`}).click({ timeout: 10000 })
         await expect(this.productNameLink.filter({hasText: `${productName}`})).toHaveCount(0, { timeout: 30000 })

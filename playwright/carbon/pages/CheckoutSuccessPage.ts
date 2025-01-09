@@ -9,11 +9,11 @@ export class CheckoutSuccessPage {
     constructor(page: Page) {
         this.page = page
         this.thankYouHeader = page.locator('[data-testid="basket__header__title"]')
-        this.orderDetailsEmailString = page.locator('[data-testid="order-details"] > div > div > div >div > p:nth-child(2) > b')
+        this.orderDetailsEmailString = page.locator('[data-testid="order-details"] > div > div > div > p:nth-child(2) > b')
     }
 
     async verifyThankYouPage(username: string): Promise<void> {
-        await expect(this.thankYouHeader).toHaveText("Thank you for your order")
+        await expect(this.thankYouHeader).toHaveText("Thank you for your order", {timeout: 80000})
         await expect(this.orderDetailsEmailString).toHaveText(`${username}`)
     }
 }

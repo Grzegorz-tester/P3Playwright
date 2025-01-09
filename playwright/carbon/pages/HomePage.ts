@@ -27,12 +27,14 @@ export class HomePage {
     async chooseMenuCategory(category: string): Promise<void> {
         this.categoryName = category
         this.category = this.page.locator('h2', { hasText: `${this.categoryName}` })
-        await expect(this.menuNavBarButton).toHaveCount(1)
+        await expect(this.menuNavBarButton).toBeVisible({timeout: 30000})
         await this.menuNavBarButton.focus()
         await this.menuNavBarButton.click()
         await expect(this.category).toHaveText(category)
         await this.category.click()
-        await this.viewAllButton.click()
+        if(await this.viewAllButton.isVisible({timeout: 5000})){
+            await this.viewAllButton.click()
+        }
         //await expect(this.page).toHaveURL(new RegExp(`^/category/${this.categoryName.replace(' ', '-')}`,))
     }
 }

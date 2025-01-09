@@ -6,16 +6,17 @@ function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
-const tradeGbUser_1_file = (process.env.CI ? process.env.CI_PROJECT_DIR + '/playwright/' : '') + 'tests/.auth/tradeGbUser_1.json';
-setup('authenticate as Trade GB user 1', async ({ request}) => {
-    const loginResponse = await request.post(`${testConfig.storefrontApi}/auth`, {
+const accountTestUser_1_file = (process.env.CI ? process.env.CI_PROJECT_DIR + '/playwright/' : '') + `${process.env.PROJECT}/tests/.auth/accountTestUser_1.json`;
+setup('authenticate as user 1', async ({ request}) => {
+    const loginResponse = await request.post(`${testConfig.getApi(process.env.PROJECT)}/auth`, {
         data: {
             'email': carbon.testUser_1.email,
             'password': carbon.testUser_1.password
         }, timeout: 20000
     });
     await delay(2000)
-    await request.storageState({ path: tradeGbUser_1_file });
+    await expect(loginResponse).toBeOK();
+    await request.storageState({ path: accountTestUser_1_file });
 });
 
 
