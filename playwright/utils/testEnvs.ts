@@ -20,13 +20,20 @@ export const envs: Envs = {
             }
 
     },
-     mipa: {
-         stage:
-             {
-                 url: "https://staging.mipa-paints.pub",
-                 api: "https://staging-api.mipa-paints.pub"
-             }
-     },
+    mipa: {
+        stage:
+            {
+                url: "https://staging.mipa-paints.pub",
+                api: "https://staging-api.mipa-paints.pub"
+            }
+    },
+    keylite: {
+        stage:
+            {
+                url: "https://staging.keyliteroofwindows.pub",
+                api: "https://staging-api.keyliteroofwindows.pub"
+            }
+    },
     kooltech: {
         stage: {
             url: "https://staging.kooltech.pub/",
