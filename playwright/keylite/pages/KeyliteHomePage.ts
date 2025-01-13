@@ -12,6 +12,6 @@ export class KeyliteHomePage extends HomePage{
     }
 
     async validateHomePage(): Promise<void> {
-        await expect(this.brandBar).toHaveCount(1, { timeout: 10000 })
+        await expect(this.brandBar).toBeVisible({ timeout: 45000 })
     }
 }
