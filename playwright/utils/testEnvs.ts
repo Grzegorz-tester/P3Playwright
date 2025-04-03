@@ -43,6 +43,13 @@ export const envs: Envs = {
             url: "https://www.kooltech.co.uk/", // not accounted for
             api: "https://api.kooltech.co.uk"// not accounted for
         }
-    }
+    },
+    indespension: {
+        stage:
+            {
+                url: "https://staging.indespension.pub",
+                api: "https://staging-api.indespension.pub"
+            }
+    },
 }
 
