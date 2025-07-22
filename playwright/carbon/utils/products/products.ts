@@ -1,20 +1,39 @@
+interface Product {
+    link: string,
+    title: string,
+    price?: string,
+    category: string,
+}
+
+
 export const products = {
-    SUPER_VAC_VACUUM_CLEANER: {
-        link: '/products/9xb0284',
-        title: 'SuperVac 2-in-1 Cordless Vacuum Cleaner 7320005',
-        price: '99.99',
-        category: 'Floor Care'
+    SIMPLE_PURCHASABLE_PRODUCT_9: {
+        link: '/products/simple-purchasable-product-spp-9',
+        title: 'Simple Purchasable Product 9',
+        price: '28.25',
+        category: 'Simple Products'
     },
-    HOTPOINT_NSWR_WASHING_MACHINE: {
-        link: '/products/hotpoint-nswr-742u-gk-uk-n-washing-machine-graphite',
-        title: 'Hotpoint NSWR 742u GK UK N Washing Machine Graphite',
-        price: '249.00',
-        category: 'Appliances'
+    SIMPLE_PURCHASABLE_PRODUCT_8: {
+        link: '/products/simple-purchasable-product-spp-8',
+        title: 'Simple Purchasable Product 8',
+        price: '59.46',
+        category: 'Simple Products'
     },
-    N_FULLY_INTEGRATED_DISHWASHER: {
-        link: '/products/s515t80d1g',
-        title: 'N 70 Fully-integrated dishwasher 60 cm S515T80D1G',
+    SIMPLE_ENQUIRY_PRODUCT_6: {
+        link: '/products/simple-enquiry-product-sep-6',
+        title: 'Simple Enquiry Product 6',
+        price: '39.05',
+        category: 'Simple Products'
+    },
+    VARIANT_PURCHASABLE_PRODUCT_24: {
+        link: '/products/variant-purchasable-no-default-product-vpndp-24',
+        title: 'Variant Purchasable No Default Product 24',
+        size: "Small",
+        colour: "Blue",
         price: '758.00',
-        category: 'Appliances'
+        category: 'Variant Products'
     }
 }
+
+export default products
+export type {Product as Product}

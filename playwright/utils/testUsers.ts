@@ -1,8 +1,12 @@
 export const carbon = {
     testUser_1: {
-        email: "ecp_test_user+1@9xb.com",
+        email: "alona.starunova+autotest+1@velstar.co.uk",
         password: "Test123$"
-    }
+    },
+    testUser_2: {
+        email: "alona.starunova+autotest+2@velstar.co.uk",
+        password: "Test123$"
+    },
 }
 
 export const mipa = {

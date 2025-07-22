@@ -1,7 +1,8 @@
 import {expect, Locator, Page} from '@playwright/test'
 import { HomePage } from '../../carbon/pages/HomePage'
+import {AbstractHomePage} from "../../abstracts/AbstractHomePage";
 
-export class IndespensionHomePage extends HomePage{
+export class IndespensionHomePage extends AbstractHomePage{
     readonly page: Page
     readonly brandBar: Locator
 
@@ -14,4 +15,6 @@ export class IndespensionHomePage extends HomePage{
     async validateHomePage(): Promise<void> {
         await expect(this.brandBar).toBeVisible({ timeout: 45000 })
     }
+
+    async chooseMenuCategory() {}
 }
