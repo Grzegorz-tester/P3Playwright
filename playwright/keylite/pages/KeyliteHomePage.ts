@@ -1,5 +1,6 @@
 import {expect, Locator, Page} from '@playwright/test'
 import { HomePage } from '../../carbon/pages/HomePage'
+import {IndespensionObjects} from "../../indespension/utils/objects";
 
 export class KeyliteHomePage extends HomePage{
     readonly page: Page
@@ -8,7 +9,8 @@ export class KeyliteHomePage extends HomePage{
     constructor(page: Page) {
         super(page);
         this.page = page;
-        this.brandBar = page.getByTestId('brand-bar')
+        this.brandBar = IndespensionObjects.HomePage.brandBar(page);
+
     }
 
     async validateHomePage(): Promise<void> {
