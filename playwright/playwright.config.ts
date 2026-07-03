@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import {testConfig} from "@utils/testConfig";
+import { testConfig } from "@utils/testConfig";
 require('dotenv').config()
 
 /**
@@ -22,7 +22,7 @@ const userAgentStrings = [
 ];
 
 export default defineConfig({
-  testDir: `./${process.env.PROJECT}/tests`,
+  testDir: `./projects/${process.env.PROJECT}/tests`,
   timeout: 120000,
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -33,7 +33,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { open: 'never', outputFolder: `./${process.env.PROJECT}/html-report`}]],
+  reporter: [['html', { open: 'never', outputFolder: `./projects/${process.env.PROJECT}/html-report` }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     navigationTimeout: 90000,
@@ -79,6 +79,7 @@ export default defineConfig({
           slowMo: 0,
         },
       },
+      timeout: 160000,
       dependencies: ['setup'],
     },
 

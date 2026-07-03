@@ -1,11 +1,10 @@
 {
     "compilerOptions": {
         "baseUrl": "." /* Specify the base directory to resolve non-relative module names. */,
-        "types": ["node"],
         "paths": {
             /* Specify a set of entries that re-map imports to additional lookup locations. */
-            "@pages/*": ["/pages/*"],
-            "@utils/*": ["utils/*"]
+            "@utils/*": ["utils/*"],
+            "@common/*": ["common/*"]
         },
         "esModuleInterop": true,
         "moduleResolution": "Node"

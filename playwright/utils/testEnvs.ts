@@ -16,7 +16,7 @@ export const envs: Envs = {
         stage:
             {
                 url: "https://staging.peracto3carbon.pub",
-                api: "https://staging.peracto3carbon.pub"
+                api: "https://staging-api.peracto3carbon.pub"
             }
 
     },
