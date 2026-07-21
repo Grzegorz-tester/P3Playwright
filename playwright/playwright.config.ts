@@ -1,6 +1,6 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 import { testConfig } from "@utils/testConfig";
-require("dotenv").config();
+require('dotenv').config()
 
 /**
  * Read environment variables from file.
@@ -15,10 +15,10 @@ require("dotenv").config();
  */
 
 const userAgentStrings = [
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
 ];
 
 export default defineConfig({
@@ -33,15 +33,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    [
-      "html",
-      {
-        open: "never",
-        outputFolder: `./projects/${process.env.PROJECT}/html-report`,
-      },
-    ],
-  ],
+  reporter: [['html', { open: 'never', outputFolder: `./projects/${process.env.PROJECT}/html-report` }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     navigationTimeout: 90000,
@@ -49,18 +41,17 @@ export default defineConfig({
     // baseURL: 'http://localhost:3000',
     baseURL: testConfig.getUrl(process.env.PROJECT),
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on",
+    trace: 'on',
   },
   projects: [
-    { name: "setup", testMatch: /.*\.setup\.ts/ },
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
       name: `Chrome`,
       use: {
         // Configure the browser to use.
         browserName: `chromium`,
 
-        userAgent:
-          userAgentStrings[Math.floor(Math.random() * userAgentStrings.length)],
+        userAgent: userAgentStrings[Math.floor(Math.random() * userAgentStrings.length)],
 
         //Chrome Browser Config
         channel: `chrome`,
@@ -68,7 +59,7 @@ export default defineConfig({
         //Picks Base Url based on User input
         baseURL: testConfig.getUrl(process.env.PROJECT),
         //Browser Mode
-        headless: false,
+        headless: true,
 
         //Browser height and width
         viewport: { width: 2560, height: 1440 },
@@ -89,22 +80,22 @@ export default defineConfig({
         },
       },
       timeout: 160000,
-      dependencies: ["setup"],
+      dependencies: ['setup'],
     },
 
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
 
     {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
     },
 
     {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
 
     /* Test against mobile viewports. */
