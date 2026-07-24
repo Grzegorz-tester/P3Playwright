@@ -1,26 +1,29 @@
-import test from '../utils/Pages'
-import { selectCountryOnFreshLoad } from '../utils/countrySelector'
+import test from '../../utils/Pages'
+import { selectCountryOnFreshLoad } from '../../utils/countrySelector'
 import { insinkerator } from '@utils/testUsers'
 
 /**
- * PURCHASE JOURNEY (logged-in, Portugal)
+ * PURCHASE JOURNEY (Logged-in, Portugal)
  * ========================================
- * Covers: home -> login -> category -> PDP -> add to basket -> basket ->
- * checkout (saved address selection) -> delivery method + phone ->
- * billing -> review & payment.
+ * Logged-in counterpart to guest-purchase-journey.test.ts. Covers: home ->
+ * login -> category -> PDP -> add to basket -> basket -> checkout (saved
+ * address selection) -> delivery method + phone -> billing -> review &
+ * payment.
  *
- * STOPS at verifying the review page loads correctly. It does NOT
- * complete a real purchase — as of this session, no payment provider is
- * configured for this country/order on staging ("Payment provider not
- * valid for this order"). Once that's fixed, extend this test with a
- * final step calling checkoutPage.payOnAccount() and asserting the
- * thank-you page.
+ * VERIFIED PASSING end-to-end (as of this session) through to
+ * verifyReachedReviewAndPayment(). Does NOT complete a real purchase —
+ * no payment provider was configured for this country/order on staging
+ * at time of writing ("Payment provider not valid for this order").
+ * Once that's fixed, extend this test with a final step calling
+ * checkoutPage.payOnAccount() and asserting the thank-you page
+ * (CheckoutSuccessPage locators are still TODOs in objects.ts).
  *
  * Logs in via the UI directly (loginPage), not via auth.setup.ts's API
  * call — that setup file's /auth endpoint has never been confirmed
- * working, only the UI login form has.
+ * working, only the UI login form has (and even that needed a
+ * fill-and-verify retry to be reliable — see InsinkeratorLoginPage.ts).
  */
-test.describe('Purchase Journey (Logged-in) - Portugal', () => {
+test.describe('Purchase Journey (Logged-in, Portugal)', () => {
     test('User can proceed from PDP through to Review & Payment', async ({
         page,
         homePage,
@@ -54,11 +57,11 @@ test.describe('Purchase Journey (Logged-in) - Portugal', () => {
             console.log(`[STEP] Choose first product and add to basket...`)
             await productListPage.clickOnFirstItemToProceedToPDP()
             await productDetailPage.addToBasket(1)
-            await productDetailPage.proceedToBasketPage()
         })
 
         await test.step(`Proceed to Secure Checkout...`, async () => {
             console.log(`[STEP] Proceed to Secure Checkout...`)
+            await page.goto('/basket')
             await basketPage.proceedToSecureCheckout()
         })
 

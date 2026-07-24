@@ -1,8 +1,8 @@
 import test from "../utils/Pages";
 import { selectCountryOnFreshLoad } from "../utils/countrySelector";
 
-test.describe('Health Check as Guest User', () => {
-    test(`Verify the home page loads`, async ({ page, homePage }) => {
+test.describe('Health Check (Guest, Portugal)', () => {
+    test(`User can load the home page`, async ({ page, homePage }) => {
 
         await test.step(`Navigate and dismiss the mandatory country modal...`, async () => {
             console.log(`[STEP] Navigate and dismiss the mandatory country modal...`)

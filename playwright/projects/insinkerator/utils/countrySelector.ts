@@ -24,7 +24,19 @@ import { InsinkeratorObjects } from './objects';
  */
 export async function selectCountryOnFreshLoad(page: Page, countryName: string): Promise<void> {
     const overlay = InsinkeratorObjects.CountrySelector.blockingOverlay(page);
-    if (await overlay.isVisible({ timeout: 5000 }).catch(() => false)) {
+    // NOTE(INSINKERATOR): use waitFor(), not isVisible(). isVisible() is a
+    // one-shot snapshot check — it does NOT poll for the element to
+    // appear, unlike waitFor() or expect().toBeVisible(). Using isVisible()
+    // here risks checking before the modal has actually rendered on a
+    // fresh navigation, silently skipping the dismissal and leaving the
+    // blocking overlay in place for every subsequent action in the test.
+    // This exact mistake was found and fixed elsewhere in this project
+    // (InsinkeratorCheckoutPage.chooseDeliveryAddress) — same class of bug.
+    const overlayAppeared = await overlay
+        .waitFor({ state: 'visible', timeout: 8000 })
+        .then(() => true)
+        .catch(() => false)
+    if (overlayAppeared) {
         const option = InsinkeratorObjects.CountrySelector.countryModalOption(countryName)(page);
         await expect(option).toBeVisible({ timeout: 15000 });
         await option.click();
