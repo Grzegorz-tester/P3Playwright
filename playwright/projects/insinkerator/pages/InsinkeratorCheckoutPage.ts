@@ -25,21 +25,28 @@ import { InsinkeratorObjects } from '../utils/objects'
  * every click on the page underneath it until dismissed. Always call
  * selectCountryOnFreshLoad() right after your first navigation.
  *
- * STATUS: verified end-to-end from address selection through billing and
- * into the final /checkout/review-and-payment step, INCLUDING a working
- * delivery method ("Wizzair air transport", confirmed once French
- * shipping methods were configured on staging — see enterDeliveryPhoneNumber
- * below for the UK-phone-format note). Order summary, line items, and
- * shipping cost all render correctly on the review page.
+ * STATUS: verified end-to-end from address selection through billing,
+ * payment, order submission AND the thank-you confirmation page —
+ * INCLUDING a working delivery method ("Wizzair air transport", confirmed
+ * once French shipping methods were configured on staging — see
+ * enterDeliveryPhoneNumber below for the UK-phone-format note), and a real
+ * CyberSource Unified Checkout payment (confirmed 2026-07-24 with the
+ * standard CyberSource test card, 4111 1111 1111 1111). Order summary,
+ * line items, and shipping cost all render correctly on the review page.
+ * The payment provider gap described in earlier revisions of this comment
+ * is FIXED — a real "Checkout With Card" button renders and a real order
+ * can be placed.
  *
- * CURRENT BLOCKER: on the review page, no "place order"/payment button
- * ever renders — instead an alert reads "Payment provider not valid for
- * this order." This is a data/config gap (no payment provider configured
- * for this country/order on staging), the same category of issue as the
- * shipping gap that was already fixed, NOT a UI bug. Once a payment
- * provider is configured, locate and wire up the actual place-order
- * button (objects.ts has a TODO placeholder) and complete a real order to
- * verify the thank-you page.
+ * FALSE ALARM (staging, 2026-07-24): an earlier manual exploration session
+ * saw /checkout/thank-you return an HTTP 500 "Oops! Something Went Wrong"
+ * error twice in a row right after a real purchase. That did NOT reproduce
+ * across 2 clean automated runs immediately afterward (each completing a
+ * real, different order end-to-end) — the page rendered a correct
+ * confirmation (order number, receipt email, delivery details) both
+ * times. Concluded to be a manual-session artifact, same category as
+ * other false alarms already documented in this project (e.g. the
+ * /account redirect false alarm) — see validateThankYouPage() below,
+ * which asserts the real, working confirmation.
  */
 export class InsinkeratorCheckoutPage extends CheckoutPage {
 
@@ -60,6 +67,8 @@ export class InsinkeratorCheckoutPage extends CheckoutPage {
     readonly addressCity = InsinkeratorObjects.CheckoutPage.addressCity(this.page);
     readonly addressPostcode = InsinkeratorObjects.CheckoutPage.addressPostcode(this.page);
     readonly addressSubmitButton = InsinkeratorObjects.CheckoutPage.addressSubmitButton(this.page);
+    readonly addressAutocompleteListbox = InsinkeratorObjects.CheckoutPage.addressAutocompleteListbox(this.page);
+    readonly addressAutocompleteOptions = InsinkeratorObjects.CheckoutPage.addressAutocompleteOptions(this.page);
 
     // --- VERIFIED: LOGGED-IN saved-address selection step ---
     readonly loggedInContinueButton = InsinkeratorObjects.CheckoutPage.loggedInContinueButton(this.page);
@@ -77,10 +86,17 @@ export class InsinkeratorCheckoutPage extends CheckoutPage {
     readonly billingAddressOptions = InsinkeratorObjects.CheckoutPage.billingAddressOptions(this.page);
     readonly billingAddressContinueButton = InsinkeratorObjects.CheckoutPage.billingAddressContinueButton(this.page);
 
-    // --- VERIFIED: review-and-payment step reached; payment itself blocked ---
+    // --- VERIFIED: review-and-payment step, including real CyberSource payment ---
     readonly reviewContent = InsinkeratorObjects.CheckoutPage.reviewContent(this.page);
     readonly reviewPaymentProviderErrorAlert = InsinkeratorObjects.CheckoutPage.reviewPaymentProviderErrorAlert(this.page);
     readonly placeOrderButton = InsinkeratorObjects.CheckoutPage.placeOrderButton(this.page);
+    readonly checkoutWithCardButton = InsinkeratorObjects.CheckoutPage.checkoutWithCardButton(this.page);
+    readonly cyberSourceCardNumberInput = InsinkeratorObjects.CheckoutPage.cyberSourceCardNumberInput(this.page);
+    readonly cyberSourceExpiryMonthSelect = InsinkeratorObjects.CheckoutPage.cyberSourceExpiryMonthSelect(this.page);
+    readonly cyberSourceExpiryYearSelect = InsinkeratorObjects.CheckoutPage.cyberSourceExpiryYearSelect(this.page);
+    readonly cyberSourceSecurityCodeInput = InsinkeratorObjects.CheckoutPage.cyberSourceSecurityCodeInput(this.page);
+    readonly cyberSourceCardContinueButton = InsinkeratorObjects.CheckoutPage.cyberSourceCardContinueButton(this.page);
+    readonly cyberSourceConfirmAndContinueButton = InsinkeratorObjects.CheckoutPage.cyberSourceConfirmAndContinueButton(this.page);
 
     // --- UNVERIFIED placeholders kept for abstract-contract compatibility ---
     readonly payOnAccountButton = InsinkeratorObjects.CheckoutPage.payOnAccountButton(this.page);
@@ -115,12 +131,35 @@ export class InsinkeratorCheckoutPage extends CheckoutPage {
     }
 
     /**
-     * GUEST delivery address form. VERIFIED reachable; NOT YET re-verified
-     * past submission with a real autocomplete suggestion selected for
-     * Address Line 1 (it's a lookup field — free text alone won't
-     * validate, per team knowledge).
+     * GUEST delivery address form. VERIFIED end-to-end (staging,
+     * 2026-07-24) through several real submitted orders. Address Line 1 is
+     * a MULTI-LEVEL autocomplete/lookup field, powered by Loqate
+     * (postcodeanywhere.co.uk / addressy.com "Capture+" — confirmed via
+     * network trace), confirmed live:
+     *   1. Typing a search term (e.g. "Rua Augusta") shows a first list of
+     *      STREET-level suggestions, each covering many addresses.
+     *   2. Clicking one expands the SAME listbox to a further list —
+     *      confirmed the number of levels is NOT fixed (some search terms
+     *      resolve in one click, others need two) — down to specific
+     *      numbered addresses.
+     *   3. Clicking a specific address auto-populates City, County and
+     *      Postcode and enables "Use this address" — no manual
+     *      city/postcode entry needed or possible.
+     * Options are picked by position (.first()) since there's no stable
+     * way to target a specific real address from fake test data — any
+     * result from a real search term is equally valid for test purposes.
+     *
+     * CONFIRMED — a real automated run showed Loqate's own "Find" API call
+     * never firing at all (confirmed via network trace: only its CSS/JS
+     * assets loaded) when typing immediately after the field becomes
+     * visible, even though the same pressSequentially sequence worked
+     * reliably in manual, less rapid-fire browsing. Loqate binds its own
+     * listeners to the input asynchronously after mount and needs a brief
+     * settle window first. Retrying the whole type-and-check cycle (rather
+     * than a single fixed sleep) rides out that variability, same pattern
+     * as InsinkeratorHomePage.closeSearchDrawer().
      */
-    async fillGuestAddressForm(details: { firstName: string, lastName: string, addressSearchTerm: string, addressSuggestionText: string, city: string, postcode: string }): Promise<void> {
+    async fillGuestAddressForm(details: { firstName: string, lastName: string, addressSearchTerm: string }): Promise<void> {
         await expect(this.addressFirstName).toBeVisible({ timeout: 15000 })
         // NOTE: fill() for plain text fields — see InsinkeratorLoginPage
         // for why (pressSequentially was seen to get interrupted
@@ -129,19 +168,82 @@ export class InsinkeratorCheckoutPage extends CheckoutPage {
         await this.addressLastName.fill(details.lastName)
         // Address Line 1 IS still pressSequentially deliberately — it's
         // an autocomplete/lookup field that needs real keystroke-by-
-        // keystroke input events to trigger its debounced suggestions
+        // keystroke input events to trigger Loqate's debounced suggestions
         // dropdown; fill() sets the value in one shot and may not fire
         // the events this field is listening for.
-        await this.addressLine1.click()
-        await this.addressLine1.pressSequentially(details.addressSearchTerm, { delay: 30 })
-        // TODO(INSINKERATOR): confirm the actual suggestion-list locator —
-        // never confirmed this session. Likely a listbox/option role
-        // rendered below the input; inspect with devtools before relying on
-        // this getByRole guess.
-        await this.page.getByRole('option', { name: details.addressSuggestionText }).click()
-        await this.addressCity.fill(details.city)
-        await this.addressPostcode.fill(details.postcode)
+        await expect(async () => {
+            await this.addressLine1.click()
+            await this.addressLine1.fill('')
+            await this.page.waitForTimeout(600)
+            await this.addressLine1.pressSequentially(details.addressSearchTerm, { delay: 30 })
+            await expect(this.addressAutocompleteListbox).toBeVisible({ timeout: 5000 })
+        }).toPass({ timeout: 25000 })
+        // Clicking a street-level suggestion expands the SAME listbox to a
+        // second, specific-address list via its OWN async lookup — the
+        // number of levels to drill through isn't fixed (confirmed some
+        // search terms need one click, others two), and clicking again
+        // before an expansion lands re-selects the still-collapsed group,
+        // leaving the form unpopulated. Rather than assume a fixed number
+        // of clicks, keep clicking the CURRENT first option (re-queried
+        // fresh each attempt, since the list's content changes underneath
+        // it) until the real success signal — the submit button actually
+        // enabling — is observed.
+        await expect(async () => {
+            if (await this.addressAutocompleteOptions.count() > 0) {
+                await this.addressAutocompleteOptions.first().click()
+            }
+            await expect(this.addressSubmitButton).toBeEnabled({ timeout: 3000 })
+        }).toPass({ timeout: 20000 })
         await this.addressSubmitButton.click()
+    }
+
+    /**
+     * VERIFIED WORKING (staging, 2026-07-24) — GUEST billing step: ticking
+     * "Same as delivery address" replaces the form with a read-only
+     * confirmation of the delivery address, then Continue proceeds
+     * straight to /checkout/review-and-payment. Confirmed DIFFERENT from
+     * the logged-in flow's radio-selection UI (chooseBillingAddressSameAsDelivery
+     * above) — see the CheckoutPage.billingSameAsDeliveryCheckbox note in
+     * objects.ts.
+     *
+     * CONFIRMED — a real automated run showed the click occasionally not
+     * registering as checked (the full address form stayed expanded rather
+     * than collapsing to the read-only confirmation), leaving
+     * billingContinueButton never rendered. Retrying the click until the
+     * checkbox reports checked rides out that flakiness, same pattern as
+     * other toggle-style interactions elsewhere in this project.
+     */
+    async confirmGuestBillingSameAsDelivery(): Promise<void> {
+        await expect(async () => {
+            await this.billingSameAsDeliveryCheckbox.click()
+            await expect(this.billingSameAsDeliveryCheckbox).toBeChecked({ timeout: 3000 })
+        }).toPass({ timeout: 20000 })
+        await expect(this.billingContinueButton).toBeEnabled({ timeout: 15000 })
+        await this.billingContinueButton.click()
+    }
+
+    /**
+     * VERIFIED WORKING end-to-end (staging, 2026-07-24) with the standard
+     * CyberSource test card (4111 1111 1111 1111, any future expiry, any
+     * 3-digit CVV) — see fakeData.ts / the test file for the exact values
+     * used. Opens the CyberSource Unified Checkout overlay ("Checkout With
+     * Card"), fills the card + confirms in its 2-step flow (Step 1 "Pay by
+     * Card" -> Step 2 "Confirm"), and submits the real order. See the
+     * class-level comment for the CONFIRMED SITE BUG this leads into
+     * (real order confirmation, on /checkout/thank-you) — see
+     * InsinkeratorCheckoutSuccessPage.verifyThankYouPage() for the
+     * corresponding assertion.
+     */
+    async payWithCyberSourceTestCard(card: { number: string, expiryMonth: string, expiryYear: string, securityCode: string }): Promise<void> {
+        await this.checkoutWithCardButton.click()
+        await expect(this.cyberSourceCardNumberInput).toBeVisible({ timeout: 20000 })
+        await this.cyberSourceCardNumberInput.fill(card.number)
+        await this.cyberSourceExpiryMonthSelect.selectOption(card.expiryMonth)
+        await this.cyberSourceExpiryYearSelect.selectOption(card.expiryYear)
+        await this.cyberSourceSecurityCodeInput.fill(card.securityCode)
+        await this.cyberSourceCardContinueButton.click()
+        await expect(this.cyberSourceConfirmAndContinueButton).toBeVisible({ timeout: 15000 })
+        await this.cyberSourceConfirmAndContinueButton.click()
     }
 
     /**

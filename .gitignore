@@ -14,3 +14,4 @@ playwright/projects/*/tests/.auth/*.json
 .claude/
 CLAUDE.md
 CLAUDE.local.md
+.playwright-mcp/

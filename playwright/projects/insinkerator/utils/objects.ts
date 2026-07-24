@@ -649,17 +649,16 @@ export const InsinkeratorObjects = {
         // this project).
         loggedInContinueButton: (page: Page) => page.getByTestId('checkout-sign-in-content__continue'),
 
-        // VERIFIED — GUEST delivery step: a fresh address FORM to fill in
-        // (confirmed reachable; confirmed Address Line 1 is an
-        // autocomplete/lookup field per your note — a suggestion must be
-        // selected, free text alone will not validate. Not yet re-verified
-        // end-to-end with a selected suggestion — the earlier "reset on
-        // submit" symptom seen during initial exploration turned out to be
-        // a DIFFERENT, unrelated cause: the mandatory country-modal
-        // overlay described at the top of this file, which was blocking
-        // every submit click that whole session, including this one.
-        // Retest with the overlay dismissed and a real autocomplete
-        // suggestion picked.)
+        // VERIFIED — GUEST delivery step: a fresh address FORM to fill in.
+        // Address Line 1 is confirmed as a genuine TWO-LEVEL autocomplete:
+        // typing a search term (pressSequentially — see fillGuestAddressForm
+        // in InsinkeratorCheckoutPage.ts for why fill() won't trigger it)
+        // shows a first list of STREET-level suggestions (e.g. "Rua Augusta
+        // 1100 Lisboa - 283 Addresses"); clicking one that has multiple
+        // addresses expands to a SECOND list of specific numbered addresses
+        // on that street; clicking one of those auto-populates City, County
+        // and Postcode and enables "Use this address". Confirmed live
+        // (staging, 2026-07-24) end-to-end through a real submitted order.
         addressForm: (page: Page) => page.getByTestId('checkout-address-form'),
         addressFirstName: (page: Page) => page.getByTestId('checkout-address-form__first-name'),
         addressLastName: (page: Page) => page.getByTestId('checkout-address-form__last-name'),
@@ -670,6 +669,15 @@ export const InsinkeratorObjects = {
         addressPostcode: (page: Page) => page.getByTestId('checkout-address-form__postcode'),
         addressCountry: (page: Page) => page.getByTestId('checkout-address-form__country'),
         addressSubmitButton: (page: Page) => page.getByTestId('checkout-address-form__submit-button'),
+        // VERIFIED — the autocomplete result list described above. No
+        // data-testid on the listbox or its options — last-resort ARIA
+        // role locators (same precedent as elsewhere in this file), matched
+        // by POSITION (.first()) rather than by text, since option text is
+        // entirely dynamic (varies with whatever search term was typed and
+        // real address-lookup data). The listbox's accessible name
+        // ("address list") comes from its own aria-label, not visible text.
+        addressAutocompleteListbox: (page: Page) => page.getByRole('listbox', { name: 'address list' }),
+        addressAutocompleteOptions: (page: Page) => page.getByRole('option'),
 
         // VERIFIED — LOGGED-IN delivery step: select from SAVED addresses
         // instead of filling a form. This is the shape the abstract
@@ -696,22 +704,22 @@ export const InsinkeratorObjects = {
         deliveryNotesInput: (page: Page) => page.getByTestId('delivery-content__form-delivery-notes'),
         deliveryContinueButton: (page: Page) => page.getByTestId('delivery-content__form-continue-button'),
 
-        // VERIFIED — billing step (/checkout/billing), FRESH flow: shows
-        // the exact same checkout-select-address radio-selection UI as
-        // the delivery step — no checkbox involved at all. Selecting a
-        // radio + clicking continue goes STRAIGHT to
-        // /checkout/review-and-payment. This corrects an earlier,
-        // wrong assumption (a "same as delivery" checkbox was seen once,
-        // but only on a RETURNING session where a billing address had
-        // already been set before — not on a fresh one). The checkbox
-        // locators below are kept as fallback for that returning-session
-        // case, but the main method (chooseBillingAddressSameAsDelivery
-        // in InsinkeratorCheckoutPage.ts) uses billingAddressOptions /
-        // billingAddressContinueButton directly, matching the fresh flow.
+        // VERIFIED — billing step (/checkout/billing). CONFIRMED to differ
+        // by auth state (corrects an earlier wrong assumption that the
+        // checkbox only appeared on a returning session):
+        //   - GUEST (confirmed live end-to-end, staging, 2026-07-24): shows
+        //     a "Same as delivery address" CHECKBOX. Ticking it renders a
+        //     read-only confirmation of the delivery address plus a
+        //     Continue button — see confirmGuestBillingSameAsDelivery() in
+        //     InsinkeratorCheckoutPage.ts.
+        //   - LOGGED-IN (confirmed working in logged-in-purchase-journey.
+        //     test.ts): shows the SAME checkout-select-address
+        //     radio-selection UI as the delivery step instead, no checkbox
+        //     — see chooseBillingAddressSameAsDelivery().
         billingSameAsDeliveryCheckbox: (page: Page) => page.getByTestId('checkout-address-form__same-as-delivery-address'),
         billingContinueButton: (page: Page) => page.getByTestId('checkout-billing-content__continue-button'),
-        // VERIFIED — the actual fresh-flow controls: same structure as
-        // the delivery step's address selection.
+        // VERIFIED — the logged-in flow's controls: same structure as the
+        // delivery step's address selection.
         billingAddressOptions: (page: Page) => page.locator('[data-testid="checkout-select-address__addresses"] [data-testid^="radio-select_option"]'),
         billingAddressContinueButton: (page: Page) => page.getByTestId('checkout-select-address__continue-button'),
 
@@ -719,19 +727,35 @@ export const InsinkeratorObjects = {
         // line items, and shipping cost all render correctly.
         reviewContent: (page: Page) => page.getByTestId('review-content'),
         reviewCurrentAddress: (page: Page) => page.getByTestId('review-current-address'),
-        // VERIFIED — THE ACTUAL CURRENT BLOCKER (as of this session): no
-        // payment button/method ever renders on this page. Instead this
-        // alert shows: "Payment provider not valid for this order." This
-        // is NOT a UI bug — no payment provider is configured for this
-        // country/order combination on staging, the same category of gap
-        // as the shipping issue that was just fixed. Whoever configures
-        // staging payment providers needs to do the equivalent fix before
-        // a "place order"/"pay" button will ever appear here to locate.
+        // CORRECTED (staging, 2026-07-24): a payment provider is now
+        // configured — this alert ("Payment provider not valid for this
+        // order") and placeOrderButton below are OBSOLETE, kept only as a
+        // historical record of the earlier blocker. Real payment now goes
+        // through the CyberSource Unified Checkout widget below instead.
         reviewPaymentProviderErrorAlert: (page: Page) => page.getByTestId('review-content__alert'),
-        // TODO(INSINKERATOR): NOT YET FOUND — no place-order/pay button
-        // exists in the DOM while the above error is showing. Re-inspect
-        // once a payment provider is configured for this country.
         placeOrderButton: (page: Page) => page.getByTestId('TODO-place-order-button'),
+
+        // VERIFIED — CyberSource Unified Checkout (staging, 2026-07-24),
+        // confirmed end-to-end with a real submitted order using the
+        // standard CyberSource test card (4111 1111 1111 1111). Three
+        // CyberSource iframes are involved, none with a data-testid, but
+        // each has a STABLE id (confirmed identical across two independent
+        // sessions) — these ids are the most reliable anchor available:
+        //   #__buttonlist - hosts the initial "Checkout With Card" trigger
+        //   #__mce        - the actual secure card-entry + confirm overlay;
+        //                   BOTH step 1 ("Pay by Card") and step 2
+        //                   ("Confirm") render inside this SAME iframe
+        // Card Number and Security Code have no testid either but DO have
+        // stable ids (#card-number, #card-security-code). Expiry Month/Year
+        // and both buttons DO have real testids once inside the #__mce
+        // frame.
+        checkoutWithCardButton: (page: Page) => page.locator('#__buttonlist').contentFrame().getByTestId('ctp-mini-btn'),
+        cyberSourceCardNumberInput: (page: Page) => page.locator('#__mce').contentFrame().locator('#card-number'),
+        cyberSourceExpiryMonthSelect: (page: Page) => page.locator('#__mce').contentFrame().getByTestId('expiry-month'),
+        cyberSourceExpiryYearSelect: (page: Page) => page.locator('#__mce').contentFrame().getByTestId('expiry-year'),
+        cyberSourceSecurityCodeInput: (page: Page) => page.locator('#__mce').contentFrame().locator('#card-security-code'),
+        cyberSourceCardContinueButton: (page: Page) => page.locator('#__mce').contentFrame().getByTestId('btn'),
+        cyberSourceConfirmAndContinueButton: (page: Page) => page.locator('#__mce').contentFrame().getByTestId('step-review-continue-btn'),
 
         // Kept for interface compatibility with the abstract CheckoutPage
         // contract's chooseDeliveryOption/chooseDeliveryDateAndOptions
@@ -745,12 +769,29 @@ export const InsinkeratorObjects = {
         proceedButton: (page: Page) => page.getByTestId('TODO-proceed-button')
     },
 
-    // TODO(INSINKERATOR): NOT YET REACHED — blocked behind the "Payment
-    // provider not valid for this order" issue above. Once a payment
-    // provider is configured and placeOrderButton is located, complete a
-    // real order to capture these.
+    // VERIFIED — confirmed live (staging, 2026-07-24) via TWO independent
+    // real completed orders in clean automated runs, each showing a
+    // correctly rendered confirmation (order number, receipt email,
+    // delivery address, delivery method, order lines). An earlier manual
+    // exploration session saw this page return an HTTP 500 "Oops!
+    // Something Went Wrong" error twice in a row — that did NOT reproduce
+    // across the 2 clean automated runs immediately afterward (each with a
+    // real, different order), strongly suggesting it was a manual-session
+    // artifact (same category as other false alarms documented elsewhere
+    // in this project, e.g. the /account redirect false alarm) rather than
+    // a real, permanent bug. errorHeading is kept in case it resurfaces.
     CheckoutSuccessPage: {
-        thankYouHeader: (page: Page) => page.getByTestId('TODO-thank-you-header'),
-        orderDetails: (page: Page) => page.getByTestId('TODO-order-details')
+        thankYouContent: (page: Page) => page.getByTestId('checkout-thank-you-content'),
+        thankYouHeader: (page: Page) => page.locator('[data-testid="checkout-thank-you-content"] h1'),
+        orderReference: (page: Page) => page.getByTestId('orders-details__reference'),
+        orderConfirmationEmail: (page: Page) => page.getByTestId('orders-details__email'),
+        orderDeliveryAddress: (page: Page) => page.getByTestId('checkout-current-address__address'),
+        // NOTE: this testid is on BOTH the section's outer DIV and the
+        // inner value <P> — .last() reaches the actual value ("Wizzair air
+        // transport"), same duplicate-testid pattern already documented on
+        // BasketPage.lineName elsewhere in this file.
+        orderDeliveryMethod: (page: Page) => page.getByTestId('orders-details__order-delivery-method').last(),
+        orderLinesList: (page: Page) => page.getByTestId('orders-details__order-lines-list'),
+        errorHeading: (page: Page) => page.getByRole('heading', { name: 'Oops! Something Went Wrong' })
     }
 };
