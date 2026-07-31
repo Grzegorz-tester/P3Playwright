@@ -281,10 +281,22 @@ export const RussellsObjects = {
     // Russells product is confirmed, see RUS-474.
     ProductDetailPage: {
         // CONFIRMED live (staging, 2026-07-31): a hidden mobile/desktop
-        // duplicate exists — .first() resolves to the real, visible copy.
+        // duplicate exists on every one of these — :visible/.first()
+        // resolves to the real, visible copy.
         productName: (page: Page) => page.getByTestId('product-info__name').first(),
+        productSku: (page: Page) => page.locator('[data-testid="product-info__sku"]:visible'),
+        productPrice: (page: Page) => page.locator('[data-testid="product-price__now-price"]:visible'),
         addToBasketButton: (page: Page) => page.getByTestId('product-add-to-basket__button').first(),
         quantityInput: (page: Page) => page.getByTestId('quantity-picker__input').first(),
-        basketLinkText: (page: Page) => page.getByTestId('brand-bar__basket-link')
+        basketLinkText: (page: Page) => page.getByTestId('brand-bar__basket-link'),
+        // VERIFIED live (staging, 2026-07-31): the number of accordion
+        // sections is content-dependent per product (e.g. some products
+        // have no "Product Description" section, and whether any section
+        // starts expanded also varies) — the single-open toggle behaviour
+        // itself (opening one collapses whichever other was open) is the
+        // stable, product-independent thing to assert.
+        accordionTriggers: (page: Page) => page.locator('[data-testid="product-accordion__trigger"]:visible'),
+        thumbnailNextButton: (page: Page) => page.locator('[data-testid="product-media__thumbnail-next-button"]:visible'),
+        thumbnailPrevButton: (page: Page) => page.locator('[data-testid="product-media__thumbnail-previous-button"]:visible')
     }
 };

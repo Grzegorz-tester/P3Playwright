@@ -6,8 +6,13 @@ export class RussellsPDPage extends ProductDetailPage {
 
     readonly basketButton: Locator;
     readonly productName = RussellsObjects.ProductDetailPage.productName(this.page);
+    readonly productSku = RussellsObjects.ProductDetailPage.productSku(this.page);
+    readonly productPrice = RussellsObjects.ProductDetailPage.productPrice(this.page);
     readonly quantityInput = RussellsObjects.ProductDetailPage.quantityInput(this.page);
     readonly basketLinkText = RussellsObjects.ProductDetailPage.basketLinkText(this.page);
+    readonly accordionTriggers = RussellsObjects.ProductDetailPage.accordionTriggers(this.page);
+    readonly thumbnailNextButton = RussellsObjects.ProductDetailPage.thumbnailNextButton(this.page);
+    readonly thumbnailPrevButton = RussellsObjects.ProductDetailPage.thumbnailPrevButton(this.page);
 
     constructor(page: Page) {
         super(page);
@@ -18,6 +23,36 @@ export class RussellsPDPage extends ProductDetailPage {
     async validateProductNameMatches(expectedName: string): Promise<void> {
         await expect(this.productName).toBeVisible({ timeout: 30000 })
         await expect(this.productName).toHaveText(expectedName)
+    }
+
+    // VERIFIED live (staging, 2026-07-31): product name, SKU and price are
+    // all visible on load.
+    async validatePDPLoaded(): Promise<void> {
+        await expect(this.productName).toBeVisible({ timeout: 30000 })
+        await expect(this.productSku.first()).toBeVisible()
+        await expect(this.productPrice.first()).toBeVisible()
+    }
+
+    // VERIFIED live (staging, 2026-07-31): opening one accordion section
+    // collapses whichever other was open — confirmed on a product with
+    // neither section expanded by default (content-dependent, see
+    // objects.ts note), so this doesn't assume any initial state.
+    async validateAccordionSingleOpenBehaviour(): Promise<void> {
+        const count = await this.accordionTriggers.count()
+        expect(count, 'Expected at least 2 accordion sections to test single-open behaviour').toBeGreaterThanOrEqual(2)
+        await this.accordionTriggers.nth(0).click()
+        await expect(this.accordionTriggers.nth(0)).toHaveAttribute('aria-expanded', 'true')
+        await this.accordionTriggers.nth(1).click()
+        await expect(this.accordionTriggers.nth(1)).toHaveAttribute('aria-expanded', 'true')
+        await expect(this.accordionTriggers.nth(0)).toHaveAttribute('aria-expanded', 'false')
+    }
+
+    // VERIFIED live (staging, 2026-07-31): Previous starts disabled; after
+    // clicking Next once, both Previous and Next are enabled.
+    async validateThumbnailCarouselNavigation(): Promise<void> {
+        await expect(this.thumbnailPrevButton.first()).toBeDisabled()
+        await this.thumbnailNextButton.first().click()
+        await expect(this.thumbnailPrevButton.first()).toBeEnabled()
     }
 
     // CONFIRMED live (staging, 2026-07-31): a real automated run showed the
