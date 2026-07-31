@@ -51,5 +51,12 @@ export const envs: Envs = {
                 api: "https://staging-api.indespension.pub"
             }
     },
+    russells: {
+        stage:
+            {
+                url: "https://staging.russells-parts.work",
+                api: "https://staging-api.russells-parts.work"
+            }
+    },
 }
 

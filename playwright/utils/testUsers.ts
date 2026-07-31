@@ -23,6 +23,13 @@ export const kooltech = {
     }
 }
 
+export const russells = {
+    accountTestUser_1: {
+        email: "grzegorz.hajduk+russells_automation@velstar.co.uk",
+        password: "Testing123!"
+    }
+}
+
 
 
 
