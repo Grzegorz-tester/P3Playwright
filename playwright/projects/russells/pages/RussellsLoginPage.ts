@@ -22,12 +22,22 @@ export class RussellsLoginPage extends LoginPage {
         await expect(this.loginHeader).toBeVisible({ timeout: 60000 })
     }
 
+    // CONFIRMED live (staging, 2026-07-31): a real automated run showed this
+    // occasionally staying on /login with correct credentials under
+    // parallel load (repeated across two separate runs, always when other
+    // tests were logging into this SAME shared account concurrently — never
+    // reproduced running alone) — looks like contention on the shared
+    // account rather than a real credentials/locator problem. Retrying the
+    // whole submit cycle rides out that contention instead of failing hard
+    // on what's very likely a transient blip.
     async loginToApplication(email: string, password: string): Promise<void> {
-        await expect(this.loginHeader).toBeVisible()
-        await this.emailInput.fill(email)
-        await this.passwordInput.fill(password)
-        await this.signInButton.click()
-        await expect(this.page).toHaveURL(/\/account$/, { timeout: 60000 })
+        await expect(async () => {
+            await expect(this.loginHeader).toBeVisible()
+            await this.emailInput.fill(email)
+            await this.passwordInput.fill(password)
+            await this.signInButton.click()
+            await expect(this.page).toHaveURL(/\/account$/, { timeout: 20000 })
+        }).toPass({ timeout: 90000 })
     }
 
     // VERIFIED live (staging, 2026-07-31): a wrong password for a real

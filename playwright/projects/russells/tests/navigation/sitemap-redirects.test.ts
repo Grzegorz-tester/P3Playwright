@@ -48,6 +48,12 @@ test.describe('Sitemap Redirects', () => {
     test(`Each sitemap category's first item redirects correctly`, async ({
         sitemapPage,
     }) => {
+        // 7 real navigations plus a direct request per category (one of
+        // which fetches a raw CDN image for "product_images") — comfortably
+        // over the project default under load. Extended rather than risking
+        // a slow run being cut off mid-loop.
+        test.setTimeout(300000)
+
         // 'article_categories' excluded - see the class-level comment above.
         const categories = [
             'products',

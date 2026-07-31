@@ -78,11 +78,15 @@ export const RussellsObjects = {
         successMessage: (page: Page) => page.getByTestId('reset-password-form__success')
     },
 
-    // Subset covering only the change-password flow (Account > Profile > My
-    // Details > "Reset Password", which swaps the same card over to a
-    // Change Password form) — address book / orders are out of scope for
-    // now, see RUS-474.
     AccountPage: {
+        // VERIFIED live (staging, 2026-07-31): all four sidebar links share
+        // the same testid ("account-menu__item") and carry their own href
+        // directly, matching Insinkerator's convention exactly.
+        dashboardMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account"]'),
+        profileMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account/profile"]'),
+        addressBookMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account/address-book"]'),
+        ordersMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account/orders"]'),
+
         myDetailsForm: (page: Page) => page.getByTestId('account__my-details-form'),
         // TODO: RUS-474 — no data-testid on this button (confirmed live,
         // 2026-07-31); last-resort text locator, scoped to the stable
@@ -101,7 +105,143 @@ export const RussellsObjects = {
             page.locator('[data-testid="account__change-password-form"] button').filter({ hasText: 'Save Changes' }).first(),
         // VERIFIED live (staging, 2026-07-31): a real change (then reverted)
         // showed "Password successfully updated" through this testid.
-        changePasswordAlert: (page: Page) => page.getByTestId('account-profile__alert')
+        changePasswordAlert: (page: Page) => page.getByTestId('account-profile__alert'),
+
+        // VERIFIED live (staging, 2026-07-31) on /account/orders — matches
+        // Insinkerator's convention almost exactly.
+        ordersPageHeading: (page: Page) => page.getByTestId('account-orders__title'),
+        ordersContent: (page: Page) => page.getByTestId('account-orders__content'),
+        ordersHeaderRow: (page: Page) => page.getByTestId('account-orders-header-row'),
+        ordersReferenceFilterInput: (page: Page) => page.getByTestId('account-orders-reference-filter'),
+        ordersTotalAmountFilterInput: (page: Page) => page.getByTestId('account-orders-total-amount-filter'),
+        ordersFilterResetButton: (page: Page) => page.getByTestId('account-orders-filter-reset'),
+        ordersRow: (index: number) => (page: Page) => page.getByTestId(`account-orders-row-${index}`),
+        ordersRowReferenceCell: (index: number) => (page: Page) => page.getByTestId(`account-orders-row-${index}-cell-reference`),
+        ordersRowAmountCell: (index: number) => (page: Page) => page.getByTestId(`account-orders-row-${index}-cell-totalIncTaxAfterDiscount`),
+
+        // VERIFIED live (staging, 2026-07-31) on /account/address-book — a
+        // fixture delivery + billing address now exists permanently on
+        // accountTestUser_1 (added deliberately so the checkout flow always
+        // has a saved address to select), so "Add new address" is always
+        // present rather than the blank form. Rows are numbered
+        // POSITIONALLY (address-1, address-2, ...), not by a persistent id.
+        addDeliveryAddressButton: (page: Page) => page.getByTestId('address-book-delivery__add-address-button'),
+        deliveryAddressNames: (page: Page) => page.locator('[data-testid^="address-book-delivery__address-"][data-testid$="__name"]'),
+        // CONFIRMED live: delivery and billing forms share the exact same
+        // "checkout-address-form" testid with no distinguishing wrapper —
+        // delivery always renders first in DOM order (confirmed by adding
+        // both), same accepted DOM-order convention used elsewhere in this
+        // project (e.g. ProductListPage.productCardLink).
+        deliveryAddressForm: (page: Page) => page.locator('[data-testid="checkout-address-form"]').first(),
+        deliveryAddressFirstNameInput: (page: Page) => RussellsObjects.AccountPage.deliveryAddressForm(page).getByTestId('checkout-address-form__first-name'),
+        deliveryAddressLastNameInput: (page: Page) => RussellsObjects.AccountPage.deliveryAddressForm(page).getByTestId('checkout-address-form__last-name'),
+        deliveryAddressLine1Input: (page: Page) => RussellsObjects.AccountPage.deliveryAddressForm(page).getByTestId('checkout-address-form__address-line-1'),
+        deliveryAddressCityInput: (page: Page) => RussellsObjects.AccountPage.deliveryAddressForm(page).getByTestId('checkout-address-form__city'),
+        deliveryAddressPostcodeInput: (page: Page) => RussellsObjects.AccountPage.deliveryAddressForm(page).getByTestId('checkout-address-form__postcode'),
+        // TODO: RUS-474 — no data-testid on the "Save Address" submit
+        // button (confirmed live, 2026-07-31); type="submit" is the one
+        // stable, non-text attribute distinguishing it from the adjacent
+        // country-picker button within the same form (same precedent
+        // Insinkerator uses for the identical gap).
+        deliveryAddressSaveButton: (page: Page) => RussellsObjects.AccountPage.deliveryAddressForm(page).locator('button[type="submit"]'),
+        deliveryAddressName: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${addressNumber}__name`),
+        deliveryAddressEditButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${addressNumber}__edit-address-button`),
+        deliveryAddressDeleteButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${addressNumber}__delete-address-button`),
+        // VERIFIED live (staging, 2026-07-31): clicking Delete opens a
+        // confirm/cancel prompt, itself scoped with the same
+        // per-address-number testid prefix.
+        deliveryAddressDeleteConfirmYesButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${addressNumber}__delete-address-yes-button`),
+
+        addBillingAddressButton: (page: Page) => page.getByTestId('address-book-billing__add-address-button'),
+        billingAddressNames: (page: Page) => page.locator('[data-testid^="address-book-billing__address-"][data-testid$="__name"]'),
+        // Delivery confirmed to always render first — billing is .last(),
+        // safe even when only one form is open (then both .first()/.last()
+        // resolve to the same single form).
+        billingAddressForm: (page: Page) => page.locator('[data-testid="checkout-address-form"]').last(),
+        billingAddressFirstNameInput: (page: Page) => RussellsObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__first-name'),
+        billingAddressLastNameInput: (page: Page) => RussellsObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__last-name'),
+        billingAddressLine1Input: (page: Page) => RussellsObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__address-line-1'),
+        billingAddressCityInput: (page: Page) => RussellsObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__city'),
+        billingAddressPostcodeInput: (page: Page) => RussellsObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__postcode'),
+        billingAddressSaveButton: (page: Page) => RussellsObjects.AccountPage.billingAddressForm(page).locator('button[type="submit"]'),
+        billingAddressName: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__name`),
+        billingAddressEditButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__edit-address-button`),
+        billingAddressDeleteButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-button`),
+        billingAddressDeleteConfirmYesButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-yes-button`)
+    },
+
+    // VERIFIED live (staging, 2026-07-31).
+    BasketPage: {
+        // CONFIRMED SITE BUG (staging, 2026-07-31): a "Continue shopping"
+        // link elsewhere in basket-summary reuses this SAME testid
+        // ("basket-summary__checkout-button"). href isn't a safe
+        // disambiguator either — it points to /checkout/sign-in for a
+        // guest but straight to /checkout/delivery-method once logged in.
+        // TODO: RUS-474 — last-resort text filter, forced by the testid
+        // collision bug above (both candidates otherwise carry the exact
+        // same testid and a login-state-dependent href).
+        checkoutButton: (page: Page) => page.getByTestId('basket-summary__checkout-button').filter({ hasText: 'Checkout' }),
+        lineName: (lineIndex: number) => (page: Page) => page.getByTestId(`basket-items__available-line-${lineIndex}__name`),
+        lineSku: (lineIndex: number) => (page: Page) => page.getByTestId(`basket-items__available-line-${lineIndex}__sku`),
+        lineTotalPrice: (lineIndex: number) => (page: Page) => page.getByTestId(`basket-items__available-line-${lineIndex}__total-price`),
+        summaryTotal: (page: Page) => page.getByTestId('basket-summary__total'),
+        quantityInput: (page: Page) => page.getByTestId('quantity-picker__input'),
+        quantityMinusButton: (page: Page) => page.getByTestId('quantity-picker__minus-button'),
+        quantityPlusButton: (page: Page) => page.getByTestId('quantity-picker__plus-button'),
+        // VERIFIED live: "Add a promotional code?" toggles to reveal an
+        // input, and the SAME testid is reused for the toggle AND the
+        // "Apply" submit button once expanded — same convention Insinkerator
+        // uses for the identical widget.
+        promoCodeToggleButton: (page: Page) => page.getByTestId('add-promotion-form__button'),
+        promoCodeInput: (page: Page) => page.getByTestId('add-promotion-form__input'),
+        // No testid on the error message itself — scoped to the stable
+        // add-promotion-form container, asserted via toContainText rather
+        // than used as a locate-and-click target.
+        promoCodeForm: (page: Page) => page.getByTestId('add-promotion-form')
+    },
+
+    // VERIFIED live (staging, 2026-07-31) end-to-end through a real
+    // completed order (Global Payments hosted fields).
+    CheckoutPage: {
+        // VERIFIED live: reaching /checkout/sign-in while already logged in
+        // (depends on which basket entry point was used) shows a "You're
+        // signed in as <email> — Continue" confirmation instead of the
+        // guest/existing-customer choice — same convention as Insinkerator.
+        loggedInSignInContinueButton: (page: Page) => page.getByTestId('checkout-sign-in-content__continue'),
+        loggedInAddressOptions: (page: Page) => page.locator('[data-testid="checkout-select-address__addresses"] [data-testid^="radio-select_option"]'),
+        loggedInAddressContinueButton: (page: Page) => page.getByTestId('checkout-select-address__continue-button'),
+        deliveryMethodRadioGroup: (page: Page) => page.locator('[data-testid^="radio-select_option-"]'),
+        deliveryMethodContinueButton: (page: Page) => page.getByTestId('delivery-methods__continue-button'),
+        deliveryPhoneInput: (page: Page) => page.getByTestId('delivery-content__form-telephone'),
+        deliveryContinueButton: (page: Page) => page.getByTestId('delivery-content__form-continue-button'),
+        // VERIFIED live: on the billing step, this checkbox is present for
+        // BOTH guest and logged-in checkout on this storefront (unlike
+        // Insinkerator, where logged-in shows a separate address-selection
+        // radio UI instead) — ticking it collapses the form to a read-only
+        // confirmation.
+        billingSameAsDeliveryCheckbox: (page: Page) => page.getByTestId('checkout-address-form__same-as-delivery-address'),
+        billingContinueButton: (page: Page) => page.getByTestId('checkout-billing-content__continue-button'),
+        reviewContent: (page: Page) => page.getByTestId('checkout-review-content'),
+        reviewTermsAndConditionsCheckbox: (page: Page) => page.getByTestId('review-content__terms-and-conditions'),
+        reviewContinueToPaymentButton: (page: Page) => page.getByTestId('review-content__continue-to-payment-account'),
+        payWithCardButton: (page: Page) => page.getByTestId('payment-method-selector__pay-with-card'),
+        // VERIFIED live — Global Payments hosted-field iframes, each with a
+        // stable `name` attribute (more reliable than the id, which embeds
+        // a per-session random token) — preferred over the class-based
+        // parent-container selector per this project's locator convention.
+        globalPaymentsCardNumberFrame: (page: Page) => page.frameLocator('iframe[name="card-number"]'),
+        globalPaymentsCardExpirationFrame: (page: Page) => page.frameLocator('iframe[name="card-expiration"]'),
+        globalPaymentsCardCvvFrame: (page: Page) => page.frameLocator('iframe[name="card-cvv"]'),
+        globalPaymentsCardHolderNameFrame: (page: Page) => page.frameLocator('iframe[name="card-holder-name"]'),
+        globalPaymentsSubmitFrame: (page: Page) => page.frameLocator('iframe[name="submit"]')
+    },
+
+    // VERIFIED live (staging, 2026-07-31) through a real completed order.
+    // The account order-detail page reuses the exact same
+    // "orders-details__*" testids as the checkout thank-you page.
+    CheckoutSuccessPage: {
+        orderReference: (page: Page) => page.getByTestId('orders-details__reference'),
+        orderConfirmationEmail: (page: Page) => page.getByTestId('orders-details__email')
     },
 
     // VERIFIED live (staging, 2026-07-31) on /category/general-parts-pto-driveline-components.
