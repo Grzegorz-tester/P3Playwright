@@ -22,7 +22,7 @@ export const kooltech = {
 };
 export const insinkerator = {
   accountTestUser_1: {
-    email: "grzegorz.hajduk@velstar.co.uk",
+    email: "grzegorz.hajduk+insinkeratorEU_automation@velstar.co.uk",
     password: "Testing123!",
   },
 };

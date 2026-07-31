@@ -27,12 +27,13 @@ import { selectCountryOnFreshLoad } from '../../utils/countrySelector'
  * the real scroll state and asserts whichever behaviour is actually
  * correct for it.
  *
- * NOT FULLY COVERED - CONFIRMED UNRELIABLE: the image zoom lightbox opens
- * reliably (worked around a real sticky-header z-index bug with
- * force:true), but closing it was NOT reliable via Escape, clicking the
- * zoomed image, clicking outside it, or its own (non-visible) "Minimize
- * image" button across repeated attempts. Only opening is tested - see
- * InsinkeratorPDPage.openImageZoom(). Worth a UI ticket.
+ * CORRECTED (staging, 2026-07-31): the image zoom lightbox opens
+ * reliably (still working around a real sticky-header z-index bug with
+ * force:true). Closing it was previously confirmed unreliable via any
+ * method - retested live and its own "Minimize image" button now closes
+ * it reliably with a genuine (non-forced) click. Both opening and closing
+ * are now tested - see InsinkeratorPDPage.openImageZoom() /
+ * closeImageZoom().
  */
 test.describe('PDP Content & Navigation (Portugal)', () => {
     test.beforeEach(async ({ page, homePage }) => {
@@ -91,12 +92,17 @@ test.describe('PDP Content & Navigation (Portugal)', () => {
         })
     })
 
-    test('Expand image opens the zoom lightbox', async ({
+    test('Expand image opens and closes the zoom lightbox', async ({
         productDetailPage,
     }) => {
         await test.step(`Open the image zoom lightbox`, async () => {
             console.log(`[STEP] Open the image zoom lightbox`)
             await productDetailPage.openImageZoom()
+        })
+
+        await test.step(`Close the image zoom lightbox`, async () => {
+            console.log(`[STEP] Close the image zoom lightbox`)
+            await productDetailPage.closeImageZoom()
         })
     })
 })

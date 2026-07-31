@@ -13,17 +13,14 @@ import { selectCountryOnFreshLoad } from '../../utils/countrySelector'
  * so empty/malformed submissions are asserted via the input's own validity
  * state, not a rendered error locator.
  *
- * KNOWN BLOCKER (confirmed live, reproduced twice with different valid
- * emails): submitting a genuinely valid email currently always returns a
- * backend error - "Form Field with uniqueString email-1 could not be
- * found." - a CRM/form-builder field-mapping misconfiguration on staging,
- * the same category of gap as the checkout payment-provider issue in
- * logged-in-purchase-journey.test.ts. No success state is reachable right now, so
- * this test asserts the CURRENT (broken) behaviour rather than a success
- * state it can't observe.
- * TODO(INSINKERATOR): once the backend field mapping is fixed, extend
- * InsinkeratorHomePage.assertValidNewsletterEmailReturnsResponse() to
- * assert the real success confirmation instead of newsletterAlert.
+ * CORRECTED (staging, 2026-07-31): submitting a genuinely valid email
+ * used to always return a backend error - "Form Field with uniqueString
+ * email-1 could not be found." - a CRM/form-builder field-mapping
+ * misconfiguration, the same category of gap as the checkout
+ * payment-provider issue that was also fixed (see
+ * logged-in-purchase-journey.test.ts). Retested live and it now shows a
+ * real success confirmation ("Thank you for subscribing to our
+ * newsletter.") through the same alert element instead.
  */
 test.describe('Footer Newsletter Sign-up (Portugal)', () => {
     test('User can submit the newsletter form, which validates email input and surfaces a response', async ({
@@ -53,8 +50,8 @@ test.describe('Footer Newsletter Sign-up (Portugal)', () => {
             await homePage.assertMalformedNewsletterEmailIsRejected('not-an-email')
         })
 
-        await test.step(`Submitting a well-formed email returns a response`, async () => {
-            console.log(`[STEP] Submitting a well-formed email returns a response`)
+        await test.step(`Submitting a well-formed email shows a success confirmation`, async () => {
+            console.log(`[STEP] Submitting a well-formed email shows a success confirmation`)
             await homePage.assertValidNewsletterEmailReturnsResponse(validEmail)
         })
     })

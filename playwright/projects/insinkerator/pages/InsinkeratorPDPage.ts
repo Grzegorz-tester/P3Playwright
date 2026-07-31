@@ -45,6 +45,7 @@ export class InsinkeratorPDPage extends ProductDetailPage {
     readonly comparisonTableViewProductLinks = InsinkeratorObjects.ProductComparisonTable.viewProductLinks(this.page);
     readonly imageExpandButton = InsinkeratorObjects.ProductImageZoom.expandButton(this.page);
     readonly imageZoomModal = InsinkeratorObjects.ProductImageZoom.modalContent(this.page);
+    readonly imageZoomCloseButton = InsinkeratorObjects.ProductImageZoom.closeButton(this.page);
 
     // NOTE: unlike Kooltech, there is no visible quantity input on this PDP
     // (confirmed absent) — quantityToBuy is accepted for interface
@@ -205,12 +206,19 @@ export class InsinkeratorPDPage extends ProductDetailPage {
     // CONFIRMED SITE BUG: see ProductImageZoom note in objects.ts — a
     // sticky header intercepts pointer events at this button's position;
     // force:true is the same workaround already used for
-    // HomePage.chooseMenuCategory. Only opening is exercised — see the
-    // "unreliable to close" note in objects.ts for why closing isn't
-    // asserted on.
+    // HomePage.chooseMenuCategory.
     async openImageZoom(): Promise<void> {
         await this.imageExpandButton.first().click({ force: true })
         await expect(this.imageZoomModal.locator('visible=true').first()).toBeVisible({ timeout: 15000 })
+    }
+
+    // CORRECTED (staging, 2026-07-31): closing this modal was earlier
+    // confirmed unreliable via any method. Retested live and the
+    // "Minimize image" button now closes it reliably with a genuine
+    // (non-forced) click.
+    async closeImageZoom(): Promise<void> {
+        await this.imageZoomCloseButton.click()
+        await expect(this.imageZoomModal.locator('visible=true').first()).toBeHidden({ timeout: 15000 })
     }
 
     /**
@@ -235,16 +243,14 @@ export class InsinkeratorPDPage extends ProductDetailPage {
     }
 
     /**
-     * TODO(INSINKERATOR): UNRELIABLE — see the WhereToBuy note in
-     * objects.ts. This modal opened successfully once during exploration
-     * but failed to open on every subsequent attempt in the same
-     * session, with no error and no network request fired. Treat this
-     * method as best-effort/known-flaky until root-caused; consider
-     * wrapping calls to it in a retry, or skipping/soft-asserting on
-     * failure rather than hard-failing a whole spec over it.
+     * CONFIRMED SITE BUG (staging, 2026-07-31) — see the WhereToBuy note
+     * in objects.ts. The button is disabled on every attempt (confirmed
+     * on two different products), so the modal cannot be opened by any
+     * method today. Asserts today's actual (disabled) behaviour rather
+     * than attempting an open that cannot succeed.
      */
-    async openWhereToBuyModal(): Promise<void> {
-        await this.whereToBuyOpenButton.click()
-        await expect(this.whereToBuyModalHeading).toBeVisible({ timeout: 15000 })
+    async validateWhereToBuyButtonIsDisabled(): Promise<void> {
+        await expect(this.whereToBuyOpenButton).toBeVisible({ timeout: 30000 })
+        await expect(this.whereToBuyOpenButton).toBeDisabled()
     }
 }

@@ -21,29 +21,30 @@ import { selectCountryOnFreshLoad } from '../../utils/countrySelector'
  *   result count to exactly match that facet's own advertised count.
  * - Load more works correctly: appends the next page of results.
  *
- * CONFIRMED SITE BUG: sorting does NOT work. Selecting a sort option (e.g.
- * "Price: Low to High") closes the Filter & Sort dialog immediately, but
- * never actually changes the result order, and re-opening the dialog shows
- * "Relevance" selected again. Reproduced consistently. This test asserts
- * TODAY's actual (broken) behaviour rather than pretending sorting works -
- * see the TODO on InsinkeratorProductListPage.selectSortByPriceLowToHighAndValidateCurrentBehaviour().
- * Worth raising as a UI ticket; a real fix should surface as a failing
- * assertion here, prompting an update to check real price ordering.
+ * CORRECTED (staging, 2026-07-27): sorting was earlier confirmed broken
+ * (selecting "Price: Low to High" reverted to "Relevance" with no order
+ * change). Retested live and it now works correctly - the dialog stays
+ * open, the radio stays checked, and results re-render in real ascending
+ * price order. See InsinkeratorProductListPage.selectSortByPriceLowToHighAndValidateAscendingOrder(),
+ * which now asserts the real ascending order instead of the earlier
+ * revert-to-Relevance workaround.
  *
- * CONFIRMED SITE BUG (bigger one): clicking a link INSIDE the header nav
- * drawer does not navigate at all - reproduced identically for BOTH "Shop"
- * and "Our Accessories" via every method tried (plain click, force click,
- * native DOM click, keyboard Enter; ruled out timing with waits up to 5s).
- * See navigateToAccessoriesLandingPage() in InsinkeratorHomePage.ts for the
- * full writeup - this ALSO means logged-in-purchase-journey.test.ts's "Navigate to
- * Shop category" step has been silently not testing category navigation
- * at all (masked by the home page's bestseller carousel sharing the same
- * product-card__name testid). Worth a UI ticket and revisiting that test
- * separately. This spec verifies the nav link's wiring (visible, correct
- * href) without relying on the broken click, then navigates directly.
+ * CORRECTED (staging, 2026-07-31): clicking a link inside the header nav
+ * drawer was earlier confirmed completely broken for BOTH "Shop" and "Our
+ * Accessories" (reproduced via plain click, force click, native DOM
+ * click, and keyboard Enter). Retested live and it now works correctly -
+ * "Our Accessories" has children, so it expands the drawer to a tier-2
+ * "View All" view rather than navigating on the first click; "Shop" (a
+ * leaf category) navigates directly. See navigateToAccessoriesLandingPage()
+ * in InsinkeratorHomePage.ts, which now performs the real click-through
+ * flow instead of the earlier href-check-then-page.goto() workaround. This
+ * also means logged-in-purchase-journey.test.ts's "Navigate to Shop
+ * category" step - previously silently not testing real category
+ * navigation, masked by the home page's bestseller carousel sharing the
+ * same product-card__name testid - is now a genuine navigation test too.
  */
 test.describe('Accessories PLP (Portugal)', () => {
-    test('User can filter, attempt to sort, load more, and reach the correct PDP', async ({
+    test('User can filter, sort, load more, and reach the correct PDP', async ({
         page,
         homePage,
         productListPage,
@@ -68,9 +69,9 @@ test.describe('Accessories PLP (Portugal)', () => {
             await productListPage.applyFirstFacetFilterAndValidate()
         })
 
-        await test.step(`Attempt to sort by price (known site bug - see file header)`, async () => {
-            console.log(`[STEP] Attempt to sort by price (known site bug - see file header)`)
-            await productListPage.selectSortByPriceLowToHighAndValidateCurrentBehaviour()
+        await test.step(`Sort by price and verify ascending order`, async () => {
+            console.log(`[STEP] Sort by price and verify ascending order`)
+            await productListPage.selectSortByPriceLowToHighAndValidateAscendingOrder()
         })
 
         await test.step(`Load more results`, async () => {

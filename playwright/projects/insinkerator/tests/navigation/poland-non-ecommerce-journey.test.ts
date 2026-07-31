@@ -12,15 +12,16 @@ import { selectCountryOnFreshLoad } from '../../utils/countrySelector'
  * as opposed to Portugal (hasEcom: true), which is the ecommerce-enabled
  * country used in logged-in-purchase-journey.test.ts.
  *
- * STOPS short of asserting the "Where to buy" modal's actual content.
- * That modal opened successfully once during exploration (showing
- * "Distributors in your country:" with dummy contact details), but
- * reliably failed to open on every later attempt in the same session —
- * same product, same country, both logged in and logged out — with no
- * console error and no network request fired. This looks like genuine
- * intermittent flakiness (consistent with other flaky behaviour seen on
- * this staging environment throughout this project) rather than something
- * fixable from the test side. See the WhereToBuy note in objects.ts.
+ * CORRECTED (staging, 2026-07-31): the "Where to buy" modal was
+ * previously documented as intermittently failing to open. Re-checked and
+ * the failure mode has changed to something worse but more deterministic
+ * - the button itself is now DISABLED on every attempt, confirmed on two
+ * different products, on a fresh page load, and after waiting several
+ * seconds for it to settle. It never becomes enabled, so the modal is
+ * unreachable by any method today. This spec now asserts that real,
+ * consistently-reproducible (disabled) state instead of leaving the step
+ * commented out. See the WhereToBuy note in objects.ts - worth a UI
+ * ticket.
  */
 test.describe('Non-Ecommerce Country Journey (Poland)', () => {
     test('User sees Where to buy instead of ecommerce elements on the PDP', async ({
@@ -46,14 +47,9 @@ test.describe('Non-Ecommerce Country Journey (Poland)', () => {
             await productDetailPage.validateNonEcommercePDP()
         })
 
-        // TODO(INSINKERATOR): re-enable once the Where to buy modal's
-        // reliability is root-caused. Left commented rather than deleted,
-        // since the underlying method (openWhereToBuyModal) and locators
-        // are already in place for whoever picks this up next.
-        //
-        // await test.step(`Open Where to buy modal...`, async () => {
-        //     console.log(`[STEP] Open Where to buy modal...`)
-        //     await productDetailPage.openWhereToBuyModal()
-        // })
+        await test.step(`Confirm the Where to buy button is currently disabled (known site bug)`, async () => {
+            console.log(`[STEP] Confirm the Where to buy button is currently disabled (known site bug)`)
+            await productDetailPage.validateWhereToBuyButtonIsDisabled()
+        })
     })
 })

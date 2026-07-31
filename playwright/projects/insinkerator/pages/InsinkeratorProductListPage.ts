@@ -68,21 +68,42 @@ export class InsinkeratorProductListPage extends AbstractProductListPage {
         await expect(this.hitCount).toHaveText(`(${expectedCount})`, { timeout: 15000 })
     }
 
-    // CONFIRMED SITE BUG (staging, 2026-07-22, reproduced twice with the
-    // cookie banner cleared): selecting a sort option — here, "Price: Low
-    // to High" at index 1 — does NOT persist or change result order. The
-    // dialog closes immediately on selection, and re-opening it shows
-    // "Relevance" (index 0) checked again with no change to the product
-    // order at all. This asserts TODAY's actual (broken) behaviour so a
-    // real fix surfaces as a needed test update instead of silently
-    // continuing to pass.
-    // TODO(INSINKERATOR): once fixed, assert real ascending price order
-    // across productCardPrice instead of the current revert-to-Relevance
-    // check.
-    async selectSortByPriceLowToHighAndValidateCurrentBehaviour(): Promise<void> {
+    private parsePrice(text: string): number {
+        const match = text.match(/([\d.,]+)\s*€/)
+        if (!match) {
+            throw new Error(`Could not parse a price out of "${text}"`)
+        }
+        return parseFloat(match[1].replace(/\./g, '').replace(',', '.'))
+    }
+
+    // CORRECTED (staging, 2026-07-27): sorting was earlier confirmed
+    // broken (selecting "Price: Low to High" reverted to "Relevance" with
+    // no order change, dialog closing immediately on selection). Retested
+    // live and it now works correctly — the dialog stays open, the radio
+    // stays checked, and results re-render in real ascending price order.
+    // Asserts that real ascending order across the current page of
+    // results (productCardPrice — confirmed no hidden mobile/desktop
+    // duplicate here, one visible price per card) rather than the earlier
+    // revert-to-Relevance workaround.
+    //
+    // CONFIRMED live (staging, 2026-07-27): re-sorting an already-filtered
+    // result set briefly clears and re-renders the grid before settling
+    // back to the same "showing X of Y" count (only the order changes, not
+    // the count). Waiting for currentItemsCount to return to its
+    // pre-sort value is a real behavioural guarantee (sort must not drop
+    // or add results) that also happens to be the correct settle signal
+    // before interacting with Load More — without it, loadMoreAndValidate()
+    // can read/click mid re-render and see no change.
+    async selectSortByPriceLowToHighAndValidateAscendingOrder(): Promise<void> {
+        const expectedCount = await this.currentItemsCount.textContent()
         await this.sortByOptions.nth(1).click()
-        await this.openFilterAndSortDrawer()
-        await expect(this.sortByOptions.nth(0)).toHaveAttribute('aria-checked', 'true')
+        await expect(this.sortByOptions.nth(1)).toHaveAttribute('aria-checked', 'true', { timeout: 15000 })
+        await expect(this.currentItemsCount).toHaveText(expectedCount ?? '', { timeout: 15000 })
+        const priceTexts = await this.productCardPrice.allTextContents()
+        const prices = priceTexts.map(text => this.parsePrice(text))
+        for (let i = 1; i < prices.length; i++) {
+            expect(prices[i]).toBeGreaterThanOrEqual(prices[i - 1])
+        }
         await this.page.keyboard.press('Escape')
         await expect(this.facetCheckboxes.first()).toBeHidden({ timeout: 15000 })
     }
@@ -108,12 +129,25 @@ export class InsinkeratorProductListPage extends AbstractProductListPage {
         return expectedName
     }
 
+    // CORRECTED (staging, 2026-07-31): this method was unreachable until
+    // the header nav drawer navigation bug (see
+    // InsinkeratorHomePage.chooseMenuCategory()) was fixed, so its two
+    // assumptions had never actually been exercised live on /category/shop:
+    // (1) it clicked productNameLink (product-card__name), but that
+    // renders as a plain, non-clickable <h5> here too — same as already
+    // documented for /category/accessories — productCardLink (the actual
+    // <a>, wrapping the image) is what navigates; (2) it then asserted the
+    // clicked locator's own count dropped to 0 as the "left this page"
+    // signal, which breaks anyway once real navigation lands on a PDP
+    // that renders its own recommendations carousel sharing the same
+    // testid. Asserting the URL genuinely changed to a PDP is the correct
+    // signal.
     async clickOnFirstItemToProceedToPDP(): Promise<void> {
-        const firstProduct = this.productNameLink.first()
+        const firstProduct = this.productCardLink.first()
         await expect(firstProduct).toBeVisible({ timeout: 15000 })
         await firstProduct.focus()
         await firstProduct.click()
-        await expect(firstProduct).toHaveCount(0, { timeout: 30000 })
+        await expect(this.page).toHaveURL(/\/products\//, { timeout: 30000 })
     }
 
     async clickOnAProductToProceedToPDP(productName: string): Promise<void> {

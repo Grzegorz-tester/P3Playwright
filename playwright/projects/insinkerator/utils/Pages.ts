@@ -8,6 +8,7 @@ import { InsinkeratorBasketPage } from '../pages/InsinkeratorBasketPage'
 import { InsinkeratorCheckoutPage } from '../pages/InsinkeratorCheckoutPage'
 import { InsinkeratorCheckoutSuccessPage } from '../pages/InsinkeratorCheckoutSuccessPage'
 import { InsinkeratorResetPasswordPage } from '../pages/InsinkeratorResetPasswordPage'
+import { InsinkeratorSitemapPage } from '../pages/InsinkeratorSitemapPage'
 
 const test = baseTest.extend<{
     loginPage: InsinkeratorLoginPage
@@ -19,6 +20,7 @@ const test = baseTest.extend<{
     checkoutPage: InsinkeratorCheckoutPage
     checkoutSuccessPage: InsinkeratorCheckoutSuccessPage
     resetPasswordPage: InsinkeratorResetPasswordPage
+    sitemapPage: InsinkeratorSitemapPage
 }>({
     loginPage: async ({ page }, use) => {
         await use(new InsinkeratorLoginPage(page))
@@ -46,6 +48,9 @@ const test = baseTest.extend<{
     },
     checkoutSuccessPage: async ({ page }, use) => {
         await use(new InsinkeratorCheckoutSuccessPage(page))
+    },
+    sitemapPage: async ({ page }, use) => {
+        await use(new InsinkeratorSitemapPage(page))
     },
 })
 

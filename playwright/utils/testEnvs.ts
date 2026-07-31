@@ -1,14 +1,14 @@
 interface Envs {
   [key: string]: {
     stage: {
-      url: string;
-      api: string;
-    };
+      url: string,
+      api: string,
+    },
     prod?: {
-      url: string;
-      api: string;
-    };
-  };
+      url: string,
+      api: string,
+    },
+  },
 }
 
 export const envs: Envs = {

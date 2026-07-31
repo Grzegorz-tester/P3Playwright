@@ -8,15 +8,27 @@ import { insinkerator } from '@utils/testUsers'
  * Logged-in counterpart to guest-purchase-journey.test.ts. Covers: home ->
  * login -> category -> PDP -> add to basket -> basket -> checkout (saved
  * address selection) -> delivery method + phone -> billing -> review &
- * payment.
+ * payment -> a real CyberSource payment -> the thank-you page.
  *
- * VERIFIED PASSING end-to-end (as of this session) through to
- * verifyReachedReviewAndPayment(). Does NOT complete a real purchase —
- * no payment provider was configured for this country/order on staging
- * at time of writing ("Payment provider not valid for this order").
- * Once that's fixed, extend this test with a final step calling
- * checkoutPage.payOnAccount() and asserting the thank-you page
- * (CheckoutSuccessPage locators are still TODOs in objects.ts).
+ * CORRECTED (staging, 2026-07-31): this used to stop at
+ * verifyReachedReviewAndPayment() because no payment provider was
+ * configured for this country/order on staging at the time ("Payment
+ * provider not valid for this order"). Retested live and the same
+ * "Checkout With Card" CyberSource widget now renders here as it does for
+ * guest checkout (see guest-purchase-journey.test.ts) - confirmed with a
+ * real completed test-mode order. Like the guest test, this deliberately
+ * completes a real order every run, so keep it to one run per suite
+ * execution.
+ *
+ * Also CORRECTED as a side effect of fixing the header nav drawer bug
+ * (see InsinkeratorHomePage.chooseMenuCategory()): the "Navigate to Shop
+ * category" step below used to silently not test real category
+ * navigation at all (masked by the home page's bestseller carousel
+ * sharing the product-card__name testid with the category PLP). It's a
+ * genuine navigation test now, and "Choose first product and add to
+ * basket" was corrected to click productCardLink (the actual PDP anchor)
+ * instead of productNameLink (a plain, non-clickable <h5> on this
+ * category) - see InsinkeratorProductListPage.clickOnFirstItemToProceedToPDP().
  *
  * Logs in via the UI directly (loginPage), not via auth.setup.ts's API
  * call — that setup file's /auth endpoint has never been confirmed
@@ -32,6 +44,7 @@ test.describe('Purchase Journey (Logged-in, Portugal)', () => {
         productDetailPage,
         basketPage,
         checkoutPage,
+        checkoutSuccessPage,
     }) => {
         const user = Object.assign({}, insinkerator.accountTestUser_1)
 
@@ -87,8 +100,19 @@ test.describe('Purchase Journey (Logged-in, Portugal)', () => {
             await checkoutPage.verifyReachedReviewAndPayment()
         })
 
-        // TODO(INSINKERATOR): extend here once a payment provider is
-        // configured — call checkoutPage.payOnAccount() and assert the
-        // thank-you page (CheckoutSuccessPage locators are still TODOs).
+        await test.step(`Pay with a CyberSource test card...`, async () => {
+            console.log(`[STEP] Pay with a CyberSource test card...`)
+            await checkoutPage.payWithCyberSourceTestCard({
+                number: '4111111111111111',
+                expiryMonth: '12',
+                expiryYear: '30',
+                securityCode: '123',
+            })
+        })
+
+        await test.step(`Verify the thank-you page shows the order confirmation...`, async () => {
+            console.log(`[STEP] Verify the thank-you page shows the order confirmation...`)
+            await checkoutSuccessPage.verifyThankYouPage(user.email)
+        })
     })
 })

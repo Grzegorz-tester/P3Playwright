@@ -5,20 +5,22 @@ import { insinkerator } from '@utils/testUsers'
 /**
  * ACCOUNT ORDERS (Logged-in, Portugal)
  * ======================================
- * Covers: /account/orders reaching its EMPTY state - column headers
- * (Order Number, Placed On, Amount), the filter controls (Order No.,
- * Date Range, Total), and the "No results." row.
+ * Covers: /account/orders showing a real order - column headers (Order
+ * Number, Placed On, Amount), the filter controls (Order No., Date Range,
+ * Total), the most recent order row, and its order detail page.
  *
- * NOT COVERED - BLOCKED: accountTestUser_1 has ZERO real orders on
- * staging. No automated test can populate real order history, since no
- * payment provider is configured on staging - the exact same blocker
- * already documented on logged-in-purchase-journey.test.ts ("Payment
- * provider not valid for this order"). Viewing a real order row or its
- * details is therefore untestable until that's fixed; this spec only
- * covers what's actually reachable today.
+ * CORRECTED (staging, 2026-07-31): accountTestUser_1 used to have ZERO
+ * real orders on staging (no payment provider was configured, so no
+ * automated test could complete a real purchase - the exact same
+ * blocker previously documented on logged-in-purchase-journey.test.ts,
+ * "Payment provider not valid for this order"). That's fixed now -
+ * logged-in-purchase-journey.test.ts completes a real order every run,
+ * so this account permanently has at least one real order from now on.
+ * This spec now covers the real order row and its detail page instead
+ * of only the (now unreachable) empty state.
  */
 test.describe('Account Orders (Logged-in, Portugal)', () => {
-    test('User can view the empty Orders page', async ({
+    test('User can view a real order in the Orders page', async ({
         page,
         homePage,
         loginPage,
@@ -38,10 +40,22 @@ test.describe('Account Orders (Logged-in, Portugal)', () => {
             await loginPage.loginToApplication(user.email, user.password)
         })
 
-        await test.step(`Navigate to the Orders page and validate its empty state`, async () => {
-            console.log(`[STEP] Navigate to the Orders page and validate its empty state`)
+        await test.step(`Navigate to the Orders page and validate a real order is listed`, async () => {
+            console.log(`[STEP] Navigate to the Orders page and validate a real order is listed`)
             await accountPage.navigateToOrdersPage()
-            await accountPage.validateOrdersPageEmptyState()
+            await accountPage.validateOrdersPageHasRealOrder()
+        })
+
+        let orderReference: string
+
+        await test.step(`Open the most recent order`, async () => {
+            console.log(`[STEP] Open the most recent order`)
+            orderReference = await accountPage.openMostRecentOrder()
+        })
+
+        await test.step(`Validate the order detail page`, async () => {
+            console.log(`[STEP] Validate the order detail page`)
+            await accountPage.validateOrderDetailsPage(orderReference, user.email)
         })
     })
 })

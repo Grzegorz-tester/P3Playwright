@@ -63,19 +63,52 @@ export const InsinkeratorObjects = {
         // state (element.validity / validationMessage), not a rendered
         // error message in the DOM. Assert against that instead of a locator.
         //
-        // IMPORTANT — CONFIRMED LIVE, reproduced twice with two different
-        // well-formed emails: submitting a genuinely VALID email currently
-        // always surfaces this alert instead of a success confirmation —
-        // "Form Field with uniqueString email-1 could not be found." This
-        // is a backend/CRM form-field-mapping misconfiguration on staging
-        // (same category of gap as CheckoutPage.reviewPaymentProviderErrorAlert
-        // — a real, current site bug, not test flakiness). No success-state
-        // testid has been observed and none is documented here as a result.
-        // TODO(INSINKERATOR): once the backend field mapping is fixed,
-        // capture the real success-state locator and tighten the "submit a
-        // valid email" test assertion to check for success instead of this
-        // alert.
-        newsletterAlert: (page: Page) => page.getByTestId('newsletter-form__alert')
+        // CORRECTED (staging, 2026-07-31): submitting a genuinely valid
+        // email used to always surface this SAME alert testid as a
+        // backend/CRM error ("Form Field with uniqueString email-1 could
+        // not be found") instead of a success confirmation. Retested live
+        // and it now shows a real success message ("Success — Thank you
+        // for subscribing to our newsletter.") through this same testid —
+        // the component reuses one alert element for both outcomes, only
+        // the content differs.
+        newsletterAlert: (page: Page) => page.getByTestId('newsletter-form__alert'),
+        // VERIFIED — present in the stripped/bottom footer bar (present on
+        // every page). CONFIRMED a real automated run hit the OneTrust
+        // cookie-consent banner intercepting this click — the FIRST
+        // interaction in this whole project to touch anything at the
+        // bottom of the page where that banner renders. No testid on the
+        // banner's "ACCEPT ALL COOKIES" button, but it has a stable,
+        // non-text id (OneTrust's own fixed element id, not app markup).
+        sitemapLink: (page: Page) => page.getByTestId('stripped-footer__sitemap-link'),
+        cookieBannerAcceptButton: (page: Page) => page.locator('#onetrust-accept-btn-handler')
+    },
+
+    // VERIFIED — /sitemap has 5 real categories (staging, 2026-07-24):
+    // products, categories, content, locations, product images. Tab links
+    // each have a STABLE, unique href (/sitemap/<category>) — no
+    // data-testid on them or on the per-category item links below, but
+    // href is a solid, non-text anchor per this project's locator
+    // preference order (testid > id > href > last-resort text).
+    SitemapPage: {
+        wrapper: (page: Page) => page.getByTestId('sitemaps'),
+        heading: (page: Page) => page.locator('[data-testid="sitemaps"] h1'),
+        productsTabLink: (page: Page) => page.locator('[data-testid="sitemaps"] a[href="/sitemap/products"]'),
+        categoriesTabLink: (page: Page) => page.locator('[data-testid="sitemaps"] a[href="/sitemap/categories"]'),
+        contentTabLink: (page: Page) => page.locator('[data-testid="sitemaps"] a[href="/sitemap/content"]'),
+        locationsTabLink: (page: Page) => page.locator('[data-testid="sitemaps"] a[href="/sitemap/locations"]'),
+        productImagesTabLink: (page: Page) => page.locator('[data-testid="sitemaps"] a[href="/sitemap/product_images"]'),
+        // VERIFIED — the actual per-category item links. No testid/id
+        // exists, and hrefs are entirely dynamic (real product/category/
+        // content page paths, or raw CDN image URLs for "product images")
+        // — so there's no stable per-item anchor. Excluding the 5 known
+        // /sitemap/* tab hrefs (a stable, non-text href-prefix check, NOT
+        // a text-content match) reliably isolates the real item links
+        // regardless of category — confirmed across all 5. CONFIRMED a
+        // real automated run hit a HIDDEN duplicate as the DOM-order
+        // ".first()" match (same mobile/desktop hidden-duplicate pattern
+        // documented elsewhere in this file, e.g.
+        // ProductDetailPage.addToBasketButton) — ":visible" filters it out.
+        categoryItemLinks: (page: Page) => page.locator('[data-testid="sitemaps"] a:not([href^="/sitemap/"]):visible')
     },
 
     HomePage: {
@@ -83,25 +116,45 @@ export const InsinkeratorObjects = {
         brandBar: (page: Page) => page.getByTestId('brand-bar'),
         // VERIFIED — categories are numbered drawer links, not named per-category
         // testids. Filtering by visible text is unavoidable here since the
-        // testid itself (link-0, link-1, ...) carries no semantic meaning and
-        // the order isn't guaranteed stable long-term.
-        category: (categoryName: string) => (page: Page) =>
-            page.locator('[data-testid^="navigation-drawer-sheet__link-"]').filter({ hasText: categoryName }),
-        // VERIFIED
-        menuNavBarButton: (page: Page) => page.getByTestId('brand-bar__menu-button')
-        // CONFIRMED ABSENT: no "view all" link exists on this project's
-        // drawer (unlike Kooltech) — category links navigate straight to
-        // the PLP. viewAllButton removed accordingly.
+        // testid itself (current-tier-link-0, current-tier-link-1, ...)
+        // carries no semantic meaning and the order isn't guaranteed stable
+        // long-term.
         //
-        // KNOWN SITE BUG (confirmed via elementFromPoint on a real run):
-        // the drawer's own animated backdrop overlay (class "fixed
-        // inset-0 z-50 bg-black/80") shares the exact same z-index (50)
-        // as the sticky <header> containing the category links, so a CSS
-        // stacking tie resolved by DOM order lets the backdrop paint on
-        // top and intercept clicks meant for the links underneath. This
-        // affects real mouse clicks, not just automation — worth raising
-        // as a UI ticket. InsinkeratorHomePage.chooseMenuCategory() works
-        // around it with a forced click.
+        // CORRECTED (staging, 2026-07-31): this used to target
+        // "navigation-drawer-sheet__link-*", which was CONFIRMED to be a
+        // DIFFERENT element from what the open drawer actually shows —
+        // that testid belongs to the underlying always-present desktop nav
+        // bar, which sits BEHIND the drawer's modal backdrop once opened
+        // (elementFromPoint at that link's exact coordinates resolves to
+        // the backdrop, not the link — correct modal behaviour, not a
+        // bug). The drawer panel's own, genuinely on-screen links carry a
+        // DIFFERENT, separate testid prefix — "current-tier-link-*" — and
+        // ARE reliably clickable with a plain click. This was a test
+        // locator bug, not a site bug: the "clicking a nav drawer link
+        // does not navigate" finding documented elsewhere in this project
+        // was targeting the wrong element all along.
+        category: (categoryName: string) => (page: Page) =>
+            page.locator('[data-testid^="navigation-drawer-sheet__current-tier-link-"]').filter({ hasText: categoryName }),
+        // VERIFIED
+        menuNavBarButton: (page: Page) => page.getByTestId('brand-bar__menu-button'),
+        // CORRECTED (staging, 2026-07-31): a "View All" link now exists
+        // for any top-level drawer category that has children (e.g. "Our
+        // Accessories") — clicking that category expands it into a tier-2
+        // view (its own sub-category links plus this "View All" link)
+        // rather than navigating straight to the PLP. Confirmed live: a
+        // leaf category with no children (e.g. "Shop") still navigates
+        // directly on the first click, no tier-2/View All involved. The
+        // testid stably embeds the destination slug.
+        viewAllLink: (categorySlug: string) => (page: Page) => page.getByTestId(`navigation-drawer-sheet__view-all-link-${categorySlug}`)
+        // CORRECTED (staging, 2026-07-31): the backdrop DOES still
+        // intercept clicks on the desktop nav bar's own links while the
+        // drawer is open (confirmed via elementFromPoint — see the
+        // category locator note above) — that part of the original
+        // finding was accurate. What was wrong was WHICH element the test
+        // was clicking: the drawer panel's own "current-tier-link-*" links
+        // sit on top of the backdrop (as they should) and are reliably
+        // clickable with a plain click. InsinkeratorHomePage.chooseMenuCategory()
+        // no longer needs force:true once it targets the right element.
     },
 
     // VERIFIED — the search DRAWER opened by clicking brand-bar__search-button
@@ -232,15 +285,17 @@ export const InsinkeratorObjects = {
         backToUserFormButton: (page: Page) => InsinkeratorObjects.AccountPage.changePasswordForm(page).getByText('Back to User Form'),
         changePasswordAlert: (page: Page) => page.getByTestId('account-profile__alert'),
 
-        // VERIFIED — /account/orders. accountTestUser_1 genuinely has ZERO
-        // real orders on staging (no payment provider is configured, so no
-        // automated test can complete a real purchase — same gap documented
-        // on logged-in-purchase-journey.test.ts), so only the EMPTY state
-        // is testable today: the column headers, the filter controls, and
-        // the "No results." row. The row has no testid of its own —
-        // last-resort text anchor scoped to the orders content container
-        // (same precedent as BasketPage.promoCodeError elsewhere in this
-        // file).
+        // VERIFIED — /account/orders.
+        //
+        // CORRECTED (staging, 2026-07-31): accountTestUser_1 used to have
+        // ZERO real orders (no payment provider configured — same gap
+        // documented on logged-in-purchase-journey.test.ts), so only the
+        // EMPTY state (column headers, filter controls, "No results." row)
+        // was testable. That's fixed now — logged-in-purchase-journey.test.ts
+        // completes a real order every run, so this account permanently
+        // has at least one order from now on. ordersNoResultsRow is kept
+        // for reference (still accurate for a genuinely fresh account) but
+        // is no longer reachable by this project's own tests.
         ordersPageHeading: (page: Page) => page.getByTestId('account-orders__title'),
         ordersContent: (page: Page) => page.getByTestId('account-orders__content'),
         ordersHeaderRow: (page: Page) => page.getByTestId('account-orders-header-row'),
@@ -248,6 +303,12 @@ export const InsinkeratorObjects = {
         ordersDateRangePicker: (page: Page) => page.getByTestId('account-orders-date-range-picker'),
         ordersTotalAmountFilterInput: (page: Page) => page.getByTestId('account-orders-total-amount-filter'),
         ordersFilterResetButton: (page: Page) => page.getByTestId('account-orders-filter-reset'),
+        // VERIFIED live (staging, 2026-07-31) — rows are numbered
+        // positionally (row-0 is the most recent order), each cell keyed
+        // by its underlying field name, not a generic index.
+        ordersRow: (index: number) => (page: Page) => page.getByTestId(`account-orders-row-${index}`),
+        ordersRowReferenceCell: (index: number) => (page: Page) => page.getByTestId(`account-orders-row-${index}-cell-reference`),
+        ordersRowAmountCell: (index: number) => (page: Page) => page.getByTestId(`account-orders-row-${index}-cell-totalIncTaxAfterDiscount`),
         ordersNoResultsRow: (page: Page) => InsinkeratorObjects.AccountPage.ordersContent(page).getByText('No results.'),
 
         // VERIFIED — on /account/address-book, but ONLY renders once at least
@@ -298,7 +359,34 @@ export const InsinkeratorObjects = {
         // scoped with the SAME per-address-number testid prefix (not a
         // shared/generic modal testid).
         deliveryAddressDeleteConfirmYesButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${addressNumber}__delete-address-yes-button`),
-        deliveryAddressDeleteConfirmNoButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${addressNumber}__delete-address-no-button`)
+        deliveryAddressDeleteConfirmNoButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${addressNumber}__delete-address-no-button`),
+
+        // VERIFIED live (staging, 2026-07-27) — the Billing Addresses card
+        // mirrors the Delivery Addresses card exactly, testid-for-testid
+        // ("address-book-billing__*" instead of "...-delivery__*"),
+        // including the same permanent accountTestUser_1 fixture address
+        // and the same numbered-by-position, not persistent-id, convention.
+        addBillingAddressButton: (page: Page) => page.getByTestId('address-book-billing__add-address-button'),
+
+        // VERIFIED — same "checkout-address-form" testid collision as
+        // deliveryAddressForm above (confirmed live: identical field
+        // testids, no distinguishing wrapper). Delivery is confirmed to
+        // always render first in DOM order, so billing is .last() — safe
+        // even when only one of the two forms is open, since that single
+        // form is then both .first() and .last().
+        billingAddressForm: (page: Page) => page.locator('[data-testid="checkout-address-form"]').last(),
+        billingAddressFirstNameInput: (page: Page) => InsinkeratorObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__first-name'),
+        billingAddressLastNameInput: (page: Page) => InsinkeratorObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__last-name'),
+        billingAddressLine1Input: (page: Page) => InsinkeratorObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__address-line-1'),
+        billingAddressCityInput: (page: Page) => InsinkeratorObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__city'),
+        billingAddressPostcodeInput: (page: Page) => InsinkeratorObjects.AccountPage.billingAddressForm(page).getByTestId('checkout-address-form__postcode'),
+        billingAddressSaveButton: (page: Page) => InsinkeratorObjects.AccountPage.billingAddressForm(page).locator('button[type="submit"]'),
+
+        billingAddressName: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__name`),
+        billingAddressEditButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__edit-address-button`),
+        billingAddressDeleteButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-button`),
+        billingAddressDeleteConfirmYesButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-yes-button`),
+        billingAddressDeleteConfirmNoButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-no-button`)
     },
 
     // VERIFIED — the full results page reached by submitting the header
@@ -535,12 +623,15 @@ export const InsinkeratorObjects = {
         // mobile/desktop duplicate DOES exist here (same pattern as
         // ProductDetailPage.addToBasketButton) — filter by real
         // visibility.
-        // CONFIRMED UNRELIABLE TO CLOSE: neither Escape, clicking the
-        // zoomed image itself, clicking outside it at real coordinates,
-        // nor the (non-visible, screen-reader-only) "Minimize image"
-        // button reliably dismissed this modal across repeated attempts.
-        // Only OPENING is tested here — see InsinkeratorPDPage.openImageZoom().
-        modalContent: (page: Page) => page.locator('[data-rmiz-modal-content]')
+        // CORRECTED (staging, 2026-07-31): closing was earlier confirmed
+        // unreliable via any method (Escape, clicking the zoomed image,
+        // clicking outside it, or the "Minimize image" button). Retested
+        // live and the "Minimize image" button now closes it reliably —
+        // a genuine (non-forced) click on it hides the modal content
+        // element. Did not retest Escape/click-outside since a working
+        // dedicated close button makes those unnecessary to rely on.
+        modalContent: (page: Page) => page.locator('[data-rmiz-modal-content]'),
+        closeButton: (page: Page) => page.getByRole('button', { name: 'Minimize image' })
     },
 
     // VERIFIED (partially) — PDP behaviour on a NON-ecommerce country (e.g.
@@ -552,24 +643,16 @@ export const InsinkeratorObjects = {
         // a 0x0 duplicate exists alongside the real, visible button.
         // :visible + first() resolves to the real one.
         openButton: (page: Page) => page.locator('[data-testid="product-stockists__open"]:visible').first(),
-        // TODO(INSINKERATOR): NOT RELIABLY VERIFIED. Earlier in this
-        // project's exploration, clicking this button DID open a modal
-        // containing "Where to buy" / "Distributors in your country:"
-        // text with dummy contact details ("test test, test, test,
-        // test", a phone number, email, website, and a "Close" button) —
-        // but on repeated attempts later in the same session (same
-        // product, same country, both logged in and out), the modal
-        // reliably failed to open at all, with no console error and no
-        // network request fired. This may be genuine intermittent
-        // flakiness (consistent with other flaky behaviour observed on
-        // this staging environment throughout this project), or may
-        // depend on some state/condition not yet identified (e.g.
-        // geolocation permission, a specific product having distributor
-        // data configured for the currently selected country while
-        // others don't). The modal itself has NO data-testids on any
-        // internal element — confirmed during the one successful open —
-        // so these are last-resort text-based locators, unverified
-        // against a reliably-reproducible open.
+        // CONFIRMED SITE BUG (staging, 2026-07-31, re-checked from an
+        // earlier "unreliable modal" finding): the button itself is now
+        // DISABLED on every attempt — confirmed on two different products
+        // (sink-flange-oil-rubbed-bronze and standard-460), on a genuinely
+        // fresh page load, and after waiting several seconds in case it
+        // was a transient loading state. It never becomes enabled. This is
+        // a different (and more severe) failure mode than the earlier
+        // "modal opened once, then reliably failed to open" finding — the
+        // button can no longer be clicked at all, so the modal is
+        // unreachable by any method today. Worth a UI ticket.
         modalHeading: (page: Page) => page.getByText('Where to buy', { exact: true }),
         modalDistributorsLabel: (page: Page) => page.getByText('Distributors in your country'),
         modalCloseButton: (page: Page) => page.getByRole('button', { name: 'Close' })

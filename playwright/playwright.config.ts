@@ -68,7 +68,7 @@ export default defineConfig({
         //Picks Base Url based on User input
         baseURL: testConfig.getUrl(process.env.PROJECT),
         //Browser Mode
-        headless: false,
+        headless: true,
 
         //Browser height and width
         viewport: { width: 2560, height: 1440 },

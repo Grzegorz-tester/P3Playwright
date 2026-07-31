@@ -18,7 +18,9 @@ import { InsinkeratorObjects } from '../utils/objects'
  *
  * Full verified step order (logged-in): address selection -> delivery
  * method + phone -> billing (same-as-delivery + address confirm) ->
- * review-and-payment.
+ * review-and-payment -> a real CyberSource payment -> the thank-you page
+ * (CORRECTED 2026-07-31 — this used to stop at review-and-payment for the
+ * logged-in flow specifically, see verifyReachedReviewAndPayment() below).
  *
  * IMPORTANT — read countrySelector.ts first. A mandatory "Choose your
  * country" modal appears on every fresh page load and silently blocks
@@ -329,11 +331,15 @@ export class InsinkeratorCheckoutPage extends CheckoutPage {
     }
 
     /**
-     * VERIFIED reachable: confirms the review-and-payment page loaded
-     * with a correct order summary. TODO(INSINKERATOR): payment itself is
-     * currently blocked — see class-level note ("Payment provider not
-     * valid for this order"). This method stops short of actually placing
-     * an order; extend it once placeOrderButton is confirmed to exist.
+     * VERIFIED: confirms the review-and-payment page loaded with a
+     * correct order summary. CORRECTED (staging, 2026-07-31): payment
+     * used to be blocked here for the LOGGED-IN flow specifically
+     * ("Payment provider not valid for this order") even though guest
+     * checkout already worked — retested live and the same "Checkout
+     * With Card" CyberSource widget now renders for logged-in checkout
+     * too. See payWithCyberSourceTestCard() below and
+     * logged-in-purchase-journey.test.ts, which now completes a real
+     * payment from here instead of stopping at this method.
      */
     async verifyReachedReviewAndPayment(): Promise<void> {
         await expect(this.reviewContent).toBeVisible({ timeout: 20000 })

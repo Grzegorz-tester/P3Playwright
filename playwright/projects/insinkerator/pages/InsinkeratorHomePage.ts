@@ -22,6 +22,8 @@ export class InsinkeratorHomePage extends HomePage {
     readonly newsletterSubmitButton = InsinkeratorObjects.Footer.newsletterSubmitButton(this.page);
     readonly newsletterPrivacyPolicyLink = InsinkeratorObjects.Footer.newsletterPrivacyPolicyLink(this.page);
     readonly newsletterAlert = InsinkeratorObjects.Footer.newsletterAlert(this.page);
+    readonly sitemapLink = InsinkeratorObjects.Footer.sitemapLink(this.page);
+    readonly cookieBannerAcceptButton = InsinkeratorObjects.Footer.cookieBannerAcceptButton(this.page);
     readonly searchDrawerOpenButton = InsinkeratorObjects.SearchDrawer.openButton(this.page);
     readonly searchDrawer = InsinkeratorObjects.SearchDrawer.drawer(this.page);
     readonly searchDrawerInput = InsinkeratorObjects.SearchDrawer.searchInput(this.page);
@@ -33,6 +35,25 @@ export class InsinkeratorHomePage extends HomePage {
 
     async validateHomePage(): Promise<void> {
         await expect(this.brandBar).toBeVisible({ timeout: 45000 })
+    }
+
+    // CONFIRMED — a real automated run showed the OneTrust cookie-consent
+    // banner intercepting this click (the first interaction in this whole
+    // project to touch anything at the bottom of the page, where that
+    // banner renders). Dismissing it first only if actually present avoids
+    // a hard dependency on it — some sessions may have already dismissed
+    // it earlier. waitFor({state:'visible'}) genuinely polls, unlike
+    // isVisible() — see the identical gotcha already documented on
+    // InsinkeratorCheckoutPage.chooseDeliveryAddress().
+    async clickSitemapLink(): Promise<void> {
+        const bannerPresent = await this.cookieBannerAcceptButton
+            .waitFor({ state: 'visible', timeout: 5000 })
+            .then(() => true)
+            .catch(() => false)
+        if (bannerPresent) {
+            await this.cookieBannerAcceptButton.click()
+        }
+        await this.sitemapLink.click()
     }
 
     async validateFooterNewsletterForm(): Promise<void> {
@@ -72,13 +93,13 @@ export class InsinkeratorHomePage extends HomePage {
         await expect(this.newsletterAlert).toHaveCount(0)
     }
 
-    // TODO(INSINKERATOR): once the backend field-mapping bug documented on
-    // newsletterAlert in objects.ts is fixed, this should assert a real
-    // success confirmation instead of the current error alert.
+    // CORRECTED (staging, 2026-07-31): the backend field-mapping bug
+    // documented on newsletterAlert in objects.ts is fixed — asserts the
+    // real success confirmation now instead of the earlier CRM error.
     async assertValidNewsletterEmailReturnsResponse(email: string): Promise<void> {
         await this.newsletterEmailInput.fill(email)
         await this.newsletterSubmitButton.click()
-        await expect(this.newsletterAlert).toBeVisible({ timeout: 15000 })
+        await expect(this.newsletterAlert).toContainText('Thank you for subscribing', { timeout: 15000 })
     }
 
     async openSearchDrawer(): Promise<void> {
@@ -152,35 +173,26 @@ export class InsinkeratorHomePage extends HomePage {
         await expect(this.page).toHaveURL(`/search?q=${encodeURIComponent(query)}`, { timeout: 30000 })
     }
 
-    // CONFIRMED SITE BUG (staging, 2026-07-22) — clicking a link INSIDE the
-    // header nav drawer does not navigate away from the current page.
-    // Reproduced consistently for both "Shop" and "Our Accessories" via
-    // every method tried: a plain click (times out — Playwright reports
-    // the SAME backdrop overlay noted in chooseMenuCategory() below
-    // intercepting it), force:true (dispatches at the covered coordinate
-    // anyway — Chrome's own hit-testing still resolves to the backdrop),
-    // a native DOM .click() on the link (bypasses hit-testing entirely and
-    // STILL didn't navigate), and keyboard Enter on a focused link. Waits
-    // up to 5s made no difference, ruling out a timing/animation cause.
-    // This is NOT specific to "Our Accessories" — "Shop" fails identically,
-    // which means chooseMenuCategory()'s existing callers (e.g.
-    // logged-in-purchase-journey.test.ts) have been silently NOT testing category
-    // navigation at all: the home page's "Our Best-sellers" carousel
-    // reuses the exact same product-card__name testid as every category
-    // PLP, so clickOnFirstItemToProceedToPDP() happily proceeds against a
-    // home-page bestseller instead of failing when the drawer click
-    // silently no-ops. Worth a UI ticket, and revisiting those callers
-    // separately. This method verifies the nav link itself is correctly
-    // wired (visible, correct href) without relying on the broken click,
-    // then navigates directly — proving the destination page is reachable
-    // and correct without pretending the click gesture works today.
+    // CORRECTED (staging, 2026-07-31): clicking a link inside the header
+    // nav drawer was earlier confirmed completely broken (reproduced for
+    // both "Shop" and "Our Accessories" via every method tried — plain
+    // click, force click, native DOM click, keyboard Enter). Retested live
+    // and it now works correctly. "Our Accessories" has children, so
+    // clicking it expands the drawer into a tier-2 view with its own
+    // "View All" link (-> /our-accessories) rather than navigating on the
+    // first click — see viewAllLink in objects.ts. This method now
+    // performs the real click-through flow instead of the earlier
+    // href-check-then-page.goto() workaround.
     async navigateToAccessoriesLandingPage(): Promise<void> {
         await expect(this.menuNavBarButton).toBeVisible({ timeout: 30000 })
         await this.menuNavBarButton.click()
         const accessoriesLink = InsinkeratorObjects.HomePage.category('Our Accessories')(this.page)
         await expect(accessoriesLink).toBeVisible({ timeout: 15000 })
-        await expect(accessoriesLink).toHaveAttribute('href', '/our-accessories')
-        await this.page.goto('/our-accessories', { timeout: 45000 })
+        await accessoriesLink.click()
+        const viewAllLink = InsinkeratorObjects.HomePage.viewAllLink('our-accessories')(this.page)
+        await expect(viewAllLink).toBeVisible({ timeout: 15000 })
+        await viewAllLink.click()
+        await expect(this.page).toHaveURL(/\/our-accessories/, { timeout: 30000 })
     }
 
     // The /our-accessories landing page's own "Shop" CTA (-> /category/accessories),
@@ -195,28 +207,22 @@ export class InsinkeratorHomePage extends HomePage {
         await expect(this.page).toHaveURL(/\/category\/accessories/, { timeout: 30000 })
     }
 
+    // CORRECTED (staging, 2026-07-31): this used to force-click the
+    // category link because the drawer's own backdrop overlay shared the
+    // header's z-index and intercepted real clicks (confirmed via
+    // elementFromPoint at the time). Retested live with a genuine
+    // (non-forced) click — the backdrop no longer intercepts it, and the
+    // click correctly navigates. Only safe for LEAF categories (no
+    // children) such as "Shop" used by existing callers — a category with
+    // children instead expands to a tier-2 "View All" view, as
+    // navigateToAccessoriesLandingPage() above now handles.
     async chooseMenuCategory(category: string): Promise<void> {
         this.categoryName = category
         await expect(this.menuNavBarButton).toBeVisible({ timeout: 30000 })
         await this.menuNavBarButton.focus()
         await this.menuNavBarButton.click()
         await expect(this.category).toHaveText(category)
-        // NOTE(INSINKERATOR): force-clicking here deliberately. A real
-        // automated run showed the drawer's own animated backdrop (a
-        // Radix-style overlay, class "fixed inset-0 z-50 bg-black/80")
-        // sitting on top of the category link at the exact same z-index
-        // (50) as the sticky <header> containing it — a CSS stacking tie
-        // resolved by DOM order, with the backdrop apparently painting
-        // after the header. Confirmed via elementFromPoint() at the
-        // link's exact coordinates: the backdrop, not the link, is what a
-        // real click would actually land on. This looks like a genuine
-        // site bug (worth raising a ticket), not test flakiness — a real
-        // user's mouse click at that position may be similarly blocked.
-        // force:true bypasses Playwright's actionability check so the
-        // test can still proceed past it.
-        await this.category.click({ force: true })
-        // NOTE: no "view all" step confirmed to exist on this project
-        // (unlike Kooltech) — the category link navigates straight to the
-        // PLP. viewAllButton locator/property removed accordingly.
+        await this.category.click()
+        await expect(this.page).not.toHaveURL('/', { timeout: 30000 })
     }
 }

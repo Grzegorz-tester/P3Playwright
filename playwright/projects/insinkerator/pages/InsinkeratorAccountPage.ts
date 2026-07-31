@@ -33,6 +33,9 @@ export class InsinkeratorAccountPage extends AccountPage {
     readonly ordersTotalAmountFilterInput = InsinkeratorObjects.AccountPage.ordersTotalAmountFilterInput(this.page);
     readonly ordersFilterResetButton = InsinkeratorObjects.AccountPage.ordersFilterResetButton(this.page);
     readonly ordersNoResultsRow = InsinkeratorObjects.AccountPage.ordersNoResultsRow(this.page);
+    readonly ordersFirstRow = InsinkeratorObjects.AccountPage.ordersRow(0)(this.page);
+    readonly ordersFirstRowReferenceCell = InsinkeratorObjects.AccountPage.ordersRowReferenceCell(0)(this.page);
+    readonly ordersFirstRowAmountCell = InsinkeratorObjects.AccountPage.ordersRowAmountCell(0)(this.page);
     readonly addDeliveryAddressButton = InsinkeratorObjects.AccountPage.addDeliveryAddressButton(this.page);
     readonly deliveryAddressForm = InsinkeratorObjects.AccountPage.deliveryAddressForm(this.page);
     readonly deliveryAddressFirstNameInput = InsinkeratorObjects.AccountPage.deliveryAddressFirstNameInput(this.page);
@@ -41,14 +44,33 @@ export class InsinkeratorAccountPage extends AccountPage {
     readonly deliveryAddressCityInput = InsinkeratorObjects.AccountPage.deliveryAddressCityInput(this.page);
     readonly deliveryAddressPostcodeInput = InsinkeratorObjects.AccountPage.deliveryAddressPostcodeInput(this.page);
     readonly deliveryAddressSaveButton = InsinkeratorObjects.AccountPage.deliveryAddressSaveButton(this.page);
+    readonly addBillingAddressButton = InsinkeratorObjects.AccountPage.addBillingAddressButton(this.page);
+    readonly billingAddressForm = InsinkeratorObjects.AccountPage.billingAddressForm(this.page);
+    readonly billingAddressFirstNameInput = InsinkeratorObjects.AccountPage.billingAddressFirstNameInput(this.page);
+    readonly billingAddressLastNameInput = InsinkeratorObjects.AccountPage.billingAddressLastNameInput(this.page);
+    readonly billingAddressLine1Input = InsinkeratorObjects.AccountPage.billingAddressLine1Input(this.page);
+    readonly billingAddressCityInput = InsinkeratorObjects.AccountPage.billingAddressCityInput(this.page);
+    readonly billingAddressPostcodeInput = InsinkeratorObjects.AccountPage.billingAddressPostcodeInput(this.page);
+    readonly billingAddressSaveButton = InsinkeratorObjects.AccountPage.billingAddressSaveButton(this.page);
 
     async waitForLoginToBeCompleted(): Promise<void> {
         await expect(this.dashboardMenuButton).toHaveCount(1, { timeout: 60000 })
     }
 
+    // CONFIRMED SITE BUG (staging, 2026-07-27): this used to also click
+    // dashboardMenuButton first, immediately before profileMenuButton — but
+    // we're always already on /account when this runs (called right after
+    // navigateToAccountPage()), so that click was a same-route no-op.
+    // Traced live via a real trace.zip from a failed automated run: both
+    // clicks reported "navigations have finished" with only ~20ms between
+    // them, yet the page never left /account — the app's client-side
+    // router silently drops the second Link navigation when it fires this
+    // soon after a same-route click. Reproduced 4/4 in isolation. Removing
+    // the redundant self-click (already-verified one line above via the
+    // toHaveCount check) removes the race entirely without losing any real
+    // coverage.
     async validateAccountPage(): Promise<void> {
         await expect(this.dashboardMenuButton).toHaveCount(1, { timeout: 60000 })
-        await this.dashboardMenuButton.click()
         await this.profileMenuButton.click()
         await expect(this.myDetailsForm).toBeVisible({ timeout: 35000 })
         await this.addressBookMenuButton.click()
@@ -100,20 +122,44 @@ export class InsinkeratorAccountPage extends AccountPage {
         await expect(this.ordersPageHeading).toBeVisible({ timeout: 35000 })
     }
 
-    // VERIFIED — confirmed live (staging, 2026-07-23): accountTestUser_1
-    // has ZERO real orders (no payment provider is configured on staging,
-    // so no automated test can complete a real purchase to populate this
-    // list — same gap already documented on
-    // logged-in-purchase-journey.test.ts). Only the empty state is
-    // verifiable today; extend this once real order data is reachable.
-    async validateOrdersPageEmptyState(): Promise<void> {
+    // CORRECTED (staging, 2026-07-31): accountTestUser_1 used to have
+    // ZERO real orders (no payment provider configured — same gap
+    // documented on logged-in-purchase-journey.test.ts), so only the
+    // empty state was verifiable. Fixed — logged-in-purchase-journey.test.ts
+    // now completes a real order every run, so this account permanently
+    // has at least one order. Validates the real order row instead of
+    // the (now unreachable) "No results." empty state.
+    async validateOrdersPageHasRealOrder(): Promise<void> {
         await expect(this.ordersHeaderRow).toContainText('Order Number')
         await expect(this.ordersHeaderRow).toContainText('Placed On')
         await expect(this.ordersHeaderRow).toContainText('Amount')
         await expect(this.ordersReferenceFilterInput).toBeVisible()
         await expect(this.ordersDateRangePicker).toBeVisible()
         await expect(this.ordersTotalAmountFilterInput).toBeVisible()
-        await expect(this.ordersNoResultsRow).toBeVisible()
+        await expect(this.ordersFirstRow).toBeVisible()
+        await expect(this.ordersFirstRowReferenceCell).toHaveText(/^\d+$/)
+        await expect(this.ordersFirstRowAmountCell).toHaveText(/€/)
+    }
+
+    // Returns the clicked order's reference (e.g. "000056") so the caller
+    // can verify the order detail page reached afterwards shows the same
+    // order — see validateOrderDetailsPage() below.
+    async openMostRecentOrder(): Promise<string> {
+        const reference = await this.ordersFirstRowReferenceCell.textContent()
+        expect(reference).not.toBe('')
+        await this.ordersFirstRow.click()
+        await expect(this.page).toHaveURL(/\/account\/orders\/\d+$/, { timeout: 20000 })
+        return reference ?? ''
+    }
+
+    // VERIFIED live (staging, 2026-07-31) — the account order detail page
+    // reuses the EXACT SAME "orders-details__*" component as the checkout
+    // thank-you page (see CheckoutSuccessPage in objects.ts), confirmed by
+    // checking the live DOM — reusing those locators here rather than
+    // duplicating them.
+    async validateOrderDetailsPage(orderReference: string, accountEmail: string): Promise<void> {
+        await expect(InsinkeratorObjects.CheckoutSuccessPage.orderReference(this.page)).toContainText(orderReference)
+        await expect(InsinkeratorObjects.CheckoutSuccessPage.orderConfirmationEmail(this.page)).toContainText(accountEmail)
     }
 
     // NOTE(INSINKERATOR): confirmed live that accountTestUser_1 now has a
@@ -203,5 +249,68 @@ export class InsinkeratorAccountPage extends AccountPage {
         await expect(confirmButton).toBeVisible({ timeout: 15000 })
         await confirmButton.click()
         await expect(InsinkeratorObjects.AccountPage.deliveryAddressName(addressNumber)(this.page)).toHaveCount(0, { timeout: 35000 })
+    }
+
+    // VERIFIED live (staging, 2026-07-27): the Billing Addresses card
+    // mirrors Delivery exactly — same permanent accountTestUser_1 fixture
+    // address, same positional (not persistent-id) numbering, same
+    // "checkout-address-form" field testids, same delete-confirm flow. See
+    // the delivery methods above and the objects.ts comments for the full
+    // detail; not re-documented here since it's identical behaviour.
+    private async getBillingAddressCount(): Promise<number> {
+        const nameLocator = this.page.locator('[data-testid^="address-book-billing__address-"][data-testid$="__name"]')
+        let previous = await nameLocator.count()
+        for (let attempt = 0; attempt < 3; attempt++) {
+            await this.navigateToAddressBook()
+            const current = await nameLocator.count()
+            if (current === previous) {
+                return current
+            }
+            previous = current
+        }
+        return previous
+    }
+
+    private async fillBillingAddressForm(address: AddressData): Promise<void> {
+        await this.billingAddressFirstNameInput.fill(address.firstName)
+        await this.billingAddressLastNameInput.fill(address.lastName)
+        await this.billingAddressLine1Input.fill(address.addressLine1)
+        await this.billingAddressCityInput.fill(address.city)
+        await this.billingAddressPostcodeInput.fill(address.postcode)
+        await this.billingAddressSaveButton.click()
+    }
+
+    async addBillingAddress(address: AddressData): Promise<number> {
+        await this.navigateToAddressBook()
+        const countBefore = await this.getBillingAddressCount()
+        // "Add new address" only appears once a billing address already
+        // exists (same rule as delivery) — on an empty billing book the
+        // form is already open.
+        if (await this.addBillingAddressButton.count() > 0) {
+            await this.addBillingAddressButton.click()
+            await expect(this.billingAddressForm).toBeVisible({ timeout: 35000 })
+        }
+        await this.fillBillingAddressForm(address)
+        await expect(this.addBillingAddressButton).toBeVisible({ timeout: 35000 })
+        const newAddressNumber = countBefore + 1
+        await expect(InsinkeratorObjects.AccountPage.billingAddressName(newAddressNumber)(this.page)).toBeVisible({ timeout: 35000 })
+        return newAddressNumber
+    }
+
+    async editBillingAddress(addressNumber: number, address: AddressData): Promise<void> {
+        await InsinkeratorObjects.AccountPage.billingAddressEditButton(addressNumber)(this.page).click()
+        await expect(this.billingAddressForm).toBeVisible({ timeout: 35000 })
+        await this.fillBillingAddressForm(address)
+        await expect(this.addBillingAddressButton).toBeVisible({ timeout: 35000 })
+        await expect(InsinkeratorObjects.AccountPage.billingAddressName(addressNumber)(this.page))
+            .toContainText(`${address.firstName} ${address.lastName}`, { timeout: 35000 })
+    }
+
+    async removeBillingAddress(addressNumber: number): Promise<void> {
+        await InsinkeratorObjects.AccountPage.billingAddressDeleteButton(addressNumber)(this.page).click()
+        const confirmButton = InsinkeratorObjects.AccountPage.billingAddressDeleteConfirmYesButton(addressNumber)(this.page)
+        await expect(confirmButton).toBeVisible({ timeout: 15000 })
+        await confirmButton.click()
+        await expect(InsinkeratorObjects.AccountPage.billingAddressName(addressNumber)(this.page)).toHaveCount(0, { timeout: 35000 })
     }
 }
