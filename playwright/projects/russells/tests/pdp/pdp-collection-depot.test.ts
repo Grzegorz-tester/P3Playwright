@@ -34,7 +34,7 @@ test.describe('PDP Collection Depot Picker', () => {
 
         await test.step(`Search for and select the first depot near a location`, async () => {
             console.log(`[STEP] Search for and select the first depot near a location`)
-            depotName = await productDetailPage.selectFirstDepotForLocation('York')
+            depotName = (await productDetailPage.selectFirstDepotForLocation('York')).name
         })
 
         await test.step(`Validate the selected depot is now shown`, async () => {

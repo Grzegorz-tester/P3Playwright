@@ -9,6 +9,8 @@ export class RussellsBasketPage extends BasketPage {
     }
 
     readonly checkoutButton = RussellsObjects.BasketPage.checkoutButton(this.page);
+    readonly firstLineRemoveButton = RussellsObjects.BasketPage.firstLineRemoveButton(this.page);
+    readonly anyLine = RussellsObjects.BasketPage.anyLine(this.page);
     readonly summaryTotal = RussellsObjects.BasketPage.summaryTotal(this.page);
     readonly quantityInput = RussellsObjects.BasketPage.quantityInput(this.page);
     readonly quantityMinusButton = RussellsObjects.BasketPage.quantityMinusButton(this.page);
@@ -19,6 +21,30 @@ export class RussellsBasketPage extends BasketPage {
 
     async proceedToSecureCheckout(): Promise<void> {
         await this.checkoutButton.click()
+    }
+
+    // Reads the first line's unit price — call this immediately before
+    // checking out (not from the PDP) since prices on this environment can
+    // change mid-session; see the objects.ts note on linePrice.
+    async getFirstLinePrice(): Promise<string> {
+        return (await RussellsObjects.BasketPage.linePrice(0)(this.page).textContent()) ?? ''
+    }
+
+    // CONFIRMED live (staging, 2026-08-01): the basket is tied to the
+    // account server-side — leftover items from an earlier interrupted
+    // session on this SAME shared test account silently carried into a
+    // later automated run's order. Call this before adding anything, in
+    // any test whose assertions assume a known, exact basket content.
+    async clearBasket(): Promise<void> {
+        await this.proceedToBasketPage()
+        let remaining = await this.anyLine.count()
+        while (remaining > 0) {
+            await this.firstLineRemoveButton.click()
+            await expect(async () => {
+                expect(await this.anyLine.count()).toBeLessThan(remaining)
+            }).toPass({ timeout: 10000 })
+            remaining = await this.anyLine.count()
+        }
     }
 
     // UK pricing uses "£" and a comma thousands separator.

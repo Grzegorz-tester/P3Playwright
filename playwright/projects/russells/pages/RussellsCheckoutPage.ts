@@ -43,6 +43,7 @@ export class RussellsCheckoutPage extends CheckoutPage {
     readonly billingSameAsDeliveryCheckbox = RussellsObjects.CheckoutPage.billingSameAsDeliveryCheckbox(this.page);
     readonly billingContinueButton = RussellsObjects.CheckoutPage.billingContinueButton(this.page);
     readonly reviewContent = RussellsObjects.CheckoutPage.reviewContent(this.page);
+    readonly reviewShippingCost = RussellsObjects.CheckoutPage.reviewShippingCost(this.page);
     readonly reviewTermsAndConditionsCheckbox = RussellsObjects.CheckoutPage.reviewTermsAndConditionsCheckbox(this.page);
     readonly reviewContinueToPaymentButton = RussellsObjects.CheckoutPage.reviewContinueToPaymentButton(this.page);
     readonly payWithCardButton = RussellsObjects.CheckoutPage.payWithCardButton(this.page);
@@ -158,6 +159,13 @@ export class RussellsCheckoutPage extends CheckoutPage {
 
     async verifyReachedReviewAndPayment(): Promise<void> {
         await expect(this.reviewContent).toBeVisible({ timeout: 20000 })
+    }
+
+    // Reads the shipping cost shown on the review page (e.g. "£10.00") so
+    // the caller can verify the thank-you page's order summary matches it
+    // exactly — absent entirely for Click & Collect orders.
+    async getReviewShippingCost(): Promise<string> {
+        return (await this.reviewShippingCost.textContent()) ?? ''
     }
 
     // VERIFIED live (staging, 2026-08-01): the review page shows

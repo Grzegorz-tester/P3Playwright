@@ -183,7 +183,23 @@ export const RussellsObjects = {
         checkoutButton: (page: Page) => page.getByTestId('basket-summary__checkout-button').filter({ hasText: 'Checkout' }),
         lineName: (lineIndex: number) => (page: Page) => page.getByTestId(`basket-items__available-line-${lineIndex}__name`),
         lineSku: (lineIndex: number) => (page: Page) => page.getByTestId(`basket-items__available-line-${lineIndex}__sku`),
+        // VERIFIED live (staging, 2026-08-01): read this immediately before
+        // checking out, not from the PDP — prices on this staging
+        // environment have been observed to change mid-session (likely a
+        // live backend sync job), so a price captured on the PDP can
+        // already be stale by the time the order confirms. Reading it here
+        // instead, seconds before payment, narrows that window.
+        linePrice: (lineIndex: number) => (page: Page) => page.getByTestId(`basket-items__available-line-${lineIndex}__price-price`),
         lineTotalPrice: (lineIndex: number) => (page: Page) => page.getByTestId(`basket-items__available-line-${lineIndex}__total-price`),
+        // VERIFIED live (staging, 2026-08-01): the basket is tied to the
+        // account server-side, not the browser session — leftover items
+        // from an earlier interrupted session/manual exploration on this
+        // SAME shared test account silently persist into the next test's
+        // basket. Lines re-index positionally after each removal, so
+        // repeatedly removing "line-0" clears the whole basket regardless
+        // of how many lines existed.
+        firstLineRemoveButton: (page: Page) => page.getByTestId('basket-items__available-line-0__remove-button'),
+        anyLine: (page: Page) => page.getByTestId('basket-items__available-line-0'),
         summaryTotal: (page: Page) => page.getByTestId('basket-summary__total'),
         quantityInput: (page: Page) => page.getByTestId('quantity-picker__input'),
         quantityMinusButton: (page: Page) => page.getByTestId('quantity-picker__minus-button'),
@@ -231,6 +247,10 @@ export const RussellsObjects = {
         collectionPhoneInput: (page: Page) => page.getByTestId('collection-content__form-telephone'),
         collectionServiceContinueButton: (page: Page) => page.getByTestId('collection-content-service__continue-button'),
         reviewContent: (page: Page) => page.getByTestId('checkout-review-content'),
+        // VERIFIED live (staging, 2026-08-01) — only present for Delivery
+        // orders (Click & Collect has no shipping cost, this testid is
+        // simply absent).
+        reviewShippingCost: (page: Page) => page.getByTestId('checkout-summary__shipping-cost'),
         reviewTermsAndConditionsCheckbox: (page: Page) => page.getByTestId('review-content__terms-and-conditions'),
         reviewContinueToPaymentButton: (page: Page) => page.getByTestId('review-content__continue-to-payment-account'),
         payWithCardButton: (page: Page) => page.getByTestId('payment-method-selector__pay-with-card'),
@@ -250,7 +270,32 @@ export const RussellsObjects = {
     // "orders-details__*" testids as the checkout thank-you page.
     CheckoutSuccessPage: {
         orderReference: (page: Page) => page.getByTestId('orders-details__reference'),
-        orderConfirmationEmail: (page: Page) => page.getByTestId('orders-details__email')
+        orderConfirmationEmail: (page: Page) => page.getByTestId('orders-details__email'),
+        // VERIFIED live (staging, 2026-08-01) — one order-product-card per
+        // basket line, in the same order they were added.
+        orderLines: (page: Page) => page.getByTestId('order-product-card'),
+        orderLineName: (lineIndex: number) => (page: Page) => RussellsObjects.CheckoutSuccessPage.orderLines(page).nth(lineIndex).getByTestId('order-product-card__name'),
+        orderLineSku: (lineIndex: number) => (page: Page) => RussellsObjects.CheckoutSuccessPage.orderLines(page).nth(lineIndex).getByTestId('order-product-card__sku'),
+        orderLineQuantity: (lineIndex: number) => (page: Page) => RussellsObjects.CheckoutSuccessPage.orderLines(page).nth(lineIndex).getByTestId('order-product-card__quantity-quantity'),
+        orderLinePrice: (lineIndex: number) => (page: Page) => RussellsObjects.CheckoutSuccessPage.orderLines(page).nth(lineIndex).getByTestId('order-product-card__price-price'),
+        orderLineTotalPrice: (lineIndex: number) => (page: Page) => RussellsObjects.CheckoutSuccessPage.orderLines(page).nth(lineIndex).getByTestId('order-product-card__total-price-price'),
+        // CONFIRMED SITE BUG (staging, 2026-08-01): this testid is reused on
+        // BOTH the section's wrapping <div> (containing the "Delivery
+        // Method" heading plus the value) AND the inner <p> holding just
+        // the value ("DPD" / "Click & Collect") — a real testid collision.
+        // Scoping to the <p> tag specifically resolves to the value alone.
+        deliveryMethod: (page: Page) => page.locator('p[data-testid="orders-details__order-delivery-method"]'),
+        // VERIFIED live: reads "Delivery Address..." or
+        // "Collection From..." followed by name/address lines/phone, all
+        // inside this one element — asserted via toContainText for each
+        // expected fragment rather than an exact match.
+        deliveryAddress: (page: Page) => page.getByTestId('orders-details__order-delivery-address'),
+        orderSummarySubtotal: (page: Page) => page.getByTestId('orders-details__order-summary__subtotal'),
+        // VERIFIED live: absent entirely for Click & Collect orders (no
+        // shipping cost) — only present for Delivery orders.
+        orderSummaryShippingTotal: (page: Page) => page.getByTestId('orders-details__order-summary__shipping-total'),
+        orderSummaryTotal: (page: Page) => page.getByTestId('orders-details__order-summary__total'),
+        orderPaymentDetails: (page: Page) => page.getByTestId('orders-details__order-payment-details')
     },
 
     // VERIFIED live (staging, 2026-07-31) on /category/general-parts-pto-driveline-components.

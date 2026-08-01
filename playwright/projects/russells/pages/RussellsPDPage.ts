@@ -68,21 +68,29 @@ export class RussellsPDPage extends ProductDetailPage {
 
     // VERIFIED live (staging, 2026-07-31): opens the "Collection
     // Information" panel, searches by location, and selects the first
-    // depot result. Returns the selected depot's name (read from the
-    // result card before clicking it, since the card itself disappears
-    // once the panel closes) so the caller can verify it against the PDP.
-    async selectFirstDepotForLocation(location: string): Promise<string> {
+    // depot result. Returns the selected depot's name AND address (read
+    // from the result card before clicking it, since the card itself
+    // disappears once the panel closes) so the caller can verify both
+    // against the PDP and, later, the order confirmation.
+    async selectFirstDepotForLocation(location: string): Promise<{ name: string, address: string }> {
         await this.collectionChangeButton.click()
         await expect(this.collectionDialog).toBeVisible({ timeout: 15000 })
         await this.depotSearchInput.fill(location)
         await this.depotSearchButton.click()
         const firstResult = this.depotResultCards.first()
         await expect(firstResult).toBeVisible({ timeout: 15000 })
-        const depotName = await firstResult.evaluate(el => el.closest('div.border')?.querySelector('p')?.textContent?.trim() ?? '')
-        expect(depotName).not.toBe('')
+        const depot = await firstResult.evaluate(el => {
+            const card = el.closest('div.border')
+            return {
+                name: card?.querySelector('p')?.textContent?.trim() ?? '',
+                address: card?.querySelector('div.max-w-\\[240px\\]')?.textContent?.trim() ?? ''
+            }
+        })
+        expect(depot.name).not.toBe('')
+        expect(depot.address).not.toBe('')
         await firstResult.click()
         await expect(this.collectionDialog).toBeHidden({ timeout: 15000 })
-        return depotName
+        return depot
     }
 
     // VERIFIED live (staging, 2026-07-31): once a depot is selected, the

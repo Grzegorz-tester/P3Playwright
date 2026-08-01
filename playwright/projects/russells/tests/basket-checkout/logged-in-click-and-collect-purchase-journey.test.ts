@@ -9,13 +9,22 @@ import { russells } from '@utils/testUsers'
  * choosing "Click & Collect" instead of "Delivery" -> confirming the
  * depot (carried through from the PDP) -> phone -> payment method ->
  * billing -> review & pay (verifying the chosen depot is shown) -> a real
- * Global Payments card payment -> the thank-you page.
+ * Global Payments card payment -> the thank-you page, verified in full
+ * (order line, collection method/depot, order summary, payment section)
+ * against values captured live during the journey rather than hardcoded.
  *
  * VERIFIED live (staging, 2026-08-01) end-to-end with a real completed
  * order. /checkout/click-and-collect mirrors /checkout/delivery's
  * two-render shape (depot selection, then phone + continue) rather than
  * reusing the same route - see RussellsCheckoutPage for the full step
  * order.
+ *
+ * CONFIRMED live (staging, 2026-08-01): the basket is tied to the account
+ * server-side, not the browser session — leftover items from an earlier
+ * interrupted run/manual exploration on this SAME shared test account
+ * silently carry into the next run's order (this is exactly how a real
+ * run once ended up confirming a 2-line order instead of the 1 line this
+ * test actually added). Clearing the basket first makes this deterministic.
  *
  * This deliberately completes a real order every run — keep it to one run
  * per suite execution.
@@ -37,20 +46,38 @@ test.describe('Purchase Journey (Logged-in, Click & Collect)', () => {
             await loginPage.loginToApplication(user.email, user.password)
         })
 
-        let depotName: string
-
-        await test.step(`Navigate to a PDP and select a collection depot`, async () => {
-            console.log(`[STEP] Navigate to a PDP and select a collection depot`)
-            await page.goto('/products/roller-for-cnh-nh-92087109')
-            await productDetailPage.validatePDPLoaded()
-            depotName = await productDetailPage.selectFirstDepotForLocation('York')
-            await productDetailPage.validateDepotSelected(depotName)
+        await test.step(`Clear the basket so the order contains exactly one known line`, async () => {
+            console.log(`[STEP] Clear the basket so the order contains exactly one known line`)
+            await basketPage.clearBasket()
         })
 
-        await test.step(`Add to basket and proceed to Secure Checkout`, async () => {
-            console.log(`[STEP] Add to basket and proceed to Secure Checkout`)
+        let depotName: string
+        let productName: string
+        let productSku: string
+        let productPrice: string
+
+        await test.step(`Navigate to a PDP, select a collection depot, and capture its details`, async () => {
+            console.log(`[STEP] Navigate to a PDP, select a collection depot, and capture its details`)
+            await page.goto('/products/roller-for-cnh-nh-92087109')
+            await productDetailPage.validatePDPLoaded()
+            const depot = await productDetailPage.selectFirstDepotForLocation('York')
+            depotName = depot.name
+            await productDetailPage.validateDepotSelected(depotName)
+            productName = (await productDetailPage.productName.textContent()) ?? ''
+            productSku = (await productDetailPage.productSku.first().textContent()) ?? ''
             await productDetailPage.addToBasket(1)
+        })
+
+        await test.step(`Capture the price and proceed to Secure Checkout`, async () => {
+            console.log(`[STEP] Capture the price and proceed to Secure Checkout`)
+            // CONFIRMED live (staging, 2026-08-01): reading the price on the
+            // PDP and comparing it against the order confirmation later
+            // failed intermittently — prices on this environment have been
+            // observed to change mid-session (likely a live backend sync
+            // job). Reading it here instead, seconds before payment,
+            // narrows that window.
             await basketPage.proceedToBasketPage()
+            productPrice = await basketPage.getFirstLinePrice()
             await basketPage.proceedToSecureCheckout()
         })
 
@@ -98,6 +125,36 @@ test.describe('Purchase Journey (Logged-in, Click & Collect)', () => {
         await test.step(`Verify the thank-you page shows the order confirmation`, async () => {
             console.log(`[STEP] Verify the thank-you page shows the order confirmation`)
             await checkoutSuccessPage.verifyThankYouPage(user.email)
+        })
+
+        await test.step(`Verify the order line matches what was actually purchased`, async () => {
+            console.log(`[STEP] Verify the order line matches what was actually purchased`)
+            await checkoutSuccessPage.verifyOrderLines([{
+                name: productName,
+                sku: productSku,
+                quantity: 1,
+                unitPrice: productPrice,
+                totalPrice: productPrice,
+            }])
+        })
+
+        await test.step(`Verify the collection method and depot`, async () => {
+            console.log(`[STEP] Verify the collection method and depot`)
+            await checkoutSuccessPage.verifyDeliveryMethod('Click & Collect')
+            await checkoutSuccessPage.verifyDeliveryAddressContains(['Fred Automation', depotName, '07700900000'])
+        })
+
+        await test.step(`Verify the order summary has no shipping cost`, async () => {
+            console.log(`[STEP] Verify the order summary has no shipping cost`)
+            await checkoutSuccessPage.verifyOrderSummary({
+                subtotal: productPrice,
+                total: productPrice,
+            })
+        })
+
+        await test.step(`Verify the payment section is present`, async () => {
+            console.log(`[STEP] Verify the payment section is present`)
+            await checkoutSuccessPage.verifyPaymentDetailsSectionPresent()
         })
     })
 })
