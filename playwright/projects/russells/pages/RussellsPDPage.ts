@@ -13,6 +13,11 @@ export class RussellsPDPage extends ProductDetailPage {
     readonly accordionTriggers = RussellsObjects.ProductDetailPage.accordionTriggers(this.page);
     readonly thumbnailNextButton = RussellsObjects.ProductDetailPage.thumbnailNextButton(this.page);
     readonly thumbnailPrevButton = RussellsObjects.ProductDetailPage.thumbnailPrevButton(this.page);
+    readonly collectionChangeButton = RussellsObjects.ProductDetailPage.collectionChangeButton(this.page);
+    readonly collectionDialog = RussellsObjects.ProductDetailPage.collectionDialog(this.page);
+    readonly depotSearchInput = RussellsObjects.ProductDetailPage.depotSearchInput(this.page);
+    readonly depotSearchButton = RussellsObjects.ProductDetailPage.depotSearchButton(this.page);
+    readonly depotResultCards = RussellsObjects.ProductDetailPage.depotResultCards(this.page);
 
     constructor(page: Page) {
         super(page);
@@ -53,6 +58,39 @@ export class RussellsPDPage extends ProductDetailPage {
         await expect(this.thumbnailPrevButton.first()).toBeDisabled()
         await this.thumbnailNextButton.first().click()
         await expect(this.thumbnailPrevButton.first()).toBeEnabled()
+    }
+
+    // VERIFIED live (staging, 2026-07-31): before any depot is selected,
+    // the button reads "Set your local depot".
+    async validateNoDepotSelectedYet(): Promise<void> {
+        await expect(this.collectionChangeButton).toHaveText('Set your local depot')
+    }
+
+    // VERIFIED live (staging, 2026-07-31): opens the "Collection
+    // Information" panel, searches by location, and selects the first
+    // depot result. Returns the selected depot's name (read from the
+    // result card before clicking it, since the card itself disappears
+    // once the panel closes) so the caller can verify it against the PDP.
+    async selectFirstDepotForLocation(location: string): Promise<string> {
+        await this.collectionChangeButton.click()
+        await expect(this.collectionDialog).toBeVisible({ timeout: 15000 })
+        await this.depotSearchInput.fill(location)
+        await this.depotSearchButton.click()
+        const firstResult = this.depotResultCards.first()
+        await expect(firstResult).toBeVisible({ timeout: 15000 })
+        const depotName = await firstResult.evaluate(el => el.closest('div.border')?.querySelector('p')?.textContent?.trim() ?? '')
+        expect(depotName).not.toBe('')
+        await firstResult.click()
+        await expect(this.collectionDialog).toBeHidden({ timeout: 15000 })
+        return depotName
+    }
+
+    // VERIFIED live (staging, 2026-07-31): once a depot is selected, the
+    // button's text changes to "Change", and the depot's name appears next
+    // to it.
+    async validateDepotSelected(depotName: string): Promise<void> {
+        await expect(this.collectionChangeButton).toHaveText('Change')
+        await expect(this.page.getByText(depotName, { exact: true }).first()).toBeVisible()
     }
 
     // CONFIRMED live (staging, 2026-07-31): a real automated run showed the

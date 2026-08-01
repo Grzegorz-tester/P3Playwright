@@ -297,6 +297,27 @@ export const RussellsObjects = {
         // stable, product-independent thing to assert.
         accordionTriggers: (page: Page) => page.locator('[data-testid="product-accordion__trigger"]:visible'),
         thumbnailNextButton: (page: Page) => page.locator('[data-testid="product-media__thumbnail-next-button"]:visible'),
-        thumbnailPrevButton: (page: Page) => page.locator('[data-testid="product-media__thumbnail-previous-button"]:visible')
+        thumbnailPrevButton: (page: Page) => page.locator('[data-testid="product-media__thumbnail-previous-button"]:visible'),
+
+        // VERIFIED live (staging, 2026-07-31): the "Collection" depot-picker
+        // feature. NONE of it carries a data-testid anywhere — every locator
+        // below is a last-resort text/role anchor. TODO: RUS-474.
+        // Reads "Set your local depot" before a depot is chosen, "Change"
+        // once one is — same aria-haspopup="dialog" button either way, and
+        // a hidden mobile/desktop duplicate exists (same pattern as
+        // elsewhere on this site) — .first() resolves to the visible copy.
+        collectionChangeButton: (page: Page) =>
+            page.locator('[aria-haspopup="dialog"]').filter({ hasText: /Set your local depot|Change/ }).first(),
+        // VERIFIED — the slide-in panel opened by collectionChangeButton.
+        // Scoped by role + its own stable heading text (not the dynamic
+        // radix dialog id, which changes per page load) — distinguishes it
+        // from the two unrelated image-zoom modals also present on this page.
+        collectionDialog: (page: Page) => page.getByRole('dialog').filter({ hasText: 'Collection Information' }),
+        // Stable id, unlike everything else in this dialog.
+        depotSearchInput: (page: Page) => RussellsObjects.ProductDetailPage.collectionDialog(page).locator('#branch-input'),
+        // The only <button> in the dialog before any results render.
+        depotSearchButton: (page: Page) => RussellsObjects.ProductDetailPage.collectionDialog(page).locator('button').first(),
+        depotResultCards: (page: Page) => RussellsObjects.ProductDetailPage.collectionDialog(page).getByRole('button', { name: 'Select Depot' }),
+        collectionDialogCloseButton: (page: Page) => RussellsObjects.ProductDetailPage.collectionDialog(page).getByRole('button', { name: 'Close' })
     }
 };
