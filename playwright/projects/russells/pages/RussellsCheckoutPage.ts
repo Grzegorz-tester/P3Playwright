@@ -14,6 +14,14 @@ import { RussellsObjects } from '../utils/objects'
  * (terms checkbox, then "Continue to Payment" reveals the Global Payments
  * hosted-field iframes directly — the card-vs-PayPal choice already
  * happened at the payment-method step, not here) -> /checkout/thank-you.
+ *
+ * CLICK & COLLECT branch (VERIFIED live, 2026-08-01, real completed order):
+ * choosing "Click & Collect" instead of "Delivery" at /checkout/delivery-method
+ * leads to /checkout/click-and-collect instead of /checkout/delivery — same
+ * two-render shape (depot selection, then phone + continue), then straight
+ * to /checkout/payment-method and onward exactly as the Delivery branch. The
+ * depot chosen on the PDP's Collection picker (see RussellsPDPage) carries
+ * through automatically, pre-selected on this step.
  */
 export class RussellsCheckoutPage extends CheckoutPage {
 
@@ -28,6 +36,10 @@ export class RussellsCheckoutPage extends CheckoutPage {
     readonly deliveryMethodContinueButton = RussellsObjects.CheckoutPage.deliveryMethodContinueButton(this.page);
     readonly deliveryPhoneInput = RussellsObjects.CheckoutPage.deliveryPhoneInput(this.page);
     readonly deliveryContinueButton = RussellsObjects.CheckoutPage.deliveryContinueButton(this.page);
+    readonly collectionDepotOptions = RussellsObjects.CheckoutPage.collectionDepotOptions(this.page);
+    readonly collectionDepotContinueButton = RussellsObjects.CheckoutPage.collectionDepotContinueButton(this.page);
+    readonly collectionPhoneInput = RussellsObjects.CheckoutPage.collectionPhoneInput(this.page);
+    readonly collectionServiceContinueButton = RussellsObjects.CheckoutPage.collectionServiceContinueButton(this.page);
     readonly billingSameAsDeliveryCheckbox = RussellsObjects.CheckoutPage.billingSameAsDeliveryCheckbox(this.page);
     readonly billingContinueButton = RussellsObjects.CheckoutPage.billingContinueButton(this.page);
     readonly reviewContent = RussellsObjects.CheckoutPage.reviewContent(this.page);
@@ -86,6 +98,29 @@ export class RussellsCheckoutPage extends CheckoutPage {
         await this.deliveryContinueButton.click()
     }
 
+    // VERIFIED live (staging, 2026-08-01) end-to-end through a real
+    // completed order: /checkout/click-and-collect renders TWICE, same
+    // pattern as /checkout/delivery. First a depot-selection list — the
+    // depot chosen on the PDP's Collection picker is pre-selected and
+    // labelled "Your Selected Depot" — confirm it (or pick a different one)
+    // and continue.
+    async confirmCollectionDepotAndContinue(): Promise<void> {
+        await expect(this.collectionDepotOptions.first()).toBeVisible({ timeout: 15000 })
+        await this.collectionDepotOptions.first().click()
+        await expect(this.collectionDepotContinueButton).toBeEnabled({ timeout: 10000 })
+        await this.collectionDepotContinueButton.click()
+    }
+
+    // VERIFIED live: the second /checkout/click-and-collect render — phone
+    // number, then continue straight to /checkout/payment-method (no
+    // separate delivery-speed choice, unlike the Delivery flow).
+    async enterCollectionPhoneNumberAndContinue(phoneNumber: string): Promise<void> {
+        await expect(this.collectionPhoneInput).toBeVisible({ timeout: 15000 })
+        await this.collectionPhoneInput.fill(phoneNumber)
+        await expect(this.collectionServiceContinueButton).toBeEnabled({ timeout: 10000 })
+        await this.collectionServiceContinueButton.click()
+    }
+
     // VERIFIED live: reached at /checkout/payment-method right after
     // delivery — a separate step from the review page, choosing between
     // "Pay with Card" (Global Payments) and PayPal. Leads to
@@ -123,6 +158,15 @@ export class RussellsCheckoutPage extends CheckoutPage {
 
     async verifyReachedReviewAndPayment(): Promise<void> {
         await expect(this.reviewContent).toBeVisible({ timeout: 20000 })
+    }
+
+    // VERIFIED live (staging, 2026-08-01): the review page shows
+    // "Collection from <depot address>" for a Click & Collect order — the
+    // depot's ADDRESS, not its name (e.g. "North Point Business Park..."
+    // rather than "Eggborough"), so this checks for the stable "Collection
+    // from" phrase rather than the caller-supplied depot name.
+    async verifyReviewShowsCollectionDepot(): Promise<void> {
+        await expect(this.reviewContent).toContainText('Collection from')
     }
 
     // VERIFIED WORKING end-to-end (staging, 2026-07-31) with a real

@@ -221,6 +221,15 @@ export const RussellsObjects = {
         // confirmation.
         billingSameAsDeliveryCheckbox: (page: Page) => page.getByTestId('checkout-address-form__same-as-delivery-address'),
         billingContinueButton: (page: Page) => page.getByTestId('checkout-billing-content__continue-button'),
+        // VERIFIED live (staging, 2026-08-01) — Click & Collect's
+        // /checkout/click-and-collect step renders TWICE, same pattern as
+        // /checkout/delivery: first a depot-selection list (the depot
+        // chosen on the PDP's Collection picker is pre-selected and
+        // labelled "Your Selected Depot"), then phone + continue.
+        collectionDepotOptions: (page: Page) => page.locator('[data-testid="collection-content-location__radio-select"] [data-testid^="radio-select_option"]'),
+        collectionDepotContinueButton: (page: Page) => page.getByTestId('collection-content-location__continue-button'),
+        collectionPhoneInput: (page: Page) => page.getByTestId('collection-content__form-telephone'),
+        collectionServiceContinueButton: (page: Page) => page.getByTestId('collection-content-service__continue-button'),
         reviewContent: (page: Page) => page.getByTestId('checkout-review-content'),
         reviewTermsAndConditionsCheckbox: (page: Page) => page.getByTestId('review-content__terms-and-conditions'),
         reviewContinueToPaymentButton: (page: Page) => page.getByTestId('review-content__continue-to-payment-account'),
