@@ -224,6 +224,22 @@ export const RussellsObjects = {
         // signed in as <email> — Continue" confirmation instead of the
         // guest/existing-customer choice — same convention as Insinkerator.
         loggedInSignInContinueButton: (page: Page) => page.getByTestId('checkout-sign-in-content__continue'),
+        // VERIFIED live (staging, 2026-08-01) — GUEST flow only, matches
+        // Insinkerator's convention.
+        guestCheckoutRadio: (page: Page) => page.getByTestId('radio-select_option-Guest checkout'),
+        guestEmailInput: (page: Page) => page.getByTestId('guest-checkout-form__email-input'),
+        guestSubmitButton: (page: Page) => page.getByTestId('guest-checkout-form__submit-button'),
+        // VERIFIED live (staging, 2026-08-01) — GUEST delivery step: a
+        // plain, blank checkout-address-form (same shared component used by
+        // account/address-book) with NO autocomplete — unlike Insinkerator,
+        // there's no Loqate-style address lookup here, just first
+        // name/last name/address line 1/city/postcode.
+        guestAddressFirstName: (page: Page) => page.getByTestId('checkout-address-form__first-name'),
+        guestAddressLastName: (page: Page) => page.getByTestId('checkout-address-form__last-name'),
+        guestAddressLine1: (page: Page) => page.getByTestId('checkout-address-form__address-line-1'),
+        guestAddressCity: (page: Page) => page.getByTestId('checkout-address-form__city'),
+        guestAddressPostcode: (page: Page) => page.getByTestId('checkout-address-form__postcode'),
+        guestAddressSubmitButton: (page: Page) => page.getByTestId('checkout-address-form__submit-button'),
         loggedInAddressOptions: (page: Page) => page.locator('[data-testid="checkout-select-address__addresses"] [data-testid^="radio-select_option"]'),
         loggedInAddressContinueButton: (page: Page) => page.getByTestId('checkout-select-address__continue-button'),
         deliveryMethodRadioGroup: (page: Page) => page.locator('[data-testid^="radio-select_option-"]'),

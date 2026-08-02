@@ -22,6 +22,13 @@ import { RussellsObjects } from '../utils/objects'
  * to /checkout/payment-method and onward exactly as the Delivery branch. The
  * depot chosen on the PDP's Collection picker (see RussellsPDPage) carries
  * through automatically, pre-selected on this step.
+ *
+ * GUEST branch (VERIFIED live, 2026-08-01, real completed order): on
+ * /checkout/sign-in, "Guest checkout" -> email -> continue leads to the
+ * SAME /checkout/delivery-method step as logged-in, but the delivery
+ * address step is a plain blank form (fillGuestAddressForm) instead of
+ * saved-address selection, and billing always shows the "same as
+ * delivery" checkbox (no saved billing address to offer instead).
  */
 export class RussellsCheckoutPage extends CheckoutPage {
 
@@ -30,6 +37,15 @@ export class RussellsCheckoutPage extends CheckoutPage {
     }
 
     readonly loggedInSignInContinueButton = RussellsObjects.CheckoutPage.loggedInSignInContinueButton(this.page);
+    readonly guestCheckoutRadio = RussellsObjects.CheckoutPage.guestCheckoutRadio(this.page);
+    readonly guestEmailInput = RussellsObjects.CheckoutPage.guestEmailInput(this.page);
+    readonly guestSubmitButton = RussellsObjects.CheckoutPage.guestSubmitButton(this.page);
+    readonly guestAddressFirstName = RussellsObjects.CheckoutPage.guestAddressFirstName(this.page);
+    readonly guestAddressLastName = RussellsObjects.CheckoutPage.guestAddressLastName(this.page);
+    readonly guestAddressLine1 = RussellsObjects.CheckoutPage.guestAddressLine1(this.page);
+    readonly guestAddressCity = RussellsObjects.CheckoutPage.guestAddressCity(this.page);
+    readonly guestAddressPostcode = RussellsObjects.CheckoutPage.guestAddressPostcode(this.page);
+    readonly guestAddressSubmitButton = RussellsObjects.CheckoutPage.guestAddressSubmitButton(this.page);
     readonly loggedInAddressOptions = RussellsObjects.CheckoutPage.loggedInAddressOptions(this.page);
     readonly loggedInAddressContinueButton = RussellsObjects.CheckoutPage.loggedInAddressContinueButton(this.page);
     readonly deliveryMethodRadioGroup = RussellsObjects.CheckoutPage.deliveryMethodRadioGroup(this.page);
@@ -65,6 +81,30 @@ export class RussellsCheckoutPage extends CheckoutPage {
         await optionButton.click()
         await expect(this.deliveryMethodContinueButton).toBeEnabled({ timeout: 10000 })
         await this.deliveryMethodContinueButton.click()
+    }
+
+    // VERIFIED live (staging, 2026-08-01) end-to-end through a real
+    // completed guest order: selects "Guest checkout" on /checkout/sign-in,
+    // fills the email step, and continues to /checkout/delivery-method.
+    async continueAsGuest(email: string): Promise<void> {
+        await this.guestCheckoutRadio.click()
+        await expect(this.guestEmailInput).toBeVisible({ timeout: 15000 })
+        await this.guestEmailInput.fill(email)
+        await this.guestSubmitButton.click()
+    }
+
+    // VERIFIED live (staging, 2026-08-01): GUEST delivery address — a
+    // plain, blank form (no autocomplete, unlike Insinkerator's Loqate
+    // lookup) reached instead of chooseDeliveryAddress()'s saved-address
+    // selection, since a guest has no saved addresses.
+    async fillGuestAddressForm(details: { firstName: string, lastName: string, addressLine1: string, city: string, postcode: string }): Promise<void> {
+        await expect(this.guestAddressFirstName).toBeVisible({ timeout: 15000 })
+        await this.guestAddressFirstName.fill(details.firstName)
+        await this.guestAddressLastName.fill(details.lastName)
+        await this.guestAddressLine1.fill(details.addressLine1)
+        await this.guestAddressCity.fill(details.city)
+        await this.guestAddressPostcode.fill(details.postcode)
+        await this.guestAddressSubmitButton.click()
     }
 
     // VERIFIED live: selects the addressNumber-th saved address (1-based)
