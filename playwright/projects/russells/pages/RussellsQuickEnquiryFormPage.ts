@@ -108,22 +108,17 @@ export class RussellsQuickEnquiryFormPage {
         return response.status()
     }
 
-    // CONFIRMED SITE BUG (RUS-474, staging, 2026-08-02): despite the
-    // submission genuinely succeeding server-side (see
-    // submitAndGetResponseStatus - a real 201), the user gets NO visible
-    // feedback whatsoever - no success message, no error, no field reset,
-    // no redirect. The form silently sits there fully filled in,
-    // indistinguishable from a page that did nothing at all. Confirmed by
-    // reading the full page text for any success/thank-you wording and by
-    // checking the fields remain populated. Documented as today's actual
-    // behaviour rather than skipped; flag to devs for a fix (e.g. a
-    // confirmation message or redirect), at which point this should be
-    // rewritten to assert that feedback DOES appear.
-    async validateNoSuccessFeedbackIsShown(expectedNameStillFilled: string): Promise<void> {
-        await this.page.waitForTimeout(3000) // no DOM/network signal to await for a no-op - see comment above
-        const bodyText = (await this.page.locator('body').innerText()).toLowerCase()
-        expect(bodyText).not.toContain('thank you')
-        expect(bodyText).not.toContain('success')
-        await expect(this.nameInput).toHaveValue(expectedNameStillFilled)
+    // EXPECTED behaviour: after a successful submission, the user should
+    // see some visible confirmation (a success/thank-you message, the
+    // form resetting, or a redirect) - the same basic contract as this
+    // site's own footer newsletter form. RUS-474: staging currently shows
+    // NONE of this (confirmed live, 2026-08-02 - the form silently sits
+    // there fully filled in after a real, backend-accepted submission),
+    // so this assertion is expected to fail until that's fixed. It's
+    // written against the correct behaviour on purpose, not against
+    // today's broken one - a bug should show up as a red test, not get
+    // quietly asserted as "working as intended".
+    async validateSuccessFeedbackIsShown(): Promise<void> {
+        await expect(this.page.locator('body')).toContainText(/thank you|successfully submitted|we.?ll be in touch|enquiry received/i, { timeout: 10000 })
     }
 }

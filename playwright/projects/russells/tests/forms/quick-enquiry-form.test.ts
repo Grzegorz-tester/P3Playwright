@@ -13,13 +13,13 @@ import { expect } from '@playwright/test'
  * TODO: RUS-474 - no data-testid anywhere on this form or its fields -
  * see the locator notes in objects.ts.
  *
- * CONFIRMED SITE BUG (RUS-474, confirmed live, staging, 2026-08-02): a
- * successful submission reaches the backend fine (a real 201 from
- * POST .../form-submissions) but the user gets NO visible feedback at
- * all - no success message, no error, no field reset, no redirect. See
- * validateNoSuccessFeedbackIsShown in RussellsQuickEnquiryFormPage for
- * the full investigation. Documented below as today's actual behaviour
- * rather than skipped, per this repo's convention.
+ * KNOWN FAILING TEST (RUS-474): "shows a success confirmation" below is
+ * written against the CORRECT/expected behaviour, not today's actual
+ * one - staging currently shows the user no feedback at all after a
+ * valid submission (confirmed live, 2026-08-02), so this test is
+ * expected to fail until that's fixed. A real bug should show up as a
+ * red test, not get quietly asserted as "working as intended" - see
+ * validateSuccessFeedbackIsShown in RussellsQuickEnquiryFormPage.
  *
  * The valid-submission test deliberately creates a real backend
  * form-submission every run (same tradeoff already accepted for the
@@ -55,7 +55,7 @@ test.describe('Quick Enquiry Form', () => {
         })
     })
 
-    test('CONFIRMED BUG (RUS-474): a valid submission reaches the backend but shows no success feedback', async ({
+    test('A valid submission reaches the backend and shows a success confirmation', async ({
         quickEnquiryFormPage,
     }) => {
         const enquiry = {
@@ -76,9 +76,9 @@ test.describe('Quick Enquiry Form', () => {
             expect(status).toBe(201)
         })
 
-        await test.step(`Validate no success feedback is shown to the user`, async () => {
-            console.log(`[STEP] Validate no success feedback is shown to the user`)
-            await quickEnquiryFormPage.validateNoSuccessFeedbackIsShown(enquiry.name)
+        await test.step(`Validate a success confirmation is shown to the user`, async () => {
+            console.log(`[STEP] Validate a success confirmation is shown to the user`)
+            await quickEnquiryFormPage.validateSuccessFeedbackIsShown()
         })
     })
 })
