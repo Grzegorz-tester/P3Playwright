@@ -27,6 +27,13 @@ export const russells = {
     accountTestUser_1: {
         email: "grzegorz.hajduk+russells_automation@velstar.co.uk",
         password: "Testing123!"
+    },
+    // VERIFIED live (staging, 2026-08-02): Wishlists (/account/wishlists)
+    // is gated to admin accounts only — accountTestUser_1 above gets a
+    // genuine 404 there, confirmed even while actively logged in.
+    accountAdminUser: {
+        email: "grzegorz.hajduk+russells_automation_admin@velstar.co.uk",
+        password: "Testing123!"
     }
 }
 

@@ -98,6 +98,11 @@ export const RussellsObjects = {
         profileMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account/profile"]'),
         addressBookMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account/address-book"]'),
         ordersMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account/orders"]'),
+        // VERIFIED live (staging, 2026-08-02): only rendered for admin
+        // accounts — accountTestUser_1 doesn't see this link at all, and
+        // /account/wishlists genuinely 404s for that user even while
+        // logged in (see testUsers.ts note on accountAdminUser).
+        wishlistsMenuButton: (page: Page) => page.locator('[data-testid="account-menu__item"][href="/account/wishlists"]'),
 
         myDetailsForm: (page: Page) => page.getByTestId('account__my-details-form'),
         // TODO: RUS-474 — no data-testid on this button (confirmed live,
@@ -179,7 +184,89 @@ export const RussellsObjects = {
         billingAddressName: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__name`),
         billingAddressEditButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__edit-address-button`),
         billingAddressDeleteButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-button`),
-        billingAddressDeleteConfirmYesButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-yes-button`)
+        billingAddressDeleteConfirmYesButton: (addressNumber: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${addressNumber}__delete-address-yes-button`),
+
+        // /account/wishlists (admin-only — see wishlistsMenuButton note
+        // above). VERIFIED live (staging, 2026-08-02). The list page is
+        // notably testid-sparse (only the generic account-card wrapper),
+        // unlike the detail page below which is fully covered — TODO:
+        // RUS-474, ask devs for testids on the list's search input, sort
+        // headers, rows and per-row delete button.
+        wishlistsHeading: (page: Page) => page.getByTestId('account-card__title'),
+        // TODO: RUS-474 — no testid/id on this button, scoped to the
+        // account card heading (confirmed live, 2026-08-02 — it sits
+        // alongside the "My Wishlists" title, NOT inside
+        // account-card__content, which holds only the search/table).
+        createWishlistButton: (page: Page) => page.getByTestId('account-card__heading').locator('button').filter({ hasText: 'Create a new wishlist' }),
+        // The Create/Edit-name/Share/Delete-confirm dialogs are all the
+        // same underlying Radix dialog primitive — only one is ever open
+        // at a time, so an unscoped [role="dialog"] is safe.
+        dialog: (page: Page) => page.locator('[role="dialog"]'),
+        // TODO: RUS-474 — no testid; a real, unusual-looking but STABLE id
+        // (confirmed unchanged across reloads, same convention accepted
+        // for the Quick Enquiry Form's fields).
+        createWishlistNameInput: (page: Page) => page.locator('[id="Wishlist Name"]'),
+        createWishlistSubmitButton: (page: Page) => RussellsObjects.AccountPage.dialog(page).locator('button').filter({ hasText: 'Create Wishlist' }),
+        createWishlistCancelButton: (page: Page) => RussellsObjects.AccountPage.dialog(page).locator('button').filter({ hasText: 'Cancel' }),
+        confirmDeletionProceedButton: (page: Page) => RussellsObjects.AccountPage.dialog(page).locator('button').filter({ hasText: 'Proceed' }),
+        // TODO: RUS-474 — no id/testid on this input either, only a
+        // placeholder — confirmed live it filters the list LIVE
+        // (debounced, no Enter/search-button needed).
+        wishlistSearchInput: (page: Page) => page.locator('input[placeholder="Wishlist Name"]'),
+        wishlistNameSortButton: (page: Page) => page.locator('table thead button').filter({ hasText: 'Wishlist Name' }),
+        wishlistRows: (page: Page) => page.locator('table tbody tr'),
+        wishlistRowFiltered: (name: string) => (page: Page) => page.locator('table tbody tr').filter({ hasText: name }),
+        // The row itself has no href (navigates via onclick, like the
+        // Depot Finder's "back to search") — the per-row Delete button is
+        // the sole button in the row's last cell.
+        wishlistRowDeleteButtonFiltered: (name: string) => (page: Page) =>
+            RussellsObjects.AccountPage.wishlistRowFiltered(name)(page).locator('td').last().locator('button'),
+
+        // VERIFIED live (staging, 2026-08-02) on /account/wishlists/<id> —
+        // a genuinely well-covered detail page, unlike the list above.
+        wishlistDetails: (page: Page) => page.getByTestId('wishlist-details'),
+        wishlistDetailsName: (page: Page) => page.getByTestId('wishlist-details__name'),
+        wishlistDetailsEditNameButton: (page: Page) => page.getByTestId('wishlist-details__edit-name'),
+        wishlistDetailsNameInput: (page: Page) => page.getByTestId('wishlist-details__name-input'),
+        wishlistDetailsSaveNameButton: (page: Page) => page.getByTestId('wishlist-details__save-name'),
+        wishlistDetailsCancelNameButton: (page: Page) => page.getByTestId('wishlist-details__cancel-name'),
+        // TODO: RUS-474 — no testid; scoped to the details card, which
+        // only ever has this one "Delete" button (Edit Name is a
+        // separate, differently-labelled button).
+        wishlistDetailsDeleteButton: (page: Page) => RussellsObjects.AccountPage.wishlistDetails(page).locator('button').filter({ hasText: 'Delete' }),
+        wishlistItemsLine: (index: number) => (page: Page) => page.getByTestId(`wishlist-items__line-${index}`),
+        wishlistItemsLineName: (index: number) => (page: Page) => page.getByTestId(`wishlist-items__line-${index}__name`),
+        wishlistItemsLineSku: (index: number) => (page: Page) => page.getByTestId(`wishlist-items__line-${index}__sku`),
+        wishlistItemsLinePrice: (index: number) => (page: Page) => page.getByTestId(`wishlist-items__line-${index}__price-price`),
+        wishlistItemsLineTotalPrice: (index: number) => (page: Page) => page.getByTestId(`wishlist-items__line-${index}__total-price`),
+        // CONFIRMED live (staging, 2026-08-02): the quantity picker's OWN
+        // testids ("quantity-picker__*") are reused identically on every
+        // line — a real testid collision, same pattern as elsewhere in
+        // this project. Resolved via the per-line
+        // "...__price-quantity-picker" wrapper, which IS correctly
+        // indexed, rather than a positional .nth()/.first().
+        wishlistItemsLineQuantityInput: (index: number) => (page: Page) =>
+            page.getByTestId(`wishlist-items__line-${index}__price-quantity-picker`).getByTestId('quantity-picker__input'),
+        wishlistItemsLineQuantityPlusButton: (index: number) => (page: Page) =>
+            page.getByTestId(`wishlist-items__line-${index}__price-quantity-picker`).getByTestId('quantity-picker__plus-button'),
+        wishlistItemsLineQuantityMinusButton: (index: number) => (page: Page) =>
+            page.getByTestId(`wishlist-items__line-${index}__price-quantity-picker`).getByTestId('quantity-picker__minus-button'),
+        wishlistItemsLineRemoveButton: (index: number) => (page: Page) => page.getByTestId(`wishlist-items__line-${index}__remove-button`),
+        wishlistNoItemsText: (page: Page) => RussellsObjects.AccountPage.wishlistDetails(page).getByText('No items added'),
+        // The Quick Buy panel is a separate Algolia autocomplete instance
+        // from the header's own search — VERIFIED live this account
+        // section's header has no search bar at all (a stripped-down
+        // logo-only header), so this testid is never ambiguous here.
+        quickBuySearchInput: (page: Page) => page.getByTestId('algolia-autocomplete__input'),
+        // TODO: RUS-474 — no testid on these result links; href is the
+        // stable signal (matches the header search's own hit pattern).
+        quickBuySearchResultLinks: (page: Page) => page.getByTestId('wishlist-details__quick-buy').locator('a[href^="/products/"]'),
+        wishlistSummary: (page: Page) => page.getByTestId('wishlist-summary'),
+        // TODO: RUS-474 — no testid on this button, scoped to the summary
+        // card (its only button).
+        shareWishlistButton: (page: Page) => RussellsObjects.AccountPage.wishlistSummary(page).locator('button').filter({ hasText: 'Share Wishlist' }),
+        // Same dialog primitive/Proceed button as confirmDeletionProceedButton above.
+        shareWishlistEmailInput: (page: Page) => RussellsObjects.AccountPage.dialog(page).locator('input[type="email"]')
     },
 
     // VERIFIED live (staging, 2026-07-31).
