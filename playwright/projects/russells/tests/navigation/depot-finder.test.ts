@@ -4,26 +4,19 @@ import test from '../../utils/Pages'
  * DEPOT FINDER
  * =============
  * Covers: the standalone /depot-finder store locator - the "All Depots"
- * list loads, searching a location recenters the map (the list itself
- * always shows all depots alphabetically, unaffected by search - see
- * objects.ts note), clicking a depot reaches its detail page (address,
- * phone, email, opening hours, a working "Get Directions" link), and
- * "Back to search" returns to the finder.
+ * list loads, searching a location shows a results dropdown of nearby
+ * depots (sorted by distance) AND recenters the map, clicking a depot
+ * (from either the search results or the "All Depots" list) reaches its
+ * detail page (address, phone, email, opening hours, a working "Get
+ * Directions" link), and "Back to search" returns to the finder.
  *
  * This is a SEPARATE feature from the PDP's "Collection" depot picker
- * (see pdp-collection-depot.test.ts) - different component, different
- * search behaviour (that one filters/sorts a result list; this one only
- * recenters the map).
+ * (see pdp-collection-depot.test.ts) - a different component with its own
+ * separate search.
  *
- * TODO: RUS-474 - the search input and its clear/search buttons carry no
- * data-testid or id (confirmed live, 2026-08-02) - see the locator notes
- * in objects.ts.
- *
- * CONFIRMED SITE BUG (RUS-474, confirmed with the user 2026-08-02): the
- * /depot-finder search never shows a results dropdown - see
- * validateNoResultsDropdownAppears in RussellsDepotFinderPage for the full
- * investigation. Documented below as today's actual behaviour rather than
- * skipped, per this repo's convention.
+ * TODO: RUS-474 - the search input, its clear/search buttons, and the
+ * results dropdown all carry no data-testid or id (confirmed live,
+ * 2026-08-02) - see the locator notes in objects.ts.
  */
 test.describe('Depot Finder', () => {
     test('User can browse all depots and reach a depot detail page', async ({
@@ -71,12 +64,7 @@ test.describe('Depot Finder', () => {
         })
     })
 
-    // CONFIRMED SITE BUG - see the class-level comment above and
-    // validateNoResultsDropdownAppears for the full investigation. This
-    // test documents today's actual (broken) behaviour; once RUS-474 is
-    // fixed, rewrite it to assert the dropdown DOES appear and shows
-    // matching depots.
-    test('CONFIRMED BUG (RUS-474): searching does not show a results dropdown', async ({
+    test('User can search a location, see the results dropdown, and navigate to a result', async ({
         depotFinderPage,
     }) => {
         await test.step(`Navigate to the Depot Finder`, async () => {
@@ -84,9 +72,21 @@ test.describe('Depot Finder', () => {
             await depotFinderPage.navigateToDepotFinder()
         })
 
-        await test.step(`Search for a location and confirm no results dropdown appears`, async () => {
-            console.log(`[STEP] Search for a location and confirm no results dropdown appears`)
-            await depotFinderPage.validateNoResultsDropdownAppears('York')
+        await test.step(`Search for a location and validate the results dropdown appears`, async () => {
+            console.log(`[STEP] Search for a location and validate the results dropdown appears`)
+            await depotFinderPage.searchAndValidateResultsDropdownAppears('York')
+        })
+
+        let depotName: string
+
+        await test.step(`Click the first search result`, async () => {
+            console.log(`[STEP] Click the first search result`)
+            depotName = await depotFinderPage.clickFirstSearchResult()
+        })
+
+        await test.step(`Validate the depot detail page`, async () => {
+            console.log(`[STEP] Validate the depot detail page`)
+            await depotFinderPage.validateBranchDetailsPage(depotName)
         })
     })
 

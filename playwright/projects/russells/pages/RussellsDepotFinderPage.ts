@@ -15,6 +15,7 @@ export class RussellsDepotFinderPage {
     readonly searchInput: ReturnType<typeof RussellsObjects.DepotFinderPage.searchInput>;
     readonly searchButton: ReturnType<typeof RussellsObjects.DepotFinderPage.searchButton>;
     readonly openInGoogleMapsLink: ReturnType<typeof RussellsObjects.DepotFinderPage.openInGoogleMapsLink>;
+    readonly searchResultLinks: ReturnType<typeof RussellsObjects.DepotFinderPage.searchResultLinks>;
     readonly allDepotsHeading: ReturnType<typeof RussellsObjects.DepotFinderPage.allDepotsHeading>;
     readonly depotLinks: ReturnType<typeof RussellsObjects.DepotFinderPage.depotLinks>;
     readonly branchHeading: ReturnType<typeof RussellsObjects.DepotFinderPage.branchHeading>;
@@ -30,6 +31,7 @@ export class RussellsDepotFinderPage {
         this.searchInput = RussellsObjects.DepotFinderPage.searchInput(this.page);
         this.searchButton = RussellsObjects.DepotFinderPage.searchButton(this.page);
         this.openInGoogleMapsLink = RussellsObjects.DepotFinderPage.openInGoogleMapsLink(this.page);
+        this.searchResultLinks = RussellsObjects.DepotFinderPage.searchResultLinks(this.page);
         this.allDepotsHeading = RussellsObjects.DepotFinderPage.allDepotsHeading(this.page);
         this.depotLinks = RussellsObjects.DepotFinderPage.depotLinks(this.page);
         this.branchHeading = RussellsObjects.DepotFinderPage.branchHeading(this.page);
@@ -65,27 +67,33 @@ export class RussellsDepotFinderPage {
         }).toPass({ timeout: 15000 })
     }
 
-    // CONFIRMED SITE BUG (staging, 2026-08-02, confirmed with the user -
-    // this is NOT the PDP's separate Collection picker, which does show a
-    // results list): searching /depot-finder never shows any dropdown/list
-    // of matching results. Verified three independent ways during
-    // investigation: no Google Places "pac-container"/"pac-item" ever
-    // appears, no listbox/option role appears, and network inspection
-    // shows the search only fires a GetViewportInfo geocode call that
-    // recenters the map (see searchAndValidateMapRecenters above) - there
-    // is no results-list endpoint or DOM update at all. This method
-    // documents today's actual (broken) behaviour so the suite doesn't
-    // silently start "passing" a feature that doesn't exist; flag to devs
-    // under RUS-474 for a fix, at which point this test should be
-    // rewritten to assert the dropdown DOES appear.
-    async validateNoResultsDropdownAppears(location: string): Promise<void> {
+    // VERIFIED live (staging, 2026-08-02): searching shows a results
+    // dropdown of nearby depots, sorted by distance, above the map - see
+    // the searchResultLinks locator note in objects.ts. Returns the
+    // hrefs of the results so the caller can cross-check them (e.g. the
+    // first result is the nearest depot and its slug should match what
+    // clickFirstSearchResult navigates to).
+    async searchAndValidateResultsDropdownAppears(location: string): Promise<string[]> {
         await this.searchInput.fill(location)
         await this.searchButton.click()
-        await this.page.waitForTimeout(3000) // no network/DOM signal to await - see comment above
-        const resultsDropdownCandidates = await this.page.locator(
-            '.pac-container, [role="listbox"], [role="option"]'
-        ).count()
-        expect(resultsDropdownCandidates).toBe(0)
+        await expect(this.searchResultLinks.first()).toBeVisible({ timeout: 15000 })
+        const count = await this.searchResultLinks.count()
+        expect(count).toBeGreaterThan(0)
+        const hrefs = await this.searchResultLinks.evaluateAll((links) =>
+            links.map((link) => link.getAttribute('href') ?? '')
+        )
+        return hrefs
+    }
+
+    // Returns the clicked result's depot name so the caller can verify the
+    // detail page reached afterwards shows the same depot.
+    async clickFirstSearchResult(): Promise<string> {
+        const firstResult = this.searchResultLinks.first()
+        const depotName = (await firstResult.locator('p').first().textContent())?.trim() ?? ''
+        expect(depotName).not.toBe('')
+        await firstResult.click()
+        await expect(this.page).toHaveURL(/\/depot-finder\/[a-z-]+$/, { timeout: 20000 })
+        return depotName
     }
 
     // VERIFIED live (staging, 2026-08-02): the map renders one pin marker

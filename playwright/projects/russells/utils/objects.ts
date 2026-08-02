@@ -412,6 +412,17 @@ export const RussellsObjects = {
         // distance — a genuinely different behaviour from the PDP's
         // Collection picker, not a bug).
         openInGoogleMapsLink: (page: Page) => page.locator('a[href*="maps.google.com/maps?ll="]'),
+        // VERIFIED live (staging, 2026-08-02): searching DOES show a
+        // results dropdown — sorted by distance, each a link to
+        // /depot-finder/<slug> — it's just not a .pac-container/listbox
+        // (an earlier check looked only for those and wrongly concluded
+        // there was no dropdown at all; corrected after the user caught
+        // it). No testid on the list, its container or its items, so it's
+        // scoped via the branch-finder container (the same one the search
+        // input lives in) plus the /depot-finder/ href pattern, which the
+        // "All Depots" list below (outside this container) never matches.
+        // TODO: RUS-474 — ask devs for a testid on this results list.
+        searchResultLinks: (page: Page) => page.getByTestId('branch-finder').locator('a[href^="/depot-finder/"]'),
         allDepotsHeading: (page: Page) => page.getByTestId('all-branches').locator('h2'),
         depotLinks: (page: Page) => page.getByTestId('branches_section__branch'),
         depotLinkFiltered: (depotName: string) => (page: Page) => page.getByTestId('branches_section__branch').filter({ hasText: depotName }),
