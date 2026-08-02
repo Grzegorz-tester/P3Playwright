@@ -563,5 +563,45 @@ export const RussellsObjects = {
         // newsletter) — scoped via the Message field's own ancestor
         // <form> instead of matching on the button's text.
         submitButton: (page: Page) => page.locator('[id="/form-fields/29"]').locator('xpath=ancestor::form').locator('button[type="submit"]')
+    },
+
+    // "Quick Parts Finder" — a cascading machine type -> brand -> model
+    // selector present on multiple category hub pages (VERIFIED live,
+    // 2026-08-02, on both /agriculture and /groundcare - same component,
+    // same testids, different option sets per page). Submitting takes
+    // the user to /parts-finder, a results page that reuses the exact
+    // same Algolia PLP testids as a category PLP (see
+    // RussellsObjects.ProductListPage - no separate result-card
+    // locators needed here).
+    PartsFinderWidget: {
+        wrapper: (page: Page) => page.getByTestId('search-by-model'),
+        machineTypeButton: (page: Page) => page.getByTestId('search-by-model__machine-type').locator('button'),
+        brandButton: (page: Page) => page.getByTestId('search-by-model__brand').locator('button'),
+        modelButton: (page: Page) => page.getByTestId('search-by-model__model').locator('button'),
+        // TODO: RUS-474 — no testid on the Search parts button itself;
+        // scoped to the widget wrapper, which always renders exactly
+        // these 4 buttons in this fixed order (confirmed live,
+        // 2026-08-02) — the last one is always Search parts.
+        searchButton: (page: Page) => RussellsObjects.PartsFinderWidget.wrapper(page).locator('button').last(),
+        // Each machine-type/brand/model button opens the same Radix
+        // dialog + cmdk combobox primitive (no testid of its own) - a
+        // "Search..." input for filtering, and options carrying a stable
+        // data-value attribute (e.g. data-value="TRACTOR") - preferred
+        // over matching on the option's visible text.
+        dialog: (page: Page) => page.locator('[role="dialog"]'),
+        dialogSearchInput: (page: Page) => RussellsObjects.PartsFinderWidget.dialog(page).locator('input'),
+        dialogOptions: (page: Page) => RussellsObjects.PartsFinderWidget.dialog(page).locator('[role="option"]'),
+        dialogOptionFiltered: (value: string) => (page: Page) => page.locator(`[data-value="${value}"]`),
+
+        // /parts-finder — VERIFIED live, 2026-08-02: this banner and
+        // "Change Vehicle" are the only things unique to this page beyond
+        // the shared PLP testids. A plain [role="alert"] ALSO matches
+        // Next.js's own hidden route-announcer element
+        // (#__next-route-announcer__, present on every page in this app
+        // - confirmed live, the same element investigated during the
+        // Depot Finder work) - scoping to the real "algolia-list-page-
+        // with-drawer" testid wrapper excludes it.
+        resultsBanner: (page: Page) => page.getByTestId('algolia-list-page-with-drawer').getByRole('alert'),
+        changeVehicleButton: (page: Page) => RussellsObjects.PartsFinderWidget.resultsBanner(page).locator('button')
     }
 };

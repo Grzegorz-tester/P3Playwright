@@ -11,6 +11,7 @@ import { RussellsCheckoutPage } from "../pages/RussellsCheckoutPage";
 import { RussellsCheckoutSuccessPage } from "../pages/RussellsCheckoutSuccessPage";
 import { RussellsDepotFinderPage } from "../pages/RussellsDepotFinderPage";
 import { RussellsQuickEnquiryFormPage } from "../pages/RussellsQuickEnquiryFormPage";
+import { RussellsPartsFinderPage } from "../pages/RussellsPartsFinderPage";
 
 const test = baseTest.extend<{
     homePage: RussellsHomePage
@@ -25,6 +26,7 @@ const test = baseTest.extend<{
     checkoutSuccessPage: RussellsCheckoutSuccessPage
     depotFinderPage: RussellsDepotFinderPage
     quickEnquiryFormPage: RussellsQuickEnquiryFormPage
+    partsFinderPage: RussellsPartsFinderPage
 }>({
     homePage: async ({ page }, use) => {
         await use(new RussellsHomePage(page))
@@ -61,6 +63,9 @@ const test = baseTest.extend<{
     },
     quickEnquiryFormPage: async ({ page }, use) => {
         await use(new RussellsQuickEnquiryFormPage(page))
+    },
+    partsFinderPage: async ({ page }, use) => {
+        await use(new RussellsPartsFinderPage(page))
     },
 })
 
