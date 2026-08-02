@@ -8,6 +8,7 @@ export class RussellsPDPage extends ProductDetailPage {
     readonly productName = RussellsObjects.ProductDetailPage.productName(this.page);
     readonly productSku = RussellsObjects.ProductDetailPage.productSku(this.page);
     readonly productPrice = RussellsObjects.ProductDetailPage.productPrice(this.page);
+    readonly productPriceTaxMessage = RussellsObjects.ProductDetailPage.productPriceTaxMessage(this.page);
     readonly quantityInput = RussellsObjects.ProductDetailPage.quantityInput(this.page);
     readonly basketLinkText = RussellsObjects.ProductDetailPage.basketLinkText(this.page);
     readonly accordionTriggers = RussellsObjects.ProductDetailPage.accordionTriggers(this.page);
@@ -124,5 +125,19 @@ export class RussellsPDPage extends ProductDetailPage {
 
     async getBasketCount(): Promise<string> {
         return this.basketLinkText.textContent().then(text => (text ?? '').replace(/\D/g, ''))
+    }
+
+    // VERIFIED live (staging, 2026-08-02): productPriceTaxMessage is a
+    // nested span inside productPrice, so its own text is subtracted out
+    // of the container's full text to leave just the numeric price.
+    async getPriceValueAndVatLabel(): Promise<{ price: number, vatLabel: string }> {
+        const container = this.productPrice.first()
+        await expect(this.productPriceTaxMessage.first()).toBeVisible()
+        const vatLabel = (await this.productPriceTaxMessage.first().textContent())?.trim() ?? ''
+        const fullText = (await container.textContent()) ?? ''
+        const priceText = fullText.replace(vatLabel, '').trim()
+        const price = parseFloat(priceText.replace(/[£,]/g, ''))
+        expect(price).not.toBeNaN()
+        return { price, vatLabel }
     }
 }

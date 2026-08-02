@@ -13,7 +13,19 @@ export const RussellsObjects = {
         // tiles, but href is preferred over text per this project's
         // locator convention.
         subCategoryTileLink: (categorySlug: string) => (page: Page) =>
-            page.locator(`a[href="/category/${categorySlug}"]`)
+            page.locator(`a[href="/category/${categorySlug}"]`),
+        // VERIFIED live (staging, 2026-08-02): a global header toggle
+        // (present on every page type - home, PDP, PLP, search) switching
+        // all displayed prices between Incl./Excl. VAT. The visible label
+        // always reads "Incl. VAT" regardless of the CURRENT state - it
+        // names what the toggle does, not which state is active - so the
+        // underlying checkbox's checked property (true = Incl. VAT
+        // currently shown) is the only reliable state signal. The
+        // preference persists across navigation (cookie/localStorage), so
+        // tests must explicitly set the state they need rather than
+        // assume one.
+        vatToggleSwitch: (page: Page) => page.getByTestId('switch'),
+        vatToggleCheckbox: (page: Page) => page.getByTestId('switch__checkbox')
     },
 
     Footer: {
@@ -356,6 +368,10 @@ export const RussellsObjects = {
         productName: (page: Page) => page.getByTestId('product-info__name').first(),
         productSku: (page: Page) => page.locator('[data-testid="product-info__sku"]:visible'),
         productPrice: (page: Page) => page.locator('[data-testid="product-price__now-price"]:visible'),
+        // VERIFIED live (staging, 2026-08-02): a nested span inside
+        // productPrice reading "Incl. VAT"/"Excl. VAT" — reflects the
+        // header's VAT toggle (RussellsObjects.HomePage.vatToggleSwitch).
+        productPriceTaxMessage: (page: Page) => page.locator('[data-testid="product-price__now-price"]:visible [data-testid="tax-message"]'),
         addToBasketButton: (page: Page) => page.getByTestId('product-add-to-basket__button').first(),
         quantityInput: (page: Page) => page.getByTestId('quantity-picker__input').first(),
         basketLinkText: (page: Page) => page.getByTestId('brand-bar__basket-link'),

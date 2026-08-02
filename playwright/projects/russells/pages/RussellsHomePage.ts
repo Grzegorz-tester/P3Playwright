@@ -19,6 +19,9 @@ export class RussellsHomePage extends HomePage {
     readonly cookieBannerAcceptButton = RussellsObjects.Footer.cookieBannerAcceptButton(this.page);
     readonly searchInput = this.page.getByTestId('algolia-autocomplete__input');
     readonly searchHitProductNames = this.page.getByTestId('algolia-autocomplete-hit-product__name');
+    readonly searchHitProductPrices = this.page.getByTestId('algolia-autocomplete-hit-product__price');
+    readonly vatToggleSwitch = RussellsObjects.HomePage.vatToggleSwitch(this.page);
+    readonly vatToggleCheckbox = RussellsObjects.HomePage.vatToggleCheckbox(this.page);
 
     async validateHomePage(): Promise<void> {
         await expect(this.brandBar).toBeVisible({ timeout: 45000 })
@@ -118,8 +121,43 @@ export class RussellsHomePage extends HomePage {
         }).toPass({ timeout: 10000 })
     }
 
+    // UK pricing convention ("£1,234.56") — same parsing as
+    // RussellsProductListPage.parsePrice, duplicated locally to avoid
+    // coupling these two page objects together for one regex.
+    async getFirstSearchHitPriceValue(): Promise<number> {
+        await expect(this.searchHitProductPrices.first()).toBeVisible({ timeout: 15000 })
+        const text = (await this.searchHitProductPrices.first().textContent()) ?? ''
+        const match = text.match(/£\s*([\d,]+\.\d+)/)
+        if (!match) {
+            throw new Error(`Could not parse a price out of "${text}"`)
+        }
+        return parseFloat(match[1].replace(/,/g, ''))
+    }
+
     async submitSearch(query: string): Promise<void> {
         await this.searchInput.press('Enter')
         await expect(this.page).toHaveURL(`/search?q=${encodeURIComponent(query)}`, { timeout: 30000 })
+    }
+
+    // VERIFIED live (staging, 2026-08-02): the switch's own visible label
+    // always reads "Incl. VAT" regardless of state (see objects.ts note) —
+    // the checkbox's checked property is the real state, true meaning
+    // prices currently display Incl. VAT.
+    async isVatIncluded(): Promise<boolean> {
+        return this.vatToggleCheckbox.isChecked()
+    }
+
+    // Idempotent: only clicks if the current state doesn't already match,
+    // so tests can set a known starting state regardless of what a
+    // previous test (or the site's default) left it as. The preference
+    // persists across navigation, so this only needs to run once per test.
+    async setVatIncluded(included: boolean): Promise<void> {
+        const current = await this.isVatIncluded()
+        if (current !== included) {
+            await this.vatToggleSwitch.click()
+            await expect(async () => {
+                expect(await this.isVatIncluded()).toBe(included)
+            }).toPass({ timeout: 10000 })
+        }
     }
 }

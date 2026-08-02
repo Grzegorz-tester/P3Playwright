@@ -66,6 +66,12 @@ export class RussellsProductListPage extends AbstractProductListPage {
         return parseFloat(match[1].replace(/,/g, ''))
     }
 
+    async getFirstCardPriceValue(): Promise<number> {
+        await expect(this.productCardPrice.first()).toBeVisible({ timeout: 15000 })
+        const text = (await this.productCardPrice.first().textContent()) ?? ''
+        return this.parsePrice(text)
+    }
+
     async selectSortByPriceLowToHighAndValidateAscendingOrder(): Promise<void> {
         const expectedCount = await this.currentItemsCount.textContent()
         await this.sortByOptions.nth(1).click()
