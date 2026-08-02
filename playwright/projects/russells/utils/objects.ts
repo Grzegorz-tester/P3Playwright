@@ -453,5 +453,28 @@ export const RussellsObjects = {
         // A <p>, not a link — no href, navigates via an onclick handler.
         branchBackToSearch: (page: Page) => page.getByTestId('branch__back-to-search'),
         branchGetDirectionsLink: (page: Page) => page.getByTestId('branch__get-directions')
+    },
+
+    // /quick-enquiry-form — a CMS-driven contact form (Name, Email,
+    // Telephone and Message required; Machine Brand/Model/Serial and
+    // Images optional). No data-testid anywhere on the form or its
+    // fields, but each field DOES carry a stable id tied to the CMS form
+    // schema (e.g. "/form-fields/27") — VERIFIED unchanged across a page
+    // reload (staging, 2026-08-02) — preferred over placeholder/text per
+    // this project's locator convention despite the unusual-looking
+    // value. TODO: RUS-474 — ask devs for real data-testids here.
+    QuickEnquiryFormPage: {
+        nameInput: (page: Page) => page.locator('[id="/form-fields/27"]'),
+        emailInput: (page: Page) => page.locator('[id="/form-fields/7"]'),
+        phoneInput: (page: Page) => page.locator('[id="/form-fields/28"]'),
+        machineBrandInput: (page: Page) => page.locator('[id="/form-fields/21"]'),
+        machineModelInput: (page: Page) => page.locator('[id="/form-fields/22"]'),
+        machineSerialInput: (page: Page) => page.locator('[id="/form-fields/23"]'),
+        messageInput: (page: Page) => page.locator('[id="/form-fields/29"]'),
+        // No testid/id on the submit button itself, and this page has
+        // OTHER unrelated submit buttons (header search, footer
+        // newsletter) — scoped via the Message field's own ancestor
+        // <form> instead of matching on the button's text.
+        submitButton: (page: Page) => page.locator('[id="/form-fields/29"]').locator('xpath=ancestor::form').locator('button[type="submit"]')
     }
 };
