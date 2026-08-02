@@ -17,12 +17,17 @@ import test from '../../utils/Pages'
  * every item is still a real, clickable product link either way, so the
  * redirect assertion below holds regardless.
  *
- * CONFIRMED SITE BUG (staging, 2026-07-31): "article_categories" is the
- * one exception - it renders a ~78,600-item unfiltered list (vs ~15-30 for
- * every other category) that never becomes visible/interactive within a
- * generous wait. Excluded from the loop below rather than padding the
- * timeout to paper over what looks like a real content/rendering bug -
- * worth flagging to the dev team.
+ * KNOWN FAILING TEST (RUS-474): "article_categories" is the one
+ * exception among the 8 categories - it renders a ~78,600-item
+ * unfiltered list (vs ~15-30 for every other category) where NONE of
+ * the items ever become visible (confirmed live, 2026-08-02: 78,633
+ * links in the DOM, 0 with a non-null offsetParent). Given its own
+ * dedicated test below, asserting the same CORRECT/expected behaviour
+ * as every other category (the list becomes visible and its first item
+ * is clickable) rather than being quietly excluded from the loop - a
+ * real bug should show up as a red test, not vanish from coverage.
+ * Kept separate from the loop so its expected failure doesn't stop the
+ * other 7 categories from being verified.
  */
 test.describe('Sitemap Redirects', () => {
     test('User can navigate to the sitemap page from the footer', async ({
@@ -54,7 +59,8 @@ test.describe('Sitemap Redirects', () => {
         // a slow run being cut off mid-loop.
         test.setTimeout(300000)
 
-        // 'article_categories' excluded - see the class-level comment above.
+        // 'article_categories' has its own dedicated (currently failing)
+        // test below - see the class-level comment above.
         const categories = [
             'products',
             'categories',
@@ -73,5 +79,20 @@ test.describe('Sitemap Redirects', () => {
                 await sitemapPage.clickFirstCategoryItemAndValidateRealPageReached()
             })
         }
+    })
+
+    test(`"article_categories" category's first item redirects to a real page`, async ({
+        sitemapPage,
+    }) => {
+        await test.step(`Navigate to the Sitemap and open "article_categories"`, async () => {
+            console.log(`[STEP] Navigate to the Sitemap and open "article_categories"`)
+            await sitemapPage.navigateToSitemapPage()
+            await sitemapPage.openCategory('article_categories')
+        })
+
+        await test.step(`"article_categories" category's first item redirects to a real page`, async () => {
+            console.log(`[STEP] "article_categories" category's first item redirects to a real page`)
+            await sitemapPage.clickFirstCategoryItemAndValidateRealPageReached()
+        })
     })
 })
