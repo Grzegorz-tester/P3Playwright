@@ -9,6 +9,7 @@ import { RussellsPDPage } from "../pages/RussellsPDPage";
 import { RussellsBasketPage } from "../pages/RussellsBasketPage";
 import { RussellsCheckoutPage } from "../pages/RussellsCheckoutPage";
 import { RussellsCheckoutSuccessPage } from "../pages/RussellsCheckoutSuccessPage";
+import { RussellsDepotFinderPage } from "../pages/RussellsDepotFinderPage";
 
 const test = baseTest.extend<{
     homePage: RussellsHomePage
@@ -21,6 +22,7 @@ const test = baseTest.extend<{
     basketPage: RussellsBasketPage
     checkoutPage: RussellsCheckoutPage
     checkoutSuccessPage: RussellsCheckoutSuccessPage
+    depotFinderPage: RussellsDepotFinderPage
 }>({
     homePage: async ({ page }, use) => {
         await use(new RussellsHomePage(page))
@@ -51,6 +53,9 @@ const test = baseTest.extend<{
     },
     checkoutSuccessPage: async ({ page }, use) => {
         await use(new RussellsCheckoutSuccessPage(page))
+    },
+    depotFinderPage: async ({ page }, use) => {
+        await use(new RussellsDepotFinderPage(page))
     },
 })
 

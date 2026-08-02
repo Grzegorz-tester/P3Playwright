@@ -389,5 +389,42 @@ export const RussellsObjects = {
         depotSearchButton: (page: Page) => RussellsObjects.ProductDetailPage.collectionDialog(page).locator('button').first(),
         depotResultCards: (page: Page) => RussellsObjects.ProductDetailPage.collectionDialog(page).getByRole('button', { name: 'Select Depot' }),
         collectionDialogCloseButton: (page: Page) => RussellsObjects.ProductDetailPage.collectionDialog(page).getByRole('button', { name: 'Close' })
+    },
+
+    // VERIFIED live (staging, 2026-08-02) — the standalone /depot-finder
+    // store locator (distinct from the PDP's Collection picker above,
+    // which is a different component with its own separate search).
+    DepotFinderPage: {
+        heading: (page: Page) => page.locator('[data-testid="branch-finder"] h1'),
+        // TODO: RUS-474 — no data-testid/id on this input, only a
+        // placeholder (confirmed live, 2026-08-02).
+        searchInput: (page: Page) => page.getByPlaceholder('Search by postcode, town or city'),
+        // TODO: RUS-474 — no testid on either button; a "clear" (X) button
+        // only appears once text is entered, so the SEARCH button is
+        // always the LAST button in the container, never the first —
+        // confirmed live (staging, 2026-08-02) after an earlier attempt
+        // that used .first() accidentally clicked the clear button instead.
+        searchButton: (page: Page) => page.getByTestId('branch-finder').locator('button').last(),
+        // VERIFIED live: searching recenters/zooms the map to the
+        // location, confirmed via this link's own coordinates changing —
+        // the "All Depots" list below always shows all depots
+        // alphabetically regardless of search (not filtered/re-sorted by
+        // distance — a genuinely different behaviour from the PDP's
+        // Collection picker, not a bug).
+        openInGoogleMapsLink: (page: Page) => page.locator('a[href*="maps.google.com/maps?ll="]'),
+        allDepotsHeading: (page: Page) => page.getByTestId('all-branches').locator('h2'),
+        depotLinks: (page: Page) => page.getByTestId('branches_section__branch'),
+        depotLinkFiltered: (depotName: string) => (page: Page) => page.getByTestId('branches_section__branch').filter({ hasText: depotName }),
+
+        // VERIFIED live (staging, 2026-08-02) on /depot-finder/boroughbridge
+        // — an individual depot's detail page.
+        branchHeading: (page: Page) => page.getByTestId('branch__heading'),
+        branchAddress: (page: Page) => page.getByTestId('branch__address'),
+        branchTelephone: (page: Page) => page.getByTestId('branch__telephone'),
+        branchEmail: (page: Page) => page.getByTestId('branch__email'),
+        branchOpeningHours: (day: string) => (page: Page) => page.getByTestId(`branch__opening-hours--${day}`),
+        // A <p>, not a link — no href, navigates via an onclick handler.
+        branchBackToSearch: (page: Page) => page.getByTestId('branch__back-to-search'),
+        branchGetDirectionsLink: (page: Page) => page.getByTestId('branch__get-directions')
     }
 };
