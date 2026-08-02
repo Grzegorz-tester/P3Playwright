@@ -65,6 +65,54 @@ export class RussellsDepotFinderPage {
         }).toPass({ timeout: 15000 })
     }
 
+    // CONFIRMED SITE BUG (staging, 2026-08-02, confirmed with the user -
+    // this is NOT the PDP's separate Collection picker, which does show a
+    // results list): searching /depot-finder never shows any dropdown/list
+    // of matching results. Verified three independent ways during
+    // investigation: no Google Places "pac-container"/"pac-item" ever
+    // appears, no listbox/option role appears, and network inspection
+    // shows the search only fires a GetViewportInfo geocode call that
+    // recenters the map (see searchAndValidateMapRecenters above) - there
+    // is no results-list endpoint or DOM update at all. This method
+    // documents today's actual (broken) behaviour so the suite doesn't
+    // silently start "passing" a feature that doesn't exist; flag to devs
+    // under RUS-474 for a fix, at which point this test should be
+    // rewritten to assert the dropdown DOES appear.
+    async validateNoResultsDropdownAppears(location: string): Promise<void> {
+        await this.searchInput.fill(location)
+        await this.searchButton.click()
+        await this.page.waitForTimeout(3000) // no network/DOM signal to await - see comment above
+        const resultsDropdownCandidates = await this.page.locator(
+            '.pac-container, [role="listbox"], [role="option"]'
+        ).count()
+        expect(resultsDropdownCandidates).toBe(0)
+    }
+
+    // VERIFIED live (staging, 2026-08-02): the map renders one pin marker
+    // per depot. These markers are real DOM <button> elements (siblings of
+    // the map's tile <iframe>, not inside it - likely an
+    // @vis.gl/react-google-maps AdvancedMarker), but carry NO testid, id,
+    // class or aria-label of their own (confirmed live) - there is no
+    // stable attribute-based selector available. Counting by their known
+    // rendered size (~30x40px, consistent across all of them) via
+    // evaluate() is used here purely to READ/COUNT rendered markers, the
+    // same way evaluate() is used elsewhere in this codebase to read data
+    // out of markup that has no stable selector - NOT as a click target or
+    // a replacement for a Playwright locator. TODO: RUS-474 - ask devs to
+    // add a stable identifier (e.g. a testid or aria-label with the depot
+    // name) to these marker buttons so this can become a real locator.
+    async validateMapPinsRendered(expectedCount: number): Promise<void> {
+        await expect(async () => {
+            const pinCount = await this.page.evaluate(() => {
+                return Array.from(document.querySelectorAll('button')).filter((button) => {
+                    const rect = button.getBoundingClientRect()
+                    return Math.abs(rect.width - 30) < 2 && Math.abs(rect.height - 40) < 2
+                }).length
+            })
+            expect(pinCount).toBe(expectedCount)
+        }).toPass({ timeout: 15000 })
+    }
+
     // Returns the clicked depot's name so the caller can verify the detail
     // page reached afterwards shows the same depot.
     async clickFirstDepot(): Promise<string> {
