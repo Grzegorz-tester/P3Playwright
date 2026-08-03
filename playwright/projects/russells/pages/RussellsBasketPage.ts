@@ -18,6 +18,8 @@ export class RussellsBasketPage extends BasketPage {
     readonly promoCodeToggleButton = RussellsObjects.BasketPage.promoCodeToggleButton(this.page);
     readonly promoCodeInput = RussellsObjects.BasketPage.promoCodeInput(this.page);
     readonly promoCodeForm = RussellsObjects.BasketPage.promoCodeForm(this.page);
+    readonly discountLine = RussellsObjects.BasketPage.discountLine(this.page);
+    readonly promotionsContainer = RussellsObjects.BasketPage.promotionsContainer(this.page);
 
     async proceedToSecureCheckout(): Promise<void> {
         await this.checkoutButton.click()
@@ -99,5 +101,25 @@ export class RussellsBasketPage extends BasketPage {
     // on the stable promo-form container rather than located by text.
     async assertInvalidPromoCodeShowsError(): Promise<void> {
         await expect(this.promoCodeForm).toContainText('This is not a valid promo code.', { timeout: 15000 })
+    }
+
+    // VERIFIED live (staging, 2026-08-03) with the real PROMO50 test code
+    // (a genuine 50% discount, confirmed via a real basket): applying a
+    // valid code shows a "promotion applied" confirmation and a Discount
+    // line, and recalculates Total to (subtotal - discount). Derives the
+    // expected discount from the discountFraction the caller supplies
+    // (e.g. 0.5 for PROMO50) rather than hardcoding £ amounts, so this
+    // still holds if the item's price changes.
+    async applyPromoCodeAndValidateDiscount(code: string, discountFraction: number): Promise<void> {
+        const subtotal = this.parsePrice(await this.summaryTotal.textContent())
+        await this.applyPromoCode(code)
+        await expect(this.promotionsContainer).toContainText('promotion applied', { timeout: 15000 })
+        const expectedDiscount = subtotal * discountFraction
+        await expect(async () => {
+            const discountAmount = this.parsePrice(await this.discountLine.textContent())
+            expect(discountAmount).toBeCloseTo(expectedDiscount, 1)
+            const totalAfterDiscount = this.parsePrice(await this.summaryTotal.textContent())
+            expect(totalAfterDiscount).toBeCloseTo(subtotal - expectedDiscount, 1)
+        }).toPass({ timeout: 10000 })
     }
 }

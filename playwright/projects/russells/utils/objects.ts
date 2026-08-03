@@ -312,7 +312,14 @@ export const RussellsObjects = {
         // No testid on the error message itself — scoped to the stable
         // add-promotion-form container, asserted via toContainText rather
         // than used as a locate-and-click target.
-        promoCodeForm: (page: Page) => page.getByTestId('add-promotion-form')
+        promoCodeForm: (page: Page) => page.getByTestId('add-promotion-form'),
+        // VERIFIED live (staging, 2026-08-03) with the real PROMO50 test
+        // code: a valid code reveals a "Discount" line in the Order
+        // Summary (basket-summary__discount) and a "promotion applied"
+        // confirmation inside basket-summary__promotions, alongside the
+        // applied-code badge already covered by promoCodeForm.
+        discountLine: (page: Page) => page.getByTestId('basket-summary__discount'),
+        promotionsContainer: (page: Page) => page.getByTestId('basket-summary__promotions')
     },
 
     // VERIFIED live (staging, 2026-07-31) end-to-end through a real
@@ -396,7 +403,21 @@ export const RussellsObjects = {
         globalPaymentsCardExpirationFrame: (page: Page) => page.frameLocator('iframe[name="card-expiration"]'),
         globalPaymentsCardCvvFrame: (page: Page) => page.frameLocator('iframe[name="card-cvv"]'),
         globalPaymentsCardHolderNameFrame: (page: Page) => page.frameLocator('iframe[name="card-holder-name"]'),
-        globalPaymentsSubmitFrame: (page: Page) => page.frameLocator('iframe[name="submit"]')
+        globalPaymentsSubmitFrame: (page: Page) => page.frameLocator('iframe[name="submit"]'),
+        // VERIFIED live (staging, 2026-08-03): the paypal-checkout-buttons
+        // container actually holds THREE iframes — the real interactive
+        // one (name starting "__zoid__paypal_buttons__"), a hidden
+        // "__zoid_prerender_frame__paypal_buttons_..." prerender copy, and
+        // a "__detect_close_..." helper frame — so a bare `iframe` locator
+        // is ambiguous. Matched on the real one's name prefix instead of a
+        // testid (third-party SDK markup, not this storefront's own). The
+        // button itself has no testid either, located by role/name same as
+        // the Global Payments hosted fields above.
+        paypalButtonFrame: (page: Page) => page.frameLocator('[data-testid="paypal-checkout-buttons"] iframe[name^="__zoid__paypal_buttons__"]'),
+        // No testid on the alert itself — a role="alert" div shown on a
+        // failed payment (e.g. a declined card), with the card form left
+        // filled in below it so the customer can retry.
+        paymentErrorAlert: (page: Page) => page.getByTestId('checkout__payment-alert')
     },
 
     // VERIFIED live (staging, 2026-07-31) through a real completed order.

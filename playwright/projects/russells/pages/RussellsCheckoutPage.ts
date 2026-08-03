@@ -64,6 +64,7 @@ export class RussellsCheckoutPage extends CheckoutPage {
     readonly reviewContinueToPaymentButton = RussellsObjects.CheckoutPage.reviewContinueToPaymentButton(this.page);
     readonly payWithCardButton = RussellsObjects.CheckoutPage.payWithCardButton(this.page);
     readonly deliveryChangeAddressButton = RussellsObjects.CheckoutPage.deliveryChangeAddressButton(this.page);
+    readonly paymentErrorAlert = RussellsObjects.CheckoutPage.paymentErrorAlert(this.page);
 
     // VERIFIED live: /checkout/sign-in shows a "You're signed in — Continue"
     // confirmation when reached while already logged in (not always present
@@ -237,6 +238,22 @@ export class RussellsCheckoutPage extends CheckoutPage {
         await this.payWithCardButton.click()
     }
 
+    // CONFIRMED live (staging, 2026-08-03): this integration points at
+    // PayPal's PRODUCTION environment even on staging (the resulting
+    // popup URL carries env=production) — clicking through and logging
+    // in would place a real PayPal transaction, not a sandbox one. So
+    // this deliberately verifies only that the button opens a popup
+    // which lands on paypal.com, and stops there rather than
+    // authenticating/completing a real payment.
+    async clickPayPalAndVerifyRedirectsToPayPal(): Promise<void> {
+        const popupPromise = this.page.context().waitForEvent('page')
+        await RussellsObjects.CheckoutPage.paypalButtonFrame(this.page).getByRole('link', { name: 'PayPal', exact: true }).click()
+        const popup = await popupPromise
+        await popup.waitForLoadState('domcontentloaded')
+        await expect(popup).toHaveURL(/paypal\.com/, { timeout: 20000 })
+        await popup.close()
+    }
+
     // CORRECTED (staging, 2026-07-31): this storefront's billing step shape
     // depends on whether a billing address already exists on the account —
     // a fresh account with none saved shows a blank checkout-address-form
@@ -310,6 +327,29 @@ export class RussellsCheckoutPage extends CheckoutPage {
         await RussellsObjects.CheckoutPage.globalPaymentsCardHolderNameFrame(this.page).getByRole('textbox', { name: 'Card Holder Name' }).fill(card.cardHolderName)
         await RussellsObjects.CheckoutPage.globalPaymentsSubmitFrame(this.page).getByRole('button', { name: 'Submit' }).click()
         await expect(this.page).toHaveURL(/\/checkout\/thank-you$/, { timeout: 45000 })
+    }
+
+    // CONFIRMED live (staging, 2026-08-03) using Global Payments' own
+    // decline test card (4000120000001154, any future expiry, any
+    // 3-digit CVV): fails gracefully with a "Payment Error" alert
+    // ("Sorry, there was an error when processing your payment. Please
+    // try again or use another payment method.") rather than completing
+    // the order — the page stays on /checkout/review-and-payment with
+    // the card form still filled in, so the customer can retry
+    // immediately instead of losing their basket.
+    async payWithDecliningGlobalPaymentsTestCard(card: { number: string, expiry: string, securityCode: string, cardHolderName: string }): Promise<void> {
+        await this.reviewTermsAndConditionsCheckbox.click()
+        await expect(async () => {
+            await this.reviewContinueToPaymentButton.click()
+            await expect(RussellsObjects.CheckoutPage.globalPaymentsCardNumberFrame(this.page).getByRole('textbox', { name: 'Card Number' })).toBeVisible({ timeout: 15000 })
+        }).toPass({ timeout: 45000 })
+        await RussellsObjects.CheckoutPage.globalPaymentsCardNumberFrame(this.page).getByRole('textbox', { name: 'Card Number' }).fill(card.number)
+        await RussellsObjects.CheckoutPage.globalPaymentsCardExpirationFrame(this.page).getByRole('textbox', { name: 'Card Expiration' }).fill(card.expiry)
+        await RussellsObjects.CheckoutPage.globalPaymentsCardCvvFrame(this.page).getByRole('textbox', { name: 'Card CVV' }).fill(card.securityCode)
+        await RussellsObjects.CheckoutPage.globalPaymentsCardHolderNameFrame(this.page).getByRole('textbox', { name: 'Card Holder Name' }).fill(card.cardHolderName)
+        await RussellsObjects.CheckoutPage.globalPaymentsSubmitFrame(this.page).getByRole('button', { name: 'Submit' }).click()
+        await expect(this.paymentErrorAlert).toContainText('Sorry, there was an error when processing your payment.', { timeout: 30000 })
+        await expect(this.page).toHaveURL(/\/checkout\/review-and-payment$/)
     }
 
     // UNVERIFIED placeholder — kept only for abstract-contract shape

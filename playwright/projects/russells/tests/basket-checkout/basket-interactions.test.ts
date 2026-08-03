@@ -1,11 +1,12 @@
 import test from '../../utils/Pages'
+import { promotions } from '../../utils/promotions/promotions'
 
 /**
  * BASKET INTERACTIONS
  * ====================
  * Covers: the basket page's own quantity picker (increment/decrement,
  * price recalculation, minus-button boundary at quantity 1) and the promo
- * code form's invalid-code error handling.
+ * code form's invalid-code and valid-code handling.
  *
  * VERIFIED live (staging, 2026-07-31):
  * - Incrementing/decrementing recalculates basket-summary__total
@@ -14,6 +15,10 @@ import test from '../../utils/Pages'
  * - An invalid promo code shows an inline error ("This is not a valid
  *   promo code.") with no testid of its own — asserted via toContainText
  *   on the stable promo-form container.
+ *
+ * VERIFIED live (staging, 2026-08-03) with the real PROMO50 test code:
+ * a valid code shows a "promotion applied" confirmation and a Discount
+ * line, and recalculates Total to exactly (subtotal - 50%).
  */
 test.describe('Basket Interactions', () => {
     test('User can adjust the basket quantity, with Minus disabled at quantity 1', async ({
@@ -60,6 +65,24 @@ test.describe('Basket Interactions', () => {
             console.log(`[STEP] Apply an invalid promo code and validate the error`)
             await basketPage.applyPromoCode('INVALIDCODE123')
             await basketPage.assertInvalidPromoCodeShowsError()
+        })
+    })
+
+    test('User can apply a valid promo code and the discount recalculates the total', async ({
+        page,
+        productDetailPage,
+        basketPage,
+    }) => {
+        await test.step(`Add a product to basket`, async () => {
+            console.log(`[STEP] Add a product to basket`)
+            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await productDetailPage.addToBasket(1)
+            await basketPage.proceedToBasketPage()
+        })
+
+        await test.step(`Apply a valid promo code and validate the discount is reflected in the total`, async () => {
+            console.log(`[STEP] Apply a valid promo code and validate the discount is reflected in the total`)
+            await basketPage.applyPromoCodeAndValidateDiscount(promotions.FIFTY_PERCENT_OFF, 0.5)
         })
     })
 })
