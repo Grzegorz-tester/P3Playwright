@@ -345,6 +345,25 @@ export const RussellsObjects = {
         deliveryMethodContinueButton: (page: Page) => page.getByTestId('delivery-methods__continue-button'),
         deliveryPhoneInput: (page: Page) => page.getByTestId('delivery-content__form-telephone'),
         deliveryContinueButton: (page: Page) => page.getByTestId('delivery-content__form-continue-button'),
+        // VERIFIED live (staging, 2026-08-03): once a delivery address is
+        // saved, its summary card shows this button, which re-opens the
+        // SAME checkout-address-form pre-filled with the current values
+        // (genuinely editable, not a blank re-entry) — no testid on the
+        // button itself; TODO: RUS-474.
+        deliveryChangeAddressButton: (page: Page) => page.getByRole('button', { name: 'Change address' }),
+        // The Review & Pay page shows one of these per address (delivery,
+        // billing), each with its own "Edit" link back to that step —
+        // filtered by the Edit link's href rather than by text/index,
+        // since the sidebar also has an unrelated "Change" link sharing
+        // the same href. VERIFIED live: the address text itself is
+        // genuinely truncated to "<name> ... <postcode>" in the DOM (not
+        // a CSS ellipsis), so only those two fragments are ever safe to
+        // assert against here — see CheckoutPage note for the rest of the
+        // address.
+        reviewCurrentAddressFiltered: (href: string) => (page: Page) =>
+            page.getByTestId('review-current-address').filter({ has: page.locator(`a[href="${href}"]`) }),
+        reviewEditAddressLinkFiltered: (href: string) => (page: Page) =>
+            RussellsObjects.CheckoutPage.reviewCurrentAddressFiltered(href)(page).locator('a'),
         // VERIFIED live: on the billing step, this checkbox is present for
         // BOTH guest and logged-in checkout on this storefront (unlike
         // Insinkerator, where logged-in shows a separate address-selection

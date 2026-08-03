@@ -63,6 +63,7 @@ export class RussellsCheckoutPage extends CheckoutPage {
     readonly reviewTermsAndConditionsCheckbox = RussellsObjects.CheckoutPage.reviewTermsAndConditionsCheckbox(this.page);
     readonly reviewContinueToPaymentButton = RussellsObjects.CheckoutPage.reviewContinueToPaymentButton(this.page);
     readonly payWithCardButton = RussellsObjects.CheckoutPage.payWithCardButton(this.page);
+    readonly deliveryChangeAddressButton = RussellsObjects.CheckoutPage.deliveryChangeAddressButton(this.page);
 
     // VERIFIED live: /checkout/sign-in shows a "You're signed in — Continue"
     // confirmation when reached while already logged in (not always present
@@ -105,6 +106,71 @@ export class RussellsCheckoutPage extends CheckoutPage {
         await this.guestAddressCity.fill(details.city)
         await this.guestAddressPostcode.fill(details.postcode)
         await this.guestAddressSubmitButton.click()
+    }
+
+    // VERIFIED live (staging, 2026-08-03): re-opens the SAME
+    // checkout-address-form, genuinely pre-filled with the currently
+    // saved address (not a blank re-entry) — editing a field and
+    // resubmitting updates the summary card correctly. CONFIRMED live:
+    // saving blanks the phone number and delivery-method selection
+    // below it (a fresh sub-step), so the caller must re-enter those
+    // afterwards, same as after the first-time address submission.
+    async changeDeliveryAddress(details: { firstName: string, lastName: string, addressLine1: string, city: string, postcode: string }): Promise<void> {
+        await this.deliveryChangeAddressButton.click()
+        await expect(this.guestAddressFirstName).toBeVisible({ timeout: 15000 })
+        await this.guestAddressFirstName.fill(details.firstName)
+        await this.guestAddressLastName.fill(details.lastName)
+        await this.guestAddressLine1.fill(details.addressLine1)
+        await this.guestAddressCity.fill(details.city)
+        await this.guestAddressPostcode.fill(details.postcode)
+        await this.guestAddressSubmitButton.click()
+    }
+
+    // Truncated to "<name> ... <postcode>" in the DOM itself (confirmed
+    // live - not a CSS ellipsis), so this is only ever safe to assert
+    // the name and postcode against, not the full address.
+    async getReviewAddressSummary(href: '/checkout/delivery' | '/checkout/billing'): Promise<string> {
+        return (await RussellsObjects.CheckoutPage.reviewCurrentAddressFiltered(href)(this.page).textContent()) ?? ''
+    }
+
+    async clickReviewEditAddress(href: '/checkout/delivery' | '/checkout/billing'): Promise<void> {
+        await RussellsObjects.CheckoutPage.reviewEditAddressLinkFiltered(href)(this.page).click()
+        await expect(this.page).toHaveURL(new RegExp(`\\${href}$`), { timeout: 20000 })
+    }
+
+    // VERIFIED live (staging, 2026-08-03): re-opens the SAME
+    // checkout-address-form, genuinely pre-filled with the currently
+    // saved BILLING address, and submitting lands back on
+    // /checkout/review-and-payment with the summary correctly updated.
+    async editBillingAddressFromReview(details: { firstName: string, lastName: string, addressLine1: string, city: string, postcode: string }): Promise<void> {
+        await this.clickReviewEditAddress('/checkout/billing')
+        await this.guestAddressFirstName.fill(details.firstName)
+        await this.guestAddressLastName.fill(details.lastName)
+        await this.guestAddressLine1.fill(details.addressLine1)
+        await this.guestAddressCity.fill(details.city)
+        await this.guestAddressPostcode.fill(details.postcode)
+        await this.guestAddressSubmitButton.click()
+        await expect(this.page).toHaveURL(/\/checkout\/review-and-payment$/, { timeout: 20000 })
+    }
+
+    // CONFIRMED SITE BUG candidate (RUS-474, staging, 2026-08-03): this
+    // asserts the EXPECTED/correct behaviour - that clicking "Edit" next
+    // to Delivery on the Review & Pay page re-opens the address form
+    // PRE-FILLED with the previously entered delivery address, matching
+    // how the equivalent Billing "Edit" link on this exact same page
+    // already behaves (confirmed correct, see editBillingAddressFromReview).
+    // Confirmed live TWICE (via direct input-value reads, not just a
+    // visual snapshot) that the Delivery form instead comes back
+    // completely BLANK, losing the address - a real, reproducible
+    // asymmetry, not a fluke. Written against the correct behaviour on
+    // purpose so this shows up as a red test until fixed, rather than
+    // quietly asserting the data-loss as "working as intended".
+    async validateReviewEditDeliveryAddressIsPreFilled(expected: { firstName: string, addressLine1: string, city: string, postcode: string }): Promise<void> {
+        await this.clickReviewEditAddress('/checkout/delivery')
+        await expect(this.guestAddressFirstName).toHaveValue(expected.firstName, { timeout: 15000 })
+        await expect(this.guestAddressLine1).toHaveValue(expected.addressLine1)
+        await expect(this.guestAddressCity).toHaveValue(expected.city)
+        await expect(this.guestAddressPostcode).toHaveValue(expected.postcode)
     }
 
     // VERIFIED live: selects the addressNumber-th saved address (1-based)
