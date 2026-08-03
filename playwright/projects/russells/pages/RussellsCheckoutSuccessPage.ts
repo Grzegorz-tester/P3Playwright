@@ -33,6 +33,16 @@ export class RussellsCheckoutSuccessPage extends AbstractCheckoutSuccessPage {
         await expect(this.orderConfirmationEmail).toContainText(username)
     }
 
+    // Strips the "Order No. " label to get just the reference (e.g.
+    // "000167") — this exact same testid/text format is reused on the
+    // account order-detail page (/account/orders/<id>), so this reference
+    // is what's needed to find that same order again via
+    // RussellsAccountPage.openOrderByReference().
+    async getOrderReferenceNumber(): Promise<string> {
+        const text = (await this.orderReference.textContent()) ?? ''
+        return text.replace('Order No.', '').trim()
+    }
+
     // VERIFIED live (staging, 2026-08-01): one order-product-card per
     // basket line, in the order they were added — no hidden mobile/desktop
     // duplicate on this page (unlike most of the rest of the site).

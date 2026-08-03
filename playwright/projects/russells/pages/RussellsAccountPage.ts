@@ -139,6 +139,19 @@ export class RussellsAccountPage extends AccountPage {
         return reference ?? ''
     }
 
+    // VERIFIED live (staging, 2026-08-03): filters live (debounced) down
+    // to the exact matching row. Used instead of openMostRecentOrder()
+    // when a test needs to open the SPECIFIC order it just placed -
+    // "most recent" would be ambiguous (and a real race) if another test
+    // run placed an order against this same shared account around the
+    // same time.
+    async openOrderByReference(reference: string): Promise<void> {
+        await this.ordersReferenceFilterInput.fill(reference)
+        await expect(this.ordersFirstRowReferenceCell).toHaveText(reference, { timeout: 15000 })
+        await this.ordersFirstRow.click()
+        await expect(this.page).toHaveURL(/\/account\/orders\/\d+$/, { timeout: 20000 })
+    }
+
     // VERIFIED live (staging, 2026-07-31): the account order-detail page
     // reuses the exact same "orders-details__*" testids as the checkout
     // thank-you page.

@@ -22,7 +22,12 @@ function formatPrice(amount: number): string {
  * delivery speed, billing "same as delivery") -> review & pay -> a real
  * Global Payments card payment -> the thank-you page, verified in full
  * (order line, delivery method/address, order summary, payment section)
- * against values captured live during the journey rather than hardcoded.
+ * against values captured live during the journey rather than hardcoded
+ * -> then the SAME order re-verified in Account > Orders, proving it was
+ * actually saved correctly server-side and not just displayed correctly
+ * once at checkout time. Found by its exact reference (not "most recent
+ * order"), since another test run could place a competing order against
+ * this same shared account around the same time.
  *
  * VERIFIED live (staging, 2026-07-31) end-to-end with a real completed
  * order, using accountTestUser_1's permanent fixture delivery/billing
@@ -48,6 +53,7 @@ test.describe('Purchase Journey (Logged-in)', () => {
         basketPage,
         checkoutPage,
         checkoutSuccessPage,
+        accountPage,
     }) => {
         const user = Object.assign({}, russells.accountTestUser_1)
 
@@ -171,6 +177,43 @@ test.describe('Purchase Journey (Logged-in)', () => {
         await test.step(`Verify the payment section is present`, async () => {
             console.log(`[STEP] Verify the payment section is present`)
             await checkoutSuccessPage.verifyPaymentDetailsSectionPresent()
+        })
+
+        let orderReference: string
+
+        await test.step(`Capture the order reference from the thank-you page`, async () => {
+            console.log(`[STEP] Capture the order reference from the thank-you page`)
+            orderReference = await checkoutSuccessPage.getOrderReferenceNumber()
+        })
+
+        await test.step(`Open the same order in Account > Orders`, async () => {
+            console.log(`[STEP] Open the same order in Account > Orders`)
+            await accountPage.navigateToOrdersPage()
+            await accountPage.openOrderByReference(orderReference)
+        })
+
+        // Reuses the exact same verification methods as the thank-you page
+        // above, against the exact same captured values — the account
+        // order-detail page is confirmed to reuse the identical
+        // "orders-details__*"/"order-product-card__*" testids (see
+        // objects.ts), so this proves the order was actually SAVED
+        // correctly, not just displayed correctly once at checkout time.
+        await test.step(`Verify the saved order details match what was actually purchased`, async () => {
+            console.log(`[STEP] Verify the saved order details match what was actually purchased`)
+            await checkoutSuccessPage.verifyOrderLines([{
+                name: productName,
+                sku: productSku,
+                quantity: 1,
+                unitPrice: productPrice,
+                totalPrice: productPrice,
+            }])
+            await checkoutSuccessPage.verifyDeliveryMethod('DPD')
+            await checkoutSuccessPage.verifyDeliveryAddressContains(['Fred Automation', '221B Baker Street', 'London', 'NW1 6XE', '07700900000'])
+            await checkoutSuccessPage.verifyOrderSummary({
+                subtotal: productPrice,
+                shippingTotal: shippingCost,
+                total: formatPrice(parsePrice(productPrice) + parsePrice(shippingCost)),
+            })
         })
     })
 })
