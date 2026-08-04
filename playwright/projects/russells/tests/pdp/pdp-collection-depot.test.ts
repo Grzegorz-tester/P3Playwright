@@ -1,4 +1,5 @@
 import test from '../../utils/Pages'
+import { products } from '../../utils/products/products'
 
 /**
  * PDP COLLECTION DEPOT PICKER
@@ -21,7 +22,7 @@ test.describe('PDP Collection Depot Picker', () => {
     }) => {
         await test.step(`Navigate to a product PDP`, async () => {
             console.log(`[STEP] Navigate to a product PDP`)
-            await page.goto('/products/roller-for-cnh-nh-92087109')
+            await page.goto(products.ROLLER_FOR_CNH.link)
             await productDetailPage.validatePDPLoaded()
         })
 

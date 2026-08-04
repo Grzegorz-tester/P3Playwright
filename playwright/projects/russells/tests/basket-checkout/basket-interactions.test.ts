@@ -1,5 +1,6 @@
 import test from '../../utils/Pages'
 import { promotions } from '../../utils/promotions/promotions'
+import { products } from '../../utils/products/products'
 
 /**
  * BASKET INTERACTIONS
@@ -28,7 +29,7 @@ test.describe('Basket Interactions', () => {
     }) => {
         await test.step(`Add a product to basket`, async () => {
             console.log(`[STEP] Add a product to basket`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()
         })
@@ -56,7 +57,7 @@ test.describe('Basket Interactions', () => {
     }) => {
         await test.step(`Add a product to basket`, async () => {
             console.log(`[STEP] Add a product to basket`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()
         })
@@ -75,7 +76,7 @@ test.describe('Basket Interactions', () => {
     }) => {
         await test.step(`Add a product to basket`, async () => {
             console.log(`[STEP] Add a product to basket`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()
         })

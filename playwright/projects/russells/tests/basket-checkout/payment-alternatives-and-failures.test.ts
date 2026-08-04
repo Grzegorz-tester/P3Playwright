@@ -1,5 +1,6 @@
 import test from '../../utils/Pages'
 import { generateDeliveryAddress } from '@utils/fakeData'
+import { products } from '../../utils/products/products'
 
 /**
  * PAYMENT ALTERNATIVES AND FAILURES
@@ -37,7 +38,7 @@ test.describe('Payment Alternatives and Failures', () => {
 
         await test.step(`Add a product to basket and continue as guest`, async () => {
             console.log(`[STEP] Add a product to basket and continue as guest`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()
             await basketPage.proceedToSecureCheckout()
@@ -74,7 +75,7 @@ test.describe('Payment Alternatives and Failures', () => {
 
         await test.step(`Add a product to basket and continue as guest`, async () => {
             console.log(`[STEP] Add a product to basket and continue as guest`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()
             await basketPage.proceedToSecureCheckout()

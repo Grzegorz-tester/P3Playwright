@@ -39,14 +39,16 @@ export const RussellsObjects = {
         // same alert testid.
         newsletterAlert: (page: Page) => page.getByTestId('newsletter-form__alert'),
         sitemapLink: (page: Page) => page.getByTestId('stripped-footer__sitemap-link'),
-        // NOT VERIFIED: the cookie-consent banner never actually triggered
-        // during exploration (staging, 2026-07-31), matching the known
-        // intermittent behaviour of this storefront's banner. Assumed same
-        // OneTrust vendor/id as Insinkerator (another Velstar-built P3
-        // storefront) since no real banner was observed to confirm against.
-        // Safe either way — clickSitemapLink() only waits up to 5s and
-        // no-ops if this never matches.
-        cookieBannerAcceptButton: (page: Page) => page.locator('#onetrust-accept-btn-handler')
+        // VERIFIED live (2026-08-04): the vendor is CookieYes, not OneTrust
+        // - the previous #onetrust-accept-btn-handler guess (ported from
+        // Insinkerator's convention) never matched anything, which is why
+        // it "never triggered" in earlier exploration on staging. CookieYes
+        // only actually renders on the PRODUCTION domain: staging's console
+        // logs a CookieYes "website URL has changed" error and the banner
+        // never appears there at all, confirmed live. No testid
+        // (third-party widget) - .cky-btn-accept is CookieYes' own stable
+        // class.
+        cookieBannerAcceptButton: (page: Page) => page.locator('.cky-btn-accept')
     },
 
     // VERIFIED live (staging, 2026-07-31) — /sitemap has 8 real tab
@@ -200,8 +202,12 @@ export const RussellsObjects = {
         createWishlistButton: (page: Page) => page.getByTestId('account-card__heading').locator('button').filter({ hasText: 'Create a new wishlist' }),
         // The Create/Edit-name/Share/Delete-confirm dialogs are all the
         // same underlying Radix dialog primitive — only one is ever open
-        // at a time, so an unscoped [role="dialog"] is safe.
-        dialog: (page: Page) => page.locator('[role="dialog"]'),
+        // at a time. VERIFIED live (2026-08-04): on production, CookieYes'
+        // own preference-center modal (id="ckyPreferenceCenter") is ALSO
+        // role="dialog" and permanently present in the DOM (whether open or
+        // not) — excluded by id, a stable third-party identifier, rather
+        // than left as a strict-mode violation waiting to happen.
+        dialog: (page: Page) => page.locator('[role="dialog"]:not(#ckyPreferenceCenter)'),
         // TODO: RUS-474 — no testid; a real, unusual-looking but STABLE id
         // (confirmed unchanged across reloads, same convention accepted
         // for the Quick Enquiry Form's fields).
@@ -627,8 +633,13 @@ export const RussellsObjects = {
         // dialog + cmdk combobox primitive (no testid of its own) - a
         // "Search..." input for filtering, and options carrying a stable
         // data-value attribute (e.g. data-value="TRACTOR") - preferred
-        // over matching on the option's visible text.
-        dialog: (page: Page) => page.locator('[role="dialog"]'),
+        // over matching on the option's visible text. VERIFIED live
+        // (2026-08-04): on production, CookieYes' own preference-center
+        // modal (id="ckyPreferenceCenter") is ALSO role="dialog" and
+        // permanently present in the DOM (whether open or not) - excluded
+        // by id, a stable third-party identifier, rather than left as a
+        // strict-mode violation waiting to happen.
+        dialog: (page: Page) => page.locator('[role="dialog"]:not(#ckyPreferenceCenter)'),
         dialogSearchInput: (page: Page) => RussellsObjects.PartsFinderWidget.dialog(page).locator('input'),
         dialogOptions: (page: Page) => RussellsObjects.PartsFinderWidget.dialog(page).locator('[role="option"]'),
         dialogOptionFiltered: (value: string) => (page: Page) => page.locator(`[data-value="${value}"]`),

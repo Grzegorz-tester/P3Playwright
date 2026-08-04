@@ -18,11 +18,35 @@ export class RussellsSitemapPage extends SitemapPage {
     }
 
     // category is the tab's href slug, e.g. 'products', 'article_categories'.
+    //
+    // CONFIRMED live (prod, 2026-08-04): production's real category content
+    // is far larger than staging's synthetic data (tens of thousands of
+    // items accumulate in the DOM switching between tabs), so rendering the
+    // first item can genuinely take longer than staging ever does.
+    //
+    // CONFIRMED live (prod, 2026-08-04): CookieYes' consent banner has also
+    // been observed to reappear mid-session on production after several
+    // full-page reloads through this exact loop, even though it was
+    // already dismissed once at test start (see Pages.ts beforeEach) and a
+    // slower, manually-paced reproduction of the identical sequence never
+    // triggered it - a genuine race in the third-party widget's own
+    // initialization under fast automated navigation, not something this
+    // storefront controls. A single dismiss-then-wait attempt isn't
+    // reliable against a race, so the whole click-dismiss-wait sequence is
+    // retried instead, same pattern already used for Global Payments'
+    // equivalent intermittent-timing flakiness in
+    // payWithGlobalPaymentsTestCard.
     async openCategory(category: string): Promise<void> {
         const tabLink = RussellsObjects.SitemapPage.categoryTabLink(category)(this.page)
         await expect(tabLink).toBeVisible({ timeout: 20000 })
-        await tabLink.click()
-        await expect(this.categoryItemLinks.first()).toBeVisible({ timeout: 20000 })
+        await expect(async () => {
+            // Dismissed BEFORE the click, not after — if the banner is
+            // covering the tab link at click-time, the click itself gets
+            // blocked, and dismissing afterwards is already too late.
+            await RussellsObjects.Footer.cookieBannerAcceptButton(this.page).click({ timeout: 2000 }).catch(() => { })
+            await tabLink.click()
+            await expect(this.categoryItemLinks.first()).toBeVisible({ timeout: 15000 })
+        }).toPass({ timeout: 75000 })
     }
 
     // CONFIRMED live (staging, 2026-07-31): this app prefetches nearly

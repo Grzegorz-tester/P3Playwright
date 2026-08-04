@@ -1,5 +1,6 @@
 import test from '../../utils/Pages'
 import { russells } from '@utils/testUsers'
+import { products } from '../../utils/products/products'
 
 /**
  * PURCHASE JOURNEY (Logged-in, Click & Collect)
@@ -58,7 +59,7 @@ test.describe('Purchase Journey (Logged-in, Click & Collect)', () => {
 
         await test.step(`Navigate to a PDP, select a collection depot, and capture its details`, async () => {
             console.log(`[STEP] Navigate to a PDP, select a collection depot, and capture its details`)
-            await page.goto('/products/roller-for-cnh-nh-92087109')
+            await page.goto(products.ROLLER_FOR_CNH.link)
             await productDetailPage.validatePDPLoaded()
             const depot = await productDetailPage.selectFirstDepotForLocation('York')
             depotName = depot.name

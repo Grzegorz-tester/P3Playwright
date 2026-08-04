@@ -1,5 +1,6 @@
 import test from '../../utils/Pages'
 import { expect } from '@playwright/test'
+import { products } from '../../utils/products/products'
 
 /**
  * GUEST CHECKOUT - ADDRESS EDITING
@@ -37,7 +38,7 @@ test.describe('Guest Checkout - Address Editing', () => {
 
         await test.step(`Add a product to basket and continue as guest`, async () => {
             console.log(`[STEP] Add a product to basket and continue as guest`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.validatePDPLoaded()
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()
@@ -87,7 +88,7 @@ test.describe('Guest Checkout - Address Editing', () => {
 
         await test.step(`Add a product to basket and continue as guest`, async () => {
             console.log(`[STEP] Add a product to basket and continue as guest`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.validatePDPLoaded()
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()
@@ -163,7 +164,7 @@ test.describe('Guest Checkout - Address Editing', () => {
 
         await test.step(`Add a product to basket and continue as guest`, async () => {
             console.log(`[STEP] Add a product to basket and continue as guest`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.validatePDPLoaded()
             await productDetailPage.addToBasket(1)
             await basketPage.proceedToBasketPage()

@@ -1,4 +1,5 @@
 import test from '../../utils/Pages'
+import { products } from '../../utils/products/products'
 
 /**
  * PDP CONTENT AND NAVIGATION
@@ -28,7 +29,7 @@ test.describe('PDP Content and Navigation', () => {
     }) => {
         await test.step(`Navigate to a product PDP`, async () => {
             console.log(`[STEP] Navigate to a product PDP`)
-            await page.goto('/products/roller-for-cnh-nh-92087109')
+            await page.goto(products.ROLLER_FOR_CNH.link)
             await productDetailPage.validatePDPLoaded()
         })
 

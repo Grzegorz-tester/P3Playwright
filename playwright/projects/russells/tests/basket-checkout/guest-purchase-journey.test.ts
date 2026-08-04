@@ -1,5 +1,6 @@
 import test from '../../utils/Pages'
 import { generateDeliveryAddress } from '@utils/fakeData'
+import { products } from '../../utils/products/products'
 
 /**
  * PURCHASE JOURNEY (Guest)
@@ -47,7 +48,7 @@ test.describe('Purchase Journey (Guest)', () => {
 
         await test.step(`Navigate to a PDP, capture its details, and add to basket`, async () => {
             console.log(`[STEP] Navigate to a PDP, capture its details, and add to basket`)
-            await page.goto('/products/walterscheid-universal-joint-32-x-76mm-standard-duty')
+            await page.goto(products.WALTERSCHEID_UNIVERSAL_JOINT.link)
             await productDetailPage.validatePDPLoaded()
             productName = (await productDetailPage.productName.textContent()) ?? ''
             productSku = (await productDetailPage.productSku.first().textContent()) ?? ''

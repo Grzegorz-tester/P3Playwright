@@ -56,7 +56,11 @@ export const envs: Envs = {
             {
                 url: "https://staging.russells-parts.work",
                 api: "https://staging-api.russells-parts.work"
-            }
+            },
+        prod: {
+            url: "https://www.russellsparts.com/",
+            api: "https://api.russellsparts.com" // not accounted for - Russells has no auth.setup.ts (logs in via UI, not the API), so this is unused; no visible client-side call to a separate API host on prod either
+        }
     },
 }
 

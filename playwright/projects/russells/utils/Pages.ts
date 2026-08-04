@@ -12,6 +12,7 @@ import { RussellsCheckoutSuccessPage } from "../pages/RussellsCheckoutSuccessPag
 import { RussellsDepotFinderPage } from "../pages/RussellsDepotFinderPage";
 import { RussellsQuickEnquiryFormPage } from "../pages/RussellsQuickEnquiryFormPage";
 import { RussellsPartsFinderPage } from "../pages/RussellsPartsFinderPage";
+import { RussellsObjects } from "./objects";
 
 const test = baseTest.extend<{
     homePage: RussellsHomePage
@@ -67,6 +68,22 @@ const test = baseTest.extend<{
     partsFinderPage: async ({ page }, use) => {
         await use(new RussellsPartsFinderPage(page))
     },
+})
+
+// VERIFIED live (2026-08-04): production (www.russellsparts.com) shows a
+// real, un-dismissed CookieYes consent banner that intercepts pointer
+// events on every page load - staging never shows it at all (its console
+// logs a CookieYes "website URL has changed" error, so the widget appears
+// to be registered against the prod domain only and fails silently on
+// staging). Dismissed once here, deterministically, before any test's own
+// steps run - a page.on('load', ...) hook was tried first but raced with
+// the test body instead of reliably completing first. Consent persists via
+// a cookie for the rest of the test once accepted, so this one dismissal
+// covers whatever pages the test navigates to afterwards. A no-op on
+// staging, where the button never appears.
+test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await RussellsObjects.Footer.cookieBannerAcceptButton(page).click({ timeout: 5000 }).catch(() => { })
 })
 
 export default test

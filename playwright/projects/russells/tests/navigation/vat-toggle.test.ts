@@ -1,5 +1,6 @@
 import test from '../../utils/Pages'
 import { expect } from '@playwright/test'
+import { products } from '../../utils/products/products'
 
 /**
  * VAT TOGGLE
@@ -30,7 +31,7 @@ test.describe('VAT Toggle', () => {
     }) => {
         await test.step(`Navigate to a PDP`, async () => {
             console.log(`[STEP] Navigate to a PDP`)
-            await page.goto('/products/roller-for-cnh-nh-92087109')
+            await page.goto(products.ROLLER_FOR_CNH.link)
             await productDetailPage.validatePDPLoaded()
         })
 
