@@ -142,6 +142,7 @@ e2e_tests_russells_stage:
     expire_in: 5 days
   rules:
     - if: $UPSTREAM_PROJECT_NAME == "russells"
+    - when: manual
 
 e2e_tests_mipa_stage:
   extends: .e2e_tests
