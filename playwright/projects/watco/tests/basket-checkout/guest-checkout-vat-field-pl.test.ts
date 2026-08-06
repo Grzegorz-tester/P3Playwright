@@ -93,5 +93,12 @@ test('PL guest checkout: NIP and NIP-EU fields on payment step', async ({ page, 
         const vatText = (await checkoutPage.summaryVatAmount.textContent())?.replace(/\s+/g, ' ').trim()
         expect(vatText).toBe('0,00 zł')
         await expect(checkoutPage.payOnAccountMethodRadio).toHaveCount(0)
+
+        // AC: new-customer minimum-order notice is "UK and IE only" — on
+        // PL this is doubly true since Pay on Account itself never
+        // renders, so the notice (which only ever shows beneath it)
+        // can't either. Asserted explicitly for AC traceability rather
+        // than left as an implication of the count(0) above.
+        await expect(checkoutPage.payOnAccountMinimumOrderNotice).toHaveCount(0)
     })
 })

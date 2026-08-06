@@ -63,6 +63,12 @@ test('DE guest checkout: VAT number field on payment step', async ({ page, homeP
         await expect(checkoutPage.vatNumberInput).toHaveValue('DE123456789')
         expect(await checkoutPage.summaryVatAmount.textContent()).toBe(vatBefore)
         await expect(checkoutPage.payOnAccountMethodRadio).toBeVisible()
+
+        // AC: new-customer minimum-order notice is "UK and IE only" —
+        // VERIFIED live, staging, 2026-08-06: no such message renders on
+        // DE regardless of order value.
+        await checkoutPage.payOnAccountMethodRadio.check({ force: true })
+        await expect(checkoutPage.payOnAccountMinimumOrderNotice).toHaveCount(0)
     })
 })
 

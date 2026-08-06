@@ -10,9 +10,8 @@ import { generateGuestEmail } from '@utils/fakeData'
  * format/rate/currency): /panier, /valider-la-commande, France as the
  * delivery country. All VERIFIED live, staging, 2026-08-06.
  *
- * CONFIRMED (not asserted here): unlike UK/IE, selecting Pay on Account
- * on FR shows no new-customer minimum-order notice — checked live, no
- * such message renders regardless of order value.
+ * Unlike UK/IE, selecting Pay on Account on FR shows no new-customer
+ * minimum-order notice — asserted explicitly below, not just noted.
  */
 test('FR guest checkout: VAT number field on payment step', async ({ page, homePage, productListPage, productDetailPage, basketPage, checkoutPage }) => {
     await test.step('Add a product to basket and reach guest checkout', async () => {
@@ -62,9 +61,12 @@ test('FR guest checkout: VAT number field on payment step', async ({ page, homeP
         expect(vatBefore).toContain('€')
     })
 
-    await test.step('Both payment methods are offered', async () => {
-        console.log('[STEP] Both payment methods are offered')
+    await test.step('Both payment methods are offered, with no new-customer minimum-order notice for Pay on Account', async () => {
+        console.log('[STEP] Both payment methods are offered, with no new-customer minimum-order notice for Pay on Account')
         await expect(checkoutPage.payByCardMethodRadio).toBeVisible()
         await expect(checkoutPage.payOnAccountMethodRadio).toBeVisible()
+
+        await checkoutPage.payOnAccountMethodRadio.check({ force: true })
+        await expect(checkoutPage.payOnAccountMinimumOrderNotice).toHaveCount(0)
     })
 })

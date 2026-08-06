@@ -60,4 +60,13 @@ test('NL guest checkout: VAT number field on payment step', async ({ page, homeP
         const vatText = (await checkoutPage.summaryVatAmount.textContent())?.replace(/\s+/g, ' ').trim()
         expect(vatText).toBe('€ 0,00')
     })
+
+    // AC: new-customer minimum-order notice is "UK and IE only" —
+    // VERIFIED live, staging, 2026-08-06: no such message renders on NL
+    // regardless of order value.
+    await test.step('Selecting Pay on Account shows no new-customer minimum-order notice', async () => {
+        console.log('[STEP] Selecting Pay on Account shows no new-customer minimum-order notice')
+        await checkoutPage.payOnAccountMethodRadio.check({ force: true })
+        await expect(checkoutPage.payOnAccountMinimumOrderNotice).toHaveCount(0)
+    })
 })
