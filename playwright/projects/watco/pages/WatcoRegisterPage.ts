@@ -23,6 +23,11 @@ export class WatcoRegisterPage {
     readonly vatNumberError = WatcoObjects.RegisterPage.vatNumberError(this.page)
     readonly vatNumberComment = WatcoObjects.RegisterPage.vatNumberComment(this.page)
 
+    // PL-only second field (NIP) — see WatcoCheckoutPage's equivalent
+    // comment. Not used by any other market.
+    readonly nipNumberInput = WatcoObjects.RegisterPage.nipNumberInput(this.page)
+    readonly nipNumberError = WatcoObjects.RegisterPage.nipNumberError(this.page)
+
     // path defaults to the UK/IE English route — FR (and any other
     // localized market) passes its own route (e.g. "/senregistrer").
     async navigateToRegisterPage(path: string = '/register'): Promise<void> {

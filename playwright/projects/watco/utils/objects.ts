@@ -139,14 +139,34 @@ export const WatcoObjects = {
         // via .js-vat-apply-error (the SAME class/element the invalid-
         // format error below uses) and the checkbox does not end up
         // checked — confirmed live, this is a real guard, not a flake.
-        vatFormGroup: (page: Page) => page.locator('.js-vat-apply-group'),
-        vatApplyButton: (page: Page) => page.locator('button.js-vat-apply'),
-        vatApplyError: (page: Page) => page.locator('.js-vat-apply-error'),
+        // Scoped to the group that contains #payment_customer_vat_number,
+        // not just ".js-vat-apply-group" — PL has a SECOND, near-identical
+        // group for its own NIP field (same classes throughout), which
+        // would otherwise make these resolve to two elements and throw a
+        // strict-mode violation the moment a PL test touches them. The
+        // :has() scope is a no-op on every other market (each has only
+        // one such group, which trivially contains that input), so this
+        // is safe everywhere, not just PL-specific hardening.
+        vatFormGroup: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_vat_number)'),
+        vatApplyButton: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_vat_number) button.js-vat-apply'),
+        vatApplyError: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_vat_number) .js-vat-apply-error'),
         // Absent on UK/IE/FR (confirmed live on each); present on DE with
         // real copy explaining the field's business-customer purpose —
         // same .vat-form-group__comment class either way, market data
         // only differs in whether the element exists at all.
-        vatNumberComment: (page: Page) => page.locator('.vat-form-group__comment'),
+        vatNumberComment: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_vat_number) .vat-form-group__comment'),
+
+        // PL-only: a SECOND, separate field for the domestic Polish tax ID
+        // (NIP), alongside the EU VAT number above (NIP-EU, which reuses
+        // the same #payment_customer_vat_number id/markup every other
+        // market uses for its single VAT field — only NIP-EU affects the
+        // VAT rate; NIP alone has no tax effect). VERIFIED live, staging,
+        // 2026-08-06.
+        nipNumberInput: (page: Page) => page.locator('#payment_customer_nip_number'),
+        nipFormGroup: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_nip_number)'),
+        nipApplyButton: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_nip_number) button.js-vat-apply'),
+        nipApplyError: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_nip_number) .js-vat-apply-error'),
+        nipNumberComment: (page: Page) => page.locator('.js-vat-apply-group:has(#payment_customer_nip_number) .vat-form-group__comment'),
         orderReferenceInput: (page: Page) => page.locator('#payment_customer_notes'),
         payByCardMethodRadio: (page: Page) => page.locator('#payment_payment_method_0'),
         payOnAccountMethodRadio: (page: Page) => page.locator('#payment_payment_method_1'),
@@ -214,8 +234,15 @@ export const WatcoObjects = {
         submitButton: (page: Page) => page.locator('form:has(#user_registration_email) button[type="submit"]'),
         vatNumberError: (page: Page) => page.locator('#user_registration_customer_vat_number ~ .alert-danger'),
         // Same .vat-form-group__comment class as checkout — absent on
-        // UK/IE/FR, present on DE.
-        vatNumberComment: (page: Page) => page.locator('.vat-form-group__comment'),
+        // UK/IE/FR, present on DE. Scoped to the group containing the VAT
+        // (NIP-EU on PL) input for the same reason as checkout's — PL adds
+        // a second NIP field to this form too (registration's wrapper is
+        // plain ".form-group", not checkout's ".js-vat-apply-group").
+        vatNumberComment: (page: Page) => page.locator('.form-group:has(#user_registration_customer_vat_number) .vat-form-group__comment'),
+
+        // PL-only second field (NIP) — see CheckoutPage comment above.
+        nipNumberInput: (page: Page) => page.locator('#user_registration_customer_nip_number'),
+        nipNumberError: (page: Page) => page.locator('#user_registration_customer_nip_number ~ .alert-danger'),
     },
 
     // VERIFIED live (staging, 2026-08-05). Express Checkout is a third
@@ -232,9 +259,18 @@ export const WatcoObjects = {
         optionContainer: (page: Page) => page.locator('.checkout-welcome__option:has(input[name="checkout_method"])'),
         optionToggle: (page: Page) => page.locator('.checkout-welcome__option:has(input[name="checkout_method"]) .checkout-welcome__option__header'),
         vatNumberInput: (page: Page) => page.locator('#express_customer_vat_number'),
-        vatApplyButton: (page: Page) => page.locator('.checkout-welcome__option:has(input[name="checkout_method"]) button.js-vat-apply'),
-        vatApplyError: (page: Page) => page.locator('.checkout-welcome__option:has(input[name="checkout_method"]) .js-vat-apply-error'),
+        // Scoped to the group containing the VAT (NIP-EU on PL) input, not
+        // just the express option card as a whole — same reasoning as
+        // checkout's vatApplyButton/vatApplyError above: PL has a second,
+        // near-identical NIP group in this same card.
+        vatApplyButton: (page: Page) => page.locator('.js-vat-apply-group:has(#express_customer_vat_number) button.js-vat-apply'),
+        vatApplyError: (page: Page) => page.locator('.js-vat-apply-group:has(#express_customer_vat_number) .js-vat-apply-error'),
         termsCheckbox: (page: Page) => page.locator('#expressTCs'),
         googlePayButton: (page: Page) => page.locator('#gpay-button-online-api-id'),
+
+        // PL-only second field (NIP) — see CheckoutPage comment above.
+        nipNumberInput: (page: Page) => page.locator('#express_customer_nip_number'),
+        nipApplyButton: (page: Page) => page.locator('.js-vat-apply-group:has(#express_customer_nip_number) button.js-vat-apply'),
+        nipApplyError: (page: Page) => page.locator('.js-vat-apply-group:has(#express_customer_nip_number) .js-vat-apply-error'),
     },
 }

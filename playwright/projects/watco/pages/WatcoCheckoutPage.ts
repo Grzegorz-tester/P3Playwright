@@ -69,6 +69,11 @@ export class WatcoCheckoutPage extends CheckoutPage {
     readonly expressTermsCheckbox = WatcoObjects.ExpressCheckout.termsCheckbox(this.page);
     readonly expressGooglePayButton = WatcoObjects.ExpressCheckout.googlePayButton(this.page);
 
+    // PL-only second field (NIP) — see the checkout NIP fields above.
+    readonly expressNipNumberInput = WatcoObjects.ExpressCheckout.nipNumberInput(this.page);
+    readonly expressNipApplyButton = WatcoObjects.ExpressCheckout.nipApplyButton(this.page);
+    readonly expressNipApplyError = WatcoObjects.ExpressCheckout.nipApplyError(this.page);
+
     readonly deliveryFirstNameInput = WatcoObjects.CheckoutPage.deliveryFirstNameInput(this.page);
     readonly deliveryLastNameInput = WatcoObjects.CheckoutPage.deliveryLastNameInput(this.page);
     readonly deliveryTelephoneInput = WatcoObjects.CheckoutPage.deliveryTelephoneInput(this.page);
@@ -86,6 +91,14 @@ export class WatcoCheckoutPage extends CheckoutPage {
     readonly vatApplyError = WatcoObjects.CheckoutPage.vatApplyError(this.page);
     readonly vatNumberComment = WatcoObjects.CheckoutPage.vatNumberComment(this.page);
     readonly vatFormGroup = WatcoObjects.CheckoutPage.vatFormGroup(this.page);
+
+    // PL-only second field (NIP, the domestic tax ID) — see objects.ts
+    // CheckoutPage comment. Not used by any other market.
+    readonly nipNumberInput = WatcoObjects.CheckoutPage.nipNumberInput(this.page);
+    readonly nipApplyButton = WatcoObjects.CheckoutPage.nipApplyButton(this.page);
+    readonly nipApplyError = WatcoObjects.CheckoutPage.nipApplyError(this.page);
+    readonly nipNumberComment = WatcoObjects.CheckoutPage.nipNumberComment(this.page);
+    readonly nipFormGroup = WatcoObjects.CheckoutPage.nipFormGroup(this.page);
     readonly payByCardMethodRadio = WatcoObjects.CheckoutPage.payByCardMethodRadio(this.page);
     readonly payOnAccountMethodRadio = WatcoObjects.CheckoutPage.payOnAccountMethodRadio(this.page);
     readonly adyenTermsCheckbox = WatcoObjects.CheckoutPage.adyenTermsCheckbox(this.page);
@@ -124,6 +137,18 @@ export class WatcoCheckoutPage extends CheckoutPage {
     async getExpressVatApplyErrorMessage(): Promise<string> {
         await expect(this.expressVatApplyError).toBeVisible({ timeout: 10000 })
         return (await this.expressVatApplyError.textContent())?.trim() ?? ''
+    }
+
+    // PL-only second field (NIP) in Express Checkout.
+    async applyExpressNipNumber(nip: string): Promise<void> {
+        await this.expressNipNumberInput.fill(nip)
+        await expect(this.expressNipApplyButton).toBeEnabled({ timeout: 10000 })
+        await this.expressNipApplyButton.click()
+    }
+
+    async getExpressNipApplyErrorMessage(): Promise<string> {
+        await expect(this.expressNipApplyError).toBeVisible({ timeout: 10000 })
+        return (await this.expressNipApplyError.textContent())?.trim() ?? ''
     }
 
     // VERIFIED live (staging, 2026-08-05): a logged-in account with a saved
@@ -208,6 +233,24 @@ export class WatcoCheckoutPage extends CheckoutPage {
 
     async isVatFieldDirty(): Promise<boolean> {
         return await this.vatFormGroup.evaluate(el => el.classList.contains('js-vat-apply-group--dirty'))
+    }
+
+    // PL-only: NIP is a second, separate field alongside NIP-EU (the
+    // vatNumberInput/applyVatNumber pair above) — it has no effect on the
+    // VAT rate, it just records the domestic tax ID.
+    async applyNipNumber(nip: string): Promise<void> {
+        await this.nipNumberInput.fill(nip)
+        await expect(this.nipApplyButton).toBeEnabled({ timeout: 10000 })
+        await this.nipApplyButton.click()
+    }
+
+    async getNipApplyErrorMessage(): Promise<string> {
+        await expect(this.nipApplyError).toBeVisible({ timeout: 20000 })
+        return (await this.nipApplyError.textContent())?.trim() ?? ''
+    }
+
+    async isNipFieldDirty(): Promise<boolean> {
+        return await this.nipFormGroup.evaluate(el => el.classList.contains('js-vat-apply-group--dirty'))
     }
 
     // CONFIRMED SITE BEHAVIOUR: checkboxes that only render once a payment

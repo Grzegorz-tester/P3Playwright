@@ -134,5 +134,23 @@ export const watcoBeFr = {
     }
 }
 
+// PL market — Poland (same Watco platform, own domain/data — see
+// testEnvs.ts watco.stagePl). Registered live (staging, 2026-08-06); same
+// staging test-data-reset caveat as watco.accountTestUserWithVat above
+// applies. accountTestUserWithVat has a saved NIP-EU (PL9876543210) —
+// PL's OWN NIP field (the domestic tax ID) is left blank on this account,
+// matching the QA doc's own scenario coverage (it only tests a saved
+// NIP-EU, never a saved NIP).
+export const watcoPl = {
+    accountTestUser_1: {
+        email: "grzegorz.hajduk+watcopl@velstar.co.uk",
+        password: "Testing123!"
+    },
+    accountTestUserWithVat: {
+        email: "grzegorz.hajduk+watcopl_hasvat_1786020219987@velstar.co.uk",
+        password: "Testing123!"
+    }
+}
+
 
 

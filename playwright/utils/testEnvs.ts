@@ -33,6 +33,10 @@ interface Envs {
         stageBeFr?: {
             url: string;
             api: string;
+        },
+        stagePl?: {
+            url: string;
+            api: string;
         }
     }
 }
@@ -151,6 +155,21 @@ export const envs: Envs = {
         stageBeFr:
             {
                 url: "https://staging-befr.watco.pub",
+                api: ""
+            },
+        // VERIFIED live (staging, 2026-08-06): Poland — the ONE market
+        // with genuinely TWO separate VAT-shaped fields (NIP, the
+        // domestic tax ID, and NIP-EU, the EU VAT number) rather than the
+        // single vatNumberInput/vatApplyButton pair every other market
+        // uses. Only NIP-EU zero-rates; NIP alone has no tax effect; Pay
+        // on Account is never offered at all (not gated, just absent).
+        // See the *-pl.test.ts files' docblocks for the full live
+        // verification, including a QA-doc-flagged bug in the invalid-NIP
+        // error copy that needed re-checking against current staging
+        // before deciding whether to encode it as a known-failing test.
+        stagePl:
+            {
+                url: "https://staging-pl.watco.pub",
                 api: ""
             }
     },
