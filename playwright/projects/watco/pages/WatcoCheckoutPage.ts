@@ -95,13 +95,16 @@ export class WatcoCheckoutPage extends CheckoutPage {
     readonly summaryVatAmount = WatcoObjects.CheckoutPage.summaryVatAmount(this.page);
     readonly summaryOrderTotal = WatcoObjects.CheckoutPage.summaryOrderTotal(this.page);
 
-    async startGuestCheckout(email: string): Promise<void> {
+    // checkoutBasePath defaults to the UK/IE English route — FR passes
+    // its own route (e.g. "/valider-la-commande"); the "/delivery"
+    // sub-path suffix itself stays English on every market checked so far.
+    async startGuestCheckout(email: string, checkoutBasePath: string = '/checkout'): Promise<void> {
         await expect(this.guestOptionToggle).toBeVisible({ timeout: 30000 })
         await this.guestOptionToggle.click()
         await expect(this.guestEmailInput).toBeVisible({ timeout: 15000 })
         await this.guestEmailInput.fill(email)
         await this.guestEmailSubmitButton.click()
-        await expect(this.page).toHaveURL(/\/checkout\/delivery$/, { timeout: 30000 })
+        await expect(this.page).toHaveURL(new RegExp(`${checkoutBasePath}/delivery$`), { timeout: 30000 })
     }
 
     async openExpressCheckout(): Promise<void> {

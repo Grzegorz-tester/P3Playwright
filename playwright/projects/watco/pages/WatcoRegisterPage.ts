@@ -22,8 +22,10 @@ export class WatcoRegisterPage {
     readonly submitButton = WatcoObjects.RegisterPage.submitButton(this.page)
     readonly vatNumberError = WatcoObjects.RegisterPage.vatNumberError(this.page)
 
-    async navigateToRegisterPage(): Promise<void> {
-        await this.page.goto('/register', { timeout: 45000 })
+    // path defaults to the UK/IE English route — FR (and any other
+    // localized market) passes its own route (e.g. "/senregistrer").
+    async navigateToRegisterPage(path: string = '/register'): Promise<void> {
+        await this.page.goto(path, { timeout: 45000 })
         await expect(this.emailInput).toBeVisible({ timeout: 30000 })
     }
 

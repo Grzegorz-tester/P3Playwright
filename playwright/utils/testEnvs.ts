@@ -8,9 +8,13 @@ interface Envs {
             url: string;
             api: string;
         },
-        // IE is a separate Watco storefront market (same platform, own
+        // IE/FR are separate Watco storefront markets (same platform, own
         // domain) — not a general convention yet, just what WAT-305 needs.
         stageIe?: {
+            url: string;
+            api: string;
+        },
+        stageFr?: {
             url: string;
             api: string;
         }
@@ -72,6 +76,17 @@ export const envs: Envs = {
         stageIe:
             {
                 url: "https://staging-ie.watco.pub",
+                api: ""
+            },
+        // VERIFIED live (staging, 2026-08-06): same platform, but this
+        // market localizes its own URL PATHS too (not just VAT format/
+        // rate/currency) — /se-connecter, /senregistrer, /panier,
+        // /valider-la-commande, /mon-compte instead of the UK/IE English
+        // routes. See WatcoLoginPage/WatcoRegisterPage/WatcoBasketPage/
+        // WatcoCheckoutPage for the path-override params this requires.
+        stageFr:
+            {
+                url: "https://staging-fr.watco.pub",
                 api: ""
             }
     },

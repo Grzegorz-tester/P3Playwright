@@ -78,11 +78,15 @@ export const WatcoObjects = {
     // data-basket-qty attribute reflecting the live basket item count —
     // used for getBasketCount() instead of parsing the "(N items)" text.
     // The basket-page "Checkout now" control is an <input type="submit">
-    // with no id/name, but it is the ONLY submit in form[action="/basket"]
-    // (confirmed live), so it's scoped by that rather than by its value
-    // text. Per-line quantity uses a separate form (action="/basket/update").
+    // with no id/name, but it is the ONLY submit in a form that submits to
+    // the basket page's OWN path — action="/basket" on UK/IE, but
+    // action="/panier" on FR (VERIFIED live, 2026-08-06: this market
+    // localizes the basket page path itself, unlike the always-English
+    // /basket/update and /basket/promo/add API-style routes). Matching the
+    // current page's own pathname keeps this scoped-not-text without
+    // hardcoding a market's route.
     BasketPage: {
-        checkoutSubmitButton: (page: Page) => page.locator('form[action="/basket"] input[type="submit"]'),
+        checkoutSubmitButton: (page: Page) => page.locator(`form[action="${new URL(page.url()).pathname}"] input[type="submit"]`),
         basketLineQtyInput: (page: Page) => page.locator('.basket-item-qty'),
         basketUpdateSubmitButton: (page: Page) => page.locator('form[action="/basket/update"] input[type="submit"]'),
     },
