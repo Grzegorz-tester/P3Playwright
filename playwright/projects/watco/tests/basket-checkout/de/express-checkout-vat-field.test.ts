@@ -5,8 +5,9 @@ import { dismissCookieBanner } from '../../../utils/cookieBanner'
 /**
  * WAT-305 — VAT registration number field, Express Checkout (DE).
  * DE mirror of express-checkout-vat-field.test.ts (UK) — same deferred
- * scope (real wallet-sheet interaction, including the Austria zero-rating
- * value inside the payment sheet) applies here too.
+ * scope (real wallet-sheet interaction) applies here too. Cross-border
+ * delivery is out of scope for this project, so only within-country
+ * (DE) delivery is exercised.
  */
 test('DE express checkout: VAT number field', async ({ page, homePage, productListPage, productDetailPage, basketPage, checkoutPage }) => {
     await test.step('Add a product to basket and open Express Checkout', async () => {

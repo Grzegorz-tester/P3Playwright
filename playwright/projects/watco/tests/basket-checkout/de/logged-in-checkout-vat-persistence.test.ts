@@ -17,10 +17,10 @@ import { watcoDe } from '@utils/testUsers'
  * own prior interrupted runs.
  *
  * Also checks VAT correctness on the thank-you page itself — see the
- * "Edit the VAT number..." step below. Note this delivery address is
- * DOMESTIC (Berlin), so DE's own zero-rating rule (cross-border only)
- * does NOT apply here — the amount is expected to carry through
- * UNCHANGED, not drop to zero.
+ * "Edit the VAT number..." step below. This delivery address is
+ * DOMESTIC (Berlin) — cross-border delivery is out of scope for this
+ * project — so the amount is expected to carry through UNCHANGED, not
+ * drop to zero.
  */
 test('DE logged-in checkout: an edited VAT number persists to the account after the order is placed', async ({ page, loginPage, homePage, productListPage, productDetailPage, basketPage, checkoutPage, accountPage }) => {
     await test.step('Log in with the account that has a saved VAT number', async () => {
