@@ -9,6 +9,17 @@ export type GuestDeliveryAddress = {
     addressLine1: string
     city: string
     postcode: string
+    country: string
+}
+
+const DEFAULT_UK_GUEST_ADDRESS: GuestDeliveryAddress = {
+    firstName: 'Grzegorz',
+    lastName: 'Test',
+    telephone: '07700900000',
+    addressLine1: '1 Test Street',
+    city: 'London',
+    postcode: 'SW1A 1AA',
+    country: 'United Kingdom',
 }
 
 // Watco is a single-page accordion checkout (Delivery/Billing/Payment all
@@ -117,7 +128,11 @@ export class WatcoCheckoutPage extends CheckoutPage {
     // SUBSEQUENT logged-in checkout hits (addressNumber, as with Kooltech's
     // own implementation, is not needed to pick between them — there's
     // only ever one address in this test account, selected by default).
-    async chooseDeliveryAddress(_addressNumber?: number): Promise<void> {
+    // `addressOverride` lets a non-UK market (e.g. IE) supply its own
+    // address/country while UK tests keep calling this with no args at
+    // all — added as an extra optional param rather than replacing
+    // addressNumber, so the abstract signature stays intact.
+    async chooseDeliveryAddress(_addressNumber?: number, addressOverride?: Partial<GuestDeliveryAddress>): Promise<void> {
         const savedAddressRadio = this.page.locator('input[name="checkout_address"]')
         const hasSavedAddress = await savedAddressRadio.first().isVisible({ timeout: 5000 }).catch(() => false)
         if (hasSavedAddress) {
@@ -126,14 +141,7 @@ export class WatcoCheckoutPage extends CheckoutPage {
             return
         }
 
-        const address: GuestDeliveryAddress = {
-            firstName: 'Grzegorz',
-            lastName: 'Test',
-            telephone: '07700900000',
-            addressLine1: '1 Test Street',
-            city: 'London',
-            postcode: 'SW1A 1AA',
-        }
+        const address: GuestDeliveryAddress = { ...DEFAULT_UK_GUEST_ADDRESS, ...addressOverride }
         await expect(this.deliveryFirstNameInput).toBeVisible({ timeout: 30000 })
         await this.deliveryFirstNameInput.fill(address.firstName)
         await this.deliveryLastNameInput.fill(address.lastName)
@@ -155,7 +163,7 @@ export class WatcoCheckoutPage extends CheckoutPage {
         await this.deliveryAddressLine1Input.fill(address.addressLine1)
         await this.deliveryCityInput.fill(address.city)
         await this.deliveryPostcodeInput.fill(address.postcode)
-        await this.deliveryCountrySelect.selectOption({ label: 'United Kingdom' })
+        await this.deliveryCountrySelect.selectOption({ label: address.country })
         await this.accordionPrimaryButton.click()
         await expect(this.firstShippingOption).toBeVisible({ timeout: 15000 })
     }

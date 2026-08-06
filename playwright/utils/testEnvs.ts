@@ -7,6 +7,12 @@ interface Envs {
         prod?: {
             url: string;
             api: string;
+        },
+        // IE is a separate Watco storefront market (same platform, own
+        // domain) — not a general convention yet, just what WAT-305 needs.
+        stageIe?: {
+            url: string;
+            api: string;
         }
     }
 }
@@ -59,6 +65,13 @@ export const envs: Envs = {
         stage:
             {
                 url: "https://staging-uk.watco.pub",
+                api: ""
+            },
+        // VERIFIED live (staging, 2026-08-06): same platform as the UK
+        // site, own domain and market data (VAT format, rate, currency).
+        stageIe:
+            {
+                url: "https://staging-ie.watco.pub",
                 api: ""
             }
     },
