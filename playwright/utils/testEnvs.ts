@@ -21,6 +21,10 @@ interface Envs {
         stageDe?: {
             url: string;
             api: string;
+        },
+        stageNl?: {
+            url: string;
+            api: string;
         }
     }
 }
@@ -104,6 +108,19 @@ export const envs: Envs = {
         stageDe:
             {
                 url: "https://staging-de.watco.pub",
+                api: ""
+            },
+        // VERIFIED live (staging, 2026-08-06): localized paths like DE/FR
+        // (/inloggen, /registreren, /winkelmandje, /de-bestelling-
+        // valideren, /mijn-account). Also VAT-gated Pay on Account and a
+        // business-customer comment like DE, but its zero-rating rule is
+        // SIMPLER — a valid NL VAT number zero-rates the order even for a
+        // domestic NL→NL delivery (DE only zero-rates for a delivery
+        // country different from its own). See the *-nl.test.ts files'
+        // docblocks for what's actually verified.
+        stageNl:
+            {
+                url: "https://staging-nl.watco.pub",
                 api: ""
             }
     },
