@@ -10,6 +10,7 @@ export class WatcoAccountPage extends AccountPage {
 
     readonly accountOverviewMarker = WatcoObjects.AccountPage.accountOverviewMarker(this.page);
     readonly vatNumberInput = WatcoObjects.AccountPage.vatNumberInput(this.page);
+    readonly nipNumberInput = WatcoObjects.AccountPage.nipNumberInput(this.page);
     readonly saveDetailsButton = WatcoObjects.AccountPage.saveDetailsButton(this.page);
 
     async waitForLoginToBeCompleted(): Promise<void> {

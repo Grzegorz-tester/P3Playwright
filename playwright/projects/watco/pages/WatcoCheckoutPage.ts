@@ -106,6 +106,10 @@ export class WatcoCheckoutPage extends CheckoutPage {
     readonly payNowButton = WatcoObjects.CheckoutPage.payNowButton(this.page);
     readonly payOnAccountMinimumOrderNotice = WatcoObjects.CheckoutPage.payOnAccountMinimumOrderNotice(this.page);
 
+    readonly adyenDropinReady = WatcoObjects.CheckoutPage.adyenDropinReady(this.page);
+    readonly adyenCardHolderNameInput = WatcoObjects.CheckoutPage.adyenCardHolderNameInput(this.page);
+    readonly adyenPayButton = WatcoObjects.CheckoutPage.adyenPayButton(this.page);
+
     readonly summaryVatAmount = WatcoObjects.CheckoutPage.summaryVatAmount(this.page);
     readonly summaryVatRow = WatcoObjects.CheckoutPage.summaryVatRow(this.page);
     readonly summaryOrderTotal = WatcoObjects.CheckoutPage.summaryOrderTotal(this.page);
@@ -310,5 +314,35 @@ export class WatcoCheckoutPage extends CheckoutPage {
         await this.payByCardMethodRadio.check({ force: true })
         await expect(this.adyenTermsCheckbox).toBeVisible({ timeout: 15000 })
         await this.checkWithRetry(this.adyenTermsCheckbox)
+    }
+
+    // Completes a REAL order via Adyen's test-mode card payment — needed
+    // on markets where Pay on Account isn't available (PL never offers
+    // it) to get an order-completing test at all. VERIFIED live (staging,
+    // 2026-08-06): staging's Adyen client config has "environment":"test",
+    // so Adyen's publicly-documented test card (4111 1111 1111 1111, any
+    // future expiry, any 3-digit CVC) is accepted without a 3-D Secure
+    // challenge. The three card fields are separate cross-origin iframes
+    // (Adyen's PCI-compliant secured fields) — scoped by the
+    // language-agnostic "data-cse" attribute Adyen puts on each field's
+    // wrapper, not by the iframe's own title (which IS per-market
+    // translated text, e.g. "Numer karty " in Polish). Nothing else here
+    // is market-specific, so this method isn't PL-only despite being
+    // discovered while closing a PL-only gap.
+    async completeCardPaymentWithTestCard(): Promise<void> {
+        await this.payByCardMethodRadio.check({ force: true })
+        await expect(this.adyenTermsCheckbox).toBeVisible({ timeout: 15000 })
+        await this.checkWithRetry(this.adyenTermsCheckbox)
+        await expect(this.adyenDropinReady).toBeVisible({ timeout: 15000 })
+
+        await this.adyenCardHolderNameInput.fill('Test Test')
+        await this.page.frameLocator('[data-cse="encryptedCardNumber"] iframe')
+            .locator('input[data-fieldtype="encryptedCardNumber"]').fill('4111111111111111')
+        await this.page.frameLocator('[data-cse="encryptedExpiryDate"] iframe')
+            .locator('input[data-fieldtype="encryptedExpiryDate"]').fill('03/30')
+        await this.page.frameLocator('[data-cse="encryptedSecurityCode"] iframe')
+            .locator('input[data-fieldtype="encryptedSecurityCode"]').fill('737')
+
+        await this.adyenPayButton.click()
     }
 }

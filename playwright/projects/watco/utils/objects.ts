@@ -179,6 +179,20 @@ export const WatcoObjects = {
         // not a flake — do not use it.
         adyenTermsCheckbox: (page: Page) => page.locator('#adyenTCs'),
         payOnAccountTermsCheckbox: (page: Page) => page.locator('#nonAdyenTCs'),
+
+        // Adyen Drop-in (card payment), used to complete a REAL order via
+        // an Adyen test card — see WatcoCheckoutPage.completeCardPayment-
+        // WithTestCard(). VERIFIED live (staging, 2026-08-06, PL market,
+        // but nothing here is PL-specific — the dropin container, its
+        // "ready" class, the cardholder-name input, and the Pay button's
+        // class are all standard Adyen Web Components markup, not
+        // per-market translated text). #dropin-container itself starts
+        // with a Bootstrap d-none class removed once the T&Cs checkbox is
+        // checked — same mechanism as payNowButton above, different
+        // element.
+        adyenDropinReady: (page: Page) => page.locator('.adyen-checkout__dropin--ready'),
+        adyenCardHolderNameInput: (page: Page) => page.locator('input[name="holderName"]'),
+        adyenPayButton: (page: Page) => page.locator('button.adyen-checkout__button--pay'),
         // CONFIRMED SITE BEHAVIOUR / CORRECTED (staging, 2026-08-06): the
         // visually prominent "Pay now" button (button.btn-checkout) is
         // NOT what actually submits the order — it stays permanently
@@ -233,6 +247,9 @@ export const WatcoObjects = {
     AccountPage: {
         accountOverviewMarker: (page: Page) => page.locator('a[href="/account/profile"]'),
         vatNumberInput: (page: Page) => page.locator('#user_profile_customer_vat_number'),
+        // PL-only second field (NIP) — see WatcoCheckoutPage's equivalent
+        // comment. VERIFIED live, staging, 2026-08-06.
+        nipNumberInput: (page: Page) => page.locator('#user_profile_customer_nip_number'),
         // Scoped to the profile form (name="user_profile") — the page also
         // has an unrelated newsletter-signup form with its own submit.
         saveDetailsButton: (page: Page) => page.locator('form[name="user_profile"] button[type="submit"]'),
