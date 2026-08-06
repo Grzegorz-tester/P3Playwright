@@ -24,6 +24,23 @@ export class WatcoBasketPage extends BasketPage {
         await this.page.goto(path, { timeout: 30000 })
     }
 
+    // The shared test accounts reused across this whole suite accumulate
+    // basket lines from every prior test run (basket state is server-side,
+    // per account, and nothing here has ever cleared it) — a real
+    // order-completing test needs a known, single-item basket first, not
+    // whatever junk a previous run left behind. Remove-link hrefs are
+    // "/basket/<market-path>/remove/<lineId>" — scoped generically by
+    // "/remove/" rather than a market-specific prefix, and re-queried
+    // fresh on each loop iteration since removing a line reflows the DOM.
+    async clearBasket(path: string = '/basket'): Promise<void> {
+        await this.proceedToBasketPage(path)
+        const removeLink = this.page.locator('a[href*="/remove/"]').first()
+        while (await removeLink.count() > 0) {
+            await removeLink.click()
+            await this.page.waitForLoadState('load')
+        }
+    }
+
     // VERIFIED live (staging, 2026-08-05): a guest lands on the checkout
     // landing page (the "Welcome to checkout" guest/sign-in/express
     // choice, e.g. /checkout on UK/IE, /valider-la-commande on FR); a

@@ -179,7 +179,18 @@ export const WatcoObjects = {
         // not a flake — do not use it.
         adyenTermsCheckbox: (page: Page) => page.locator('#adyenTCs'),
         payOnAccountTermsCheckbox: (page: Page) => page.locator('#nonAdyenTCs'),
-        payNowButton: (page: Page) => page.locator('button.btn-checkout'),
+        // CONFIRMED SITE BEHAVIOUR / CORRECTED (staging, 2026-08-06): the
+        // visually prominent "Pay now" button (button.btn-checkout) is
+        // NOT what actually submits the order — it stays permanently
+        // visibility:hidden throughout this flow (confirmed via computed
+        // style, tried every payment method/state combination). The real
+        // submit control is this generic accordion-style "proceed" input,
+        // gated by a Bootstrap d-none class removed once the active
+        // payment method's own T&Cs checkbox is checked — same d-none-
+        // toggle mechanism DE's Pay-on-Account-visibility uses, just on a
+        // different element. This was never caught earlier because no
+        // test had ever completed a full order until this was found.
+        payNowButton: (page: Page) => page.locator('.payment__button-proceed'),
         // VERIFIED: shown once Pay on Account is selected. Real copy:
         // "For new customers, the minimum value for a Pay on account order
         // is £500.00. If you are an existing customer payment on account

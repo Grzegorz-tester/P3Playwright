@@ -257,21 +257,48 @@ export class WatcoCheckoutPage extends CheckoutPage {
     // method is selected (#adyenTCs / #nonAdyenTCs) are occasionally not
     // yet wired to their click handler the instant they become visible —
     // same class of lazy-binding quirk as enterAddressManuallyLink above.
-    // Verify the check actually landed and retry once rather than trusting
-    // the first click.
+    // CONFIRMED live (staging, 2026-08-06) that force-checking the input
+    // directly (this method's original approach) can report toBeChecked()
+    // as satisfied while the payment__button-proceed's d-none class never
+    // actually gets removed — i.e. the checkbox's OWN state looks fine,
+    // but whatever listener reveals the submit button didn't fire. A real
+    // click on the checkbox's <label> proved to be what that listener
+    // actually needs, and even that occasionally needs a second attempt —
+    // seen live going from unchecked to checked only on retry. Poll for
+    // BOTH the checkbox state and the actual effect (label click, not a
+    // forced input state) up to 3 times rather than trusting Playwright's
+    // own toBeChecked() alone to mean "the page reacted correctly".
     private async checkWithRetry(checkbox: ReturnType<Page['locator']>): Promise<void> {
-        try {
-            await checkbox.check({ force: true, timeout: 5000 })
-        } catch {
-            await checkbox.check({ force: true })
+        const checkboxId = await checkbox.getAttribute('id')
+        const label = this.page.locator(`label[for="${checkboxId}"]`)
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (await checkbox.isChecked().catch(() => false)) return
+            await label.click({ force: true }).catch(() => checkbox.check({ force: true }))
+            await checkbox.isChecked().catch(() => false)
+            await this.page.waitForTimeout(500)
         }
         await expect(checkbox).toBeChecked()
     }
 
+    // Completes the order — payNowButton starts with a Bootstrap d-none
+    // class, only removed once the T&Cs checkbox is checked (see
+    // objects.ts comment). CONFIRMED live: the checkbox itself can report
+    // checked=true while the d-none removal listener still hasn't fired —
+    // checkWithRetry succeeding is NOT sufficient proof the button will
+    // appear. Re-click the label (up to 3 times) if the button doesn't
+    // show up within a short window, rather than trusting a single wait.
     async payOnAccount(): Promise<void> {
         await this.payOnAccountMethodRadio.check({ force: true })
         await expect(this.payOnAccountTermsCheckbox).toBeVisible({ timeout: 15000 })
         await this.checkWithRetry(this.payOnAccountTermsCheckbox)
+
+        const label = this.page.locator('label[for="nonAdyenTCs"]')
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (await this.payNowButton.isVisible().catch(() => false)) break
+            await label.click({ force: true }).catch(() => {})
+            await this.page.waitForTimeout(1000)
+        }
+        await expect(this.payNowButton).toBeVisible({ timeout: 10000 })
         await this.payNowButton.click()
     }
 
