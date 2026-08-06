@@ -70,3 +70,47 @@ test('DE guest checkout: VAT number field validation', async ({ page, homePage, 
         await expect(checkoutPage.payOnAccountTermsCheckbox).not.toBeChecked()
     })
 })
+
+// See the UK file's equivalent test for why this is kept separate (fresh
+// checkout session) rather than a further step above. Uses the card/
+// Adyen method rather than Pay on Account — Pay on Account is VAT-gated
+// on DE and this test never applies a VALID VAT, so it never appears.
+test('DE guest checkout: an invalid, applied VAT number also blocks proceeding', async ({ page, homePage, productListPage, productDetailPage, basketPage, checkoutPage }) => {
+    await test.step('Add a product to basket and reach the payment step', async () => {
+        console.log('[STEP] Add a product to basket and reach the payment step')
+        await homePage.navigateToHomePage()
+        await dismissCookieBanner(page)
+        await homePage.searchForProduct('epoxy')
+        await productListPage.clickOnFirstItemToProceedToPDP()
+        await productDetailPage.addToBasket(1)
+        await basketPage.proceedToBasketPage('/warenkorb')
+        await basketPage.proceedToSecureCheckout('/kasse')
+        await checkoutPage.startGuestCheckout(generateGuestEmail('watcode_guest_vat_invalid_block'), '/kasse')
+        await checkoutPage.chooseDeliveryAddress(undefined, {
+            addressLine1: 'Teststrasse 1',
+            city: 'Berlin',
+            postcode: '10115',
+            country: 'Deutschland',
+        })
+        await checkoutPage.chooseDeliveryDateAndOptions(1)
+    })
+
+    await test.step('An invalid, applied VAT number blocks proceeding via the same mechanism as an unsaved edit', async () => {
+        console.log('[STEP] An invalid, applied VAT number blocks proceeding via the same mechanism as an unsaved edit')
+        await checkoutPage.applyVatNumber('DE12')
+        expect(await checkoutPage.getVatApplyErrorMessage()).toBe(
+            'Die eingegebene USt-IdNr. ist ungültig. Bitte geben Sie eine Umsatzsteuer-Identifikationsnummer im Format DE123456789 ein'
+        )
+        await expect(checkoutPage.vatNumberInput).toHaveClass(/is-invalid/)
+
+        await checkoutPage.payByCardMethodRadio.check({ force: true })
+        await expect(checkoutPage.adyenTermsCheckbox).toBeVisible({ timeout: 15000 })
+        await checkoutPage.adyenTermsCheckbox.click({ force: true }).catch(() => {})
+        await checkoutPage.adyenTermsCheckbox.click({ force: true }).catch(() => {})
+
+        expect(await checkoutPage.getVatApplyErrorMessage()).toBe(
+            'Es liegen nicht gespeicherte Änderungen in diesem Feld vor. Bitte übernehmen Sie die Änderungen oder leeren Sie das Feld, bevor Sie fortfahren'
+        )
+        await expect(checkoutPage.adyenTermsCheckbox).not.toBeChecked()
+    })
+})

@@ -61,3 +61,45 @@ test('FR guest checkout: VAT number field validation', async ({ page, homePage, 
         await expect(checkoutPage.payOnAccountTermsCheckbox).not.toBeChecked()
     })
 })
+
+// See the UK file's equivalent test for why this is kept separate (fresh
+// checkout session) rather than a further step above.
+test('FR guest checkout: an invalid, applied VAT number also blocks proceeding', async ({ page, homePage, productListPage, productDetailPage, basketPage, checkoutPage }) => {
+    await test.step('Add a product to basket and reach the payment step', async () => {
+        console.log('[STEP] Add a product to basket and reach the payment step')
+        await homePage.navigateToHomePage()
+        await dismissCookieBanner(page)
+        await homePage.searchForProduct('epoxy')
+        await productListPage.clickOnFirstItemToProceedToPDP()
+        await productDetailPage.addToBasket(1)
+        await basketPage.proceedToBasketPage('/panier')
+        await basketPage.proceedToSecureCheckout('/valider-la-commande')
+        await checkoutPage.startGuestCheckout(generateGuestEmail('watcofr_guest_vat_invalid_block'), '/valider-la-commande')
+        await checkoutPage.chooseDeliveryAddress(undefined, {
+            addressLine1: '1 Rue de Test',
+            city: 'Paris',
+            postcode: '75001',
+            country: 'France',
+        })
+        await checkoutPage.chooseDeliveryDateAndOptions(1)
+    })
+
+    await test.step('An invalid, applied VAT number blocks proceeding via the same mechanism as an unsaved edit', async () => {
+        console.log('[STEP] An invalid, applied VAT number blocks proceeding via the same mechanism as an unsaved edit')
+        await checkoutPage.applyVatNumber('FRA1234567')
+        expect(await checkoutPage.getVatApplyErrorMessage()).toBe(
+            "Le numéro de TVA entré n'est pas valable. Veuillez entrer un numéro de TVA au format: FRXX123456789."
+        )
+        await expect(checkoutPage.vatNumberInput).toHaveClass(/is-invalid/)
+
+        await checkoutPage.payOnAccountMethodRadio.check({ force: true })
+        await expect(checkoutPage.payOnAccountTermsCheckbox).toBeVisible({ timeout: 15000 })
+        await checkoutPage.payOnAccountTermsCheckbox.click({ force: true }).catch(() => {})
+        await checkoutPage.payOnAccountTermsCheckbox.click({ force: true }).catch(() => {})
+
+        expect(await checkoutPage.getVatApplyErrorMessage()).toBe(
+            'Des modifications ne sont pas enregistrées. Veuillez valider ou vider le champ avant de continuer'
+        )
+        await expect(checkoutPage.payOnAccountTermsCheckbox).not.toBeChecked()
+    })
+})

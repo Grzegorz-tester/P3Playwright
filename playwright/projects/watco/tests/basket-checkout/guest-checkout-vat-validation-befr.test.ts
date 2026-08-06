@@ -75,3 +75,47 @@ test('BE-FR guest checkout: VAT number field validation', async ({ page, homePag
         await expect(checkoutPage.payOnAccountTermsCheckbox).not.toBeChecked()
     })
 })
+
+// See the UK file's equivalent test for why this is kept separate (fresh
+// checkout session) rather than a further step above. Uses the card/
+// Adyen method rather than Pay on Account — Pay on Account is VAT-gated
+// on BE-FR and this test never applies a VALID VAT, so it never appears.
+test('BE-FR guest checkout: an invalid, applied VAT number also blocks proceeding', async ({ page, homePage, productListPage, productDetailPage, basketPage, checkoutPage }) => {
+    await test.step('Add a product to basket and reach the payment step', async () => {
+        console.log('[STEP] Add a product to basket and reach the payment step')
+        await homePage.navigateToHomePage()
+        await dismissCookieBanner(page)
+        await homePage.searchForProduct('epoxy')
+        await productListPage.clickOnFirstItemToProceedToPDP()
+        await productDetailPage.addToBasket(1)
+        await basketPage.proceedToBasketPage('/panier')
+        await basketPage.proceedToSecureCheckout('/valider-la-commande')
+        await checkoutPage.startGuestCheckout(generateGuestEmail('watcobefr_guest_vat_invalid_block'), '/valider-la-commande')
+        await checkoutPage.chooseDeliveryAddress(undefined, {
+            addressLine1: 'Rue de Test 1',
+            city: 'Bruxelles',
+            postcode: '1000',
+            country: 'Belgique',
+        })
+        await checkoutPage.chooseDeliveryDateAndOptions(1)
+    })
+
+    await test.step('An invalid, applied VAT number blocks proceeding via the same mechanism as an unsaved edit', async () => {
+        console.log('[STEP] An invalid, applied VAT number blocks proceeding via the same mechanism as an unsaved edit')
+        await checkoutPage.applyVatNumber('BE12')
+        expect(await checkoutPage.getVatApplyErrorMessage()).toBe(
+            'Le numéro de TVA entré n’est pas valable. Veuillez entrer un numéro de TVA au format: BE1234567890.'
+        )
+        await expect(checkoutPage.vatNumberInput).toHaveClass(/is-invalid/)
+
+        await checkoutPage.payByCardMethodRadio.check({ force: true })
+        await expect(checkoutPage.adyenTermsCheckbox).toBeVisible({ timeout: 15000 })
+        await checkoutPage.adyenTermsCheckbox.click({ force: true }).catch(() => {})
+        await checkoutPage.adyenTermsCheckbox.click({ force: true }).catch(() => {})
+
+        expect(await checkoutPage.getVatApplyErrorMessage()).toBe(
+            'Des modifications ne sont pas enregistrées. Veuillez valider ou vider le champ avant de continuer'
+        )
+        await expect(checkoutPage.adyenTermsCheckbox).not.toBeChecked()
+    })
+})

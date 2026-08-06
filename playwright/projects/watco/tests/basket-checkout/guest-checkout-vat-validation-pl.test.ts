@@ -86,3 +86,49 @@ test('PL guest checkout: NIP and NIP-EU field validation', async ({ page, homePa
         await expect(checkoutPage.adyenTermsCheckbox).not.toBeChecked()
     })
 })
+
+// QA doc scenario 22 ("Customer blocked from proceeding with unresolved
+// invalid NIP") — kept separate (fresh checkout session) rather than a
+// further step above, matching every other market's equivalent test.
+// VERIFIED live, staging, 2026-08-06: an invalid, APPLIED NIP uses the
+// exact same generic "unsaved changes" blocking message as an unsaved
+// edit, not a NIP-specific one — matching the QA doc's own finding.
+test('PL guest checkout: an invalid, applied NIP also blocks proceeding', async ({ page, homePage, productListPage, productDetailPage, basketPage, checkoutPage }) => {
+    await test.step('Add a product to basket and reach the payment step', async () => {
+        console.log('[STEP] Add a product to basket and reach the payment step')
+        await homePage.navigateToHomePage()
+        await dismissCookieBanner(page)
+        await homePage.searchForProduct('epoxy')
+        await productListPage.clickOnFirstItemToProceedToPDP()
+        await productDetailPage.addToBasket(1)
+        await basketPage.proceedToBasketPage('/koszyk')
+        await basketPage.proceedToSecureCheckout('/realizacja-transakcji')
+        await checkoutPage.startGuestCheckout(generateGuestEmail('watcopl_guest_nip_invalid_block'), '/realizacja-transakcji')
+        await checkoutPage.chooseDeliveryAddress(undefined, {
+            addressLine1: 'Testowa 1',
+            city: 'Warszawa',
+            postcode: '00-001',
+            country: 'Polska',
+        })
+        await checkoutPage.chooseDeliveryDateAndOptions(1)
+    })
+
+    await test.step('An invalid, applied NIP blocks proceeding via the same mechanism as an unsaved edit', async () => {
+        console.log('[STEP] An invalid, applied NIP blocks proceeding via the same mechanism as an unsaved edit')
+        await checkoutPage.applyNipNumber('123')
+        expect(await checkoutPage.getNipApplyErrorMessage()).toBe(
+            'Wprowadzony numer NIP jest nieprawidłowy. Wprowadź numer NIP w formacie 1234567890.'
+        )
+        await expect(checkoutPage.nipNumberInput).toHaveClass(/is-invalid/)
+
+        await checkoutPage.payByCardMethodRadio.check({ force: true })
+        await expect(checkoutPage.adyenTermsCheckbox).toBeVisible({ timeout: 15000 })
+        await checkoutPage.adyenTermsCheckbox.click({ force: true }).catch(() => {})
+        await checkoutPage.adyenTermsCheckbox.click({ force: true }).catch(() => {})
+
+        expect(await checkoutPage.getNipApplyErrorMessage()).toBe(
+            'W tym polu znajdują się niezapisane zmiany. Zastosuj zmiany lub wyczyść pole przed kontynuowaniem'
+        )
+        await expect(checkoutPage.adyenTermsCheckbox).not.toBeChecked()
+    })
+})
