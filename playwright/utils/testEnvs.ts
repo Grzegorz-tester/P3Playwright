@@ -51,5 +51,16 @@ export const envs: Envs = {
                 api: "https://staging-api.indespension.pub"
             }
     },
+    // TODO(WAT-305): no separate API host confirmed yet — no auth.setup.ts
+    // is planned for this project (UI login only, matching the confirmed
+    // pattern of the closest sibling project), so this is likely unused.
+    // Revisit if that changes.
+    watco: {
+        stage:
+            {
+                url: "https://staging-uk.watco.pub",
+                api: ""
+            }
+    },
 }
 

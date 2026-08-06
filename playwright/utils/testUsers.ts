@@ -23,6 +23,24 @@ export const kooltech = {
     }
 }
 
+export const watco = {
+    accountTestUser_1: {
+        email: "grzegorz.hajduk@velstar.co.uk",
+        password: "Testing123!"
+    },
+    // VERIFIED live (staging, 2026-08-05): dedicated account with a saved
+    // VAT number (GB123456789), registered specifically for WAT-335's
+    // "has saved VAT" scenarios — accountTestUser_1 above has none.
+    // NOTE: staging test data has been observed to reset between sessions —
+    // an earlier account under this same alias stopped logging in and had
+    // to be re-registered. If tests using this account start failing
+    // login, re-register via /register with a customer_vat_number of
+    // GB123456789 and update this entry.
+    accountTestUserWithVat: {
+        email: "grzegorz.hajduk+watco_hasvat_1785956451012@velstar.co.uk",
+        password: "Testing123!"
+    }
+}
 
 
 

@@ -21,3 +21,15 @@ export function generateDeliveryAddress(): AddressData {
         postcode: faker.location.zipCode(),
     }
 }
+
+/**
+ * Generates a unique, throwaway guest-checkout email under a real Velstar
+ * alias (grzegorz.hajduk+<label>_<timestamp>@velstar.co.uk), rather than a
+ * fully synthetic faker email. Matches the naming shape already used for
+ * this project's manually-created test accounts, so a stray guest order
+ * created by a test run stays greppable in a real inbox/admin panel during
+ * debugging. `label` should identify the calling test (e.g. "watco-poa").
+ */
+export function generateGuestEmail(label: string): string {
+    return `grzegorz.hajduk+${label}_${Date.now()}@velstar.co.uk`
+}
