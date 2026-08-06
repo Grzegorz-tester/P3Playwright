@@ -118,5 +118,21 @@ export const watcoBeNl = {
     }
 }
 
+// BE-FR market — Belgium, French language (same Watco platform, own
+// domain/data — see testEnvs.ts watco.stageBeFr). Registered live
+// (staging, 2026-08-06); same staging test-data-reset caveat as
+// watco.accountTestUserWithVat above applies.
+export const watcoBeFr = {
+    accountTestUser_1: {
+        email: "grzegorz.hajduk+watcobefr@velstar.co.uk",
+        password: "Testing123!"
+    },
+    // Dedicated account with a saved VAT number (BE0411905847).
+    accountTestUserWithVat: {
+        email: "grzegorz.hajduk+watcobefr_hasvat_1786016690754@velstar.co.uk",
+        password: "Testing123!"
+    }
+}
+
 
 

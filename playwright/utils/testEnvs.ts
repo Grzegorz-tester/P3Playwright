@@ -29,6 +29,10 @@ interface Envs {
         stageBeNl?: {
             url: string;
             api: string;
+        },
+        stageBeFr?: {
+            url: string;
+            api: string;
         }
     }
 }
@@ -135,6 +139,18 @@ export const envs: Envs = {
         stageBeNl:
             {
                 url: "https://staging-benl.watco.pub",
+                api: ""
+            },
+        // VERIFIED live (staging, 2026-08-06): Belgium, French-language
+        // storefront — same URL paths as FR (/valider-la-commande, etc.)
+        // and same VAT field behaviour (single field, not the "NIP/NIP-EU"
+        // pair the QA doc's scenario 1 mentions — see the *-befr.test.ts
+        // docblocks for the full live verification, including why that
+        // scenario is treated as a doc artifact rather than a real
+        // divergence).
+        stageBeFr:
+            {
+                url: "https://staging-befr.watco.pub",
                 api: ""
             }
     },
