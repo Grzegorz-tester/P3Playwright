@@ -19,6 +19,9 @@ import { watcoIe } from '@utils/testUsers'
  *
  * Self-heals against its own prior interrupted runs the same way the UK
  * file does — see that file's docblock for why.
+ *
+ * Also checks VAT correctness on the thank-you page itself — see the
+ * "Edit the VAT number..." step below.
  */
 test('IE logged-in checkout: an edited VAT number persists to the account after the order is placed', async ({ page, loginPage, homePage, productListPage, productDetailPage, basketPage, checkoutPage, accountPage }) => {
     await test.step('Log in with the account that has a saved VAT number', async () => {
@@ -74,8 +77,14 @@ test('IE logged-in checkout: an edited VAT number persists to the account after 
         console.log('[STEP] Edit the VAT number and complete the order via Pay on Account')
         await checkoutPage.applyVatNumber('IE9999999L')
         await expect(checkoutPage.vatNumberInput).not.toHaveClass(/is-invalid/)
+        const vatBeforeOrder = await checkoutPage.summaryVatAmount.textContent()
         await checkoutPage.payOnAccount()
         await expect(page).toHaveURL(/\/checkout\/thanks$/, { timeout: 30000 })
+
+        // IE always charges the standard rate regardless of VAT number —
+        // the meaningful check is that the amount shown mid-checkout
+        // carried through unchanged to the confirmed order.
+        await expect(checkoutPage.thankYouVatAmount).toHaveText(vatBeforeOrder ?? '')
     })
 
     await test.step('The account\'s saved VAT number now reflects the edited value', async () => {

@@ -211,6 +211,20 @@ export const WatcoObjects = {
         // has (confirmed present on /basket's equivalent row, so this is a
         // checkout-template-specific omission, not a repo-wide pattern).
         summaryOrderTotal: (page: Page) => page.locator('.basket-summary__row--total .basket-summary__total'),
+
+        // Thank-you page (post-order). A DIFFERENT template from the rest
+        // of checkout — none of the .basket-summary__* locators above
+        // exist here. VERIFIED live (staging, 2026-08-06): each row is
+        // "<div class='checkout-thank-you__summary-row'><span>Label</span>
+        // <span>Amount</span></div>", with no VAT RATE shown (unlike the
+        // checkout page's "VAT (20%)") and no VAT NUMBER shown anywhere
+        // on the page. Scoped by ":has(+ ...__summary-total)" — the row
+        // immediately before the total row — rather than by the label
+        // text, since the label itself is a translated word ("VAT" /
+        // "MwSt" / "TVA" / etc.) and this repo's hard rule is to avoid
+        // text-based locators when a structural alternative exists.
+        thankYouVatRow: (page: Page) => page.locator('.checkout-thank-you__summary-row:has(+ .checkout-thank-you__summary-total)'),
+        thankYouVatAmount: (page: Page) => page.locator('.checkout-thank-you__summary-row:has(+ .checkout-thank-you__summary-total) span:last-child'),
     },
 
     // VERIFIED live (staging, 2026-08-05). /account/profile's VAT field has

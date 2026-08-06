@@ -14,6 +14,10 @@ import { watcoNl } from '@utils/testUsers'
  * so no extra handling needed. See the UK file's docblock for the
  * payNowButton / clearBasket background this depends on, and for why
  * this self-heals against its own prior interrupted runs.
+ *
+ * Also checks VAT correctness on the thank-you page itself — see the
+ * "Edit the VAT number..." step below. NL zero-rates even for domestic
+ * delivery, so the expected carried-through amount here is zero.
  */
 test('NL logged-in checkout: an edited VAT number persists to the account after the order is placed', async ({ page, loginPage, homePage, productListPage, productDetailPage, basketPage, checkoutPage, accountPage }) => {
     await test.step('Log in with the account that has a saved VAT number', async () => {
@@ -71,8 +75,10 @@ test('NL logged-in checkout: an edited VAT number persists to the account after 
         console.log('[STEP] Edit the VAT number and complete the order via Pay on Account')
         await checkoutPage.applyVatNumber('NL000099999B12')
         await expect(checkoutPage.vatNumberInput).not.toHaveClass(/is-invalid/)
+        const vatBeforeOrder = await checkoutPage.summaryVatAmount.textContent()
         await checkoutPage.payOnAccount()
         await expect(page).toHaveURL(/\/bestelling-bevestigen\/bedankt$/, { timeout: 30000 })
+        await expect(checkoutPage.thankYouVatAmount).toHaveText(vatBeforeOrder ?? '')
     })
 
     await test.step('The account\'s saved VAT number now reflects the edited value', async () => {

@@ -46,6 +46,10 @@ import { watco } from '@utils/testUsers'
  * baseline. The "ensure baseline first" step below forces a known
  * starting state before the real edit, so the edit step is always a
  * genuine change regardless of what a previous run left behind.
+ *
+ * Also checks VAT correctness on the thank-you page itself (a page no
+ * test in this suite had ever inspected) — see the "Edit the VAT
+ * number..." step below for what's actually there and what isn't.
  */
 test('Logged-in checkout: an edited VAT number persists to the account after the order is placed', async ({ page, loginPage, homePage, productListPage, productDetailPage, basketPage, checkoutPage, accountPage }) => {
     await test.step('Log in with the account that has a saved VAT number', async () => {
@@ -93,8 +97,17 @@ test('Logged-in checkout: an edited VAT number persists to the account after the
         console.log('[STEP] Edit the VAT number and complete the order via Pay on Account')
         await checkoutPage.applyVatNumber('GB999999999')
         await expect(checkoutPage.vatNumberInput).not.toHaveClass(/is-invalid/)
+        const vatBeforeOrder = await checkoutPage.summaryVatAmount.textContent()
         await checkoutPage.payOnAccount()
         await expect(page).toHaveURL(/\/checkout\/thanks$/, { timeout: 30000 })
+
+        // UK always charges the standard rate regardless of VAT number —
+        // the meaningful check is that the amount shown mid-checkout
+        // carried through unchanged to the confirmed order. VERIFIED
+        // live, staging, 2026-08-06: the thank-you page shows the VAT
+        // AMOUNT but neither its RATE nor the customer's VAT NUMBER
+        // anywhere on the page — nothing further to assert there.
+        await expect(checkoutPage.thankYouVatAmount).toHaveText(vatBeforeOrder ?? '')
     })
 
     await test.step('The account\'s saved VAT number now reflects the edited value', async () => {

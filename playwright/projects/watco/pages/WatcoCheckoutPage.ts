@@ -110,6 +110,10 @@ export class WatcoCheckoutPage extends CheckoutPage {
     readonly summaryVatRow = WatcoObjects.CheckoutPage.summaryVatRow(this.page);
     readonly summaryOrderTotal = WatcoObjects.CheckoutPage.summaryOrderTotal(this.page);
 
+    // Thank-you page (post-order) — see objects.ts comment.
+    readonly thankYouVatRow = WatcoObjects.CheckoutPage.thankYouVatRow(this.page);
+    readonly thankYouVatAmount = WatcoObjects.CheckoutPage.thankYouVatAmount(this.page);
+
     // checkoutBasePath defaults to the UK/IE English route — FR passes
     // its own route (e.g. "/valider-la-commande"); the "/delivery"
     // sub-path suffix itself stays English on every market checked so far.

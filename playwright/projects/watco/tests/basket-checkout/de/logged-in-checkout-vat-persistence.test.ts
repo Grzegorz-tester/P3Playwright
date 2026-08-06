@@ -15,6 +15,12 @@ import { watcoDe } from '@utils/testUsers'
  * needed. See the UK file's docblock for the payNowButton / clearBasket
  * background this depends on, and for why this self-heals against its
  * own prior interrupted runs.
+ *
+ * Also checks VAT correctness on the thank-you page itself — see the
+ * "Edit the VAT number..." step below. Note this delivery address is
+ * DOMESTIC (Berlin), so DE's own zero-rating rule (cross-border only)
+ * does NOT apply here — the amount is expected to carry through
+ * UNCHANGED, not drop to zero.
  */
 test('DE logged-in checkout: an edited VAT number persists to the account after the order is placed', async ({ page, loginPage, homePage, productListPage, productDetailPage, basketPage, checkoutPage, accountPage }) => {
     await test.step('Log in with the account that has a saved VAT number', async () => {
@@ -72,8 +78,10 @@ test('DE logged-in checkout: an edited VAT number persists to the account after 
         console.log('[STEP] Edit the VAT number and complete the order via Pay on Account')
         await checkoutPage.applyVatNumber('DE999999999')
         await expect(checkoutPage.vatNumberInput).not.toHaveClass(/is-invalid/)
+        const vatBeforeOrder = await checkoutPage.summaryVatAmount.textContent()
         await checkoutPage.payOnAccount()
         await expect(page).toHaveURL(/\/kasse\/danke$/, { timeout: 30000 })
+        await expect(checkoutPage.thankYouVatAmount).toHaveText(vatBeforeOrder ?? '')
     })
 
     await test.step('The account\'s saved VAT number now reflects the edited value', async () => {
