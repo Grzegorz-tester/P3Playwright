@@ -11,6 +11,19 @@ export class WatcoHomePage extends HomePage {
     readonly searchInput = WatcoObjects.HomePage.searchInput(this.page);
     readonly categoryNav = WatcoObjects.HomePage.categoryNav(this.page);
 
+    // CONFIRMED SITE BEHAVIOUR (staging-de.watco.pub, 2026-08-06): the
+    // abstract HomePage's networkidle wait times out here intermittently
+    // but repeatedly (a persistent connection — most likely the live-chat
+    // widget seen on every Watco market — appears to keep the network
+    // "busy" by Playwright's definition well past 90s). Overriding with a
+    // concrete-element wait instead, scoped to this project only — the
+    // shared abstract class is used by other storefronts, so its
+    // behaviour is left untouched.
+    async navigateToHomePage(): Promise<void> {
+        await this.page.goto('/', { timeout: 45000 })
+        await expect(this.searchInput).toBeVisible({ timeout: 30000 })
+    }
+
     async validateHomePage(): Promise<void> {
         await expect(this.searchInput).toBeVisible({ timeout: 45000 })
     }

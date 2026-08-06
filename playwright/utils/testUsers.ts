@@ -72,5 +72,20 @@ export const watcoFr = {
     }
 }
 
+// DE market (same Watco platform, own domain/data — see testEnvs.ts
+// watco.stageDe). Registered live (staging, 2026-08-06); same staging
+// test-data-reset caveat as watco.accountTestUserWithVat above applies.
+export const watcoDe = {
+    accountTestUser_1: {
+        email: "grzegorz.hajduk+watcode@velstar.co.uk",
+        password: "Testing123!"
+    },
+    // Dedicated account with a saved VAT number (DE123456789).
+    accountTestUserWithVat: {
+        email: "grzegorz.hajduk+watcode_hasvat_1786004937149@velstar.co.uk",
+        password: "Testing123!"
+    }
+}
+
 
 

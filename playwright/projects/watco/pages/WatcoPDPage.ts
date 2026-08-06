@@ -29,12 +29,19 @@ export class WatcoPDPage extends ProductDetailPage {
         await dismissStrayPreferenceCentre(this.page)
         // The dark-filter overlay has been observed appearing mid-click
         // (after this point-in-time check passed) rather than only before
-        // it, so on a collision we dismiss again and retry once rather
-        // than trusting a single pre-click check.
-        try {
-            await this.addToBasketButton.click({ timeout: 10000 })
-        } catch {
-            await dismissStrayPreferenceCentre(this.page)
+        // it, and on DE it has been observed reappearing repeatedly rather
+        // than just once — a single retry wasn't enough there. Loop a
+        // bounded number of times, dismissing again before each attempt.
+        let clicked = false
+        for (let attempt = 0; attempt < 4 && !clicked; attempt++) {
+            try {
+                await this.addToBasketButton.click({ timeout: 10000 })
+                clicked = true
+            } catch {
+                await dismissStrayPreferenceCentre(this.page)
+            }
+        }
+        if (!clicked) {
             await this.addToBasketButton.click()
         }
         await expect(this.basketButton).toHaveAttribute('data-basket-qty', String(countBefore + 1), { timeout: 15000 })

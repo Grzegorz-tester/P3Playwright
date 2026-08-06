@@ -21,6 +21,7 @@ export class WatcoRegisterPage {
     readonly marketingAgreementCheckbox = WatcoObjects.RegisterPage.marketingAgreementCheckbox(this.page)
     readonly submitButton = WatcoObjects.RegisterPage.submitButton(this.page)
     readonly vatNumberError = WatcoObjects.RegisterPage.vatNumberError(this.page)
+    readonly vatNumberComment = WatcoObjects.RegisterPage.vatNumberComment(this.page)
 
     // path defaults to the UK/IE English route — FR (and any other
     // localized market) passes its own route (e.g. "/senregistrer").

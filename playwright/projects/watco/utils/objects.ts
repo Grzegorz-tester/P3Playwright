@@ -142,6 +142,11 @@ export const WatcoObjects = {
         vatFormGroup: (page: Page) => page.locator('.js-vat-apply-group'),
         vatApplyButton: (page: Page) => page.locator('button.js-vat-apply'),
         vatApplyError: (page: Page) => page.locator('.js-vat-apply-error'),
+        // Absent on UK/IE/FR (confirmed live on each); present on DE with
+        // real copy explaining the field's business-customer purpose —
+        // same .vat-form-group__comment class either way, market data
+        // only differs in whether the element exists at all.
+        vatNumberComment: (page: Page) => page.locator('.vat-form-group__comment'),
         orderReferenceInput: (page: Page) => page.locator('#payment_customer_notes'),
         payByCardMethodRadio: (page: Page) => page.locator('#payment_payment_method_0'),
         payOnAccountMethodRadio: (page: Page) => page.locator('#payment_payment_method_1'),
@@ -165,6 +170,10 @@ export const WatcoObjects = {
         // Order summary panel (right column) — used to assert VAT/total
         // are unchanged after applying a VAT number.
         summaryVatAmount: (page: Page) => page.locator('.basket-summary__row.basket-summary__tax .basket-summary__price'),
+        // The row's full text (e.g. "MwSt (20%) 61,18 €") — use this when
+        // the rate percentage itself matters; summaryVatAmount above is
+        // the price div only, it does not include the "(NN%)" label.
+        summaryVatRow: (page: Page) => page.locator('.basket-summary__row.basket-summary__tax'),
         // CONFIRMED SITE BUG (minor, checkout-only): on /checkout this total
         // div carries only class="basket-summary__total" — it's missing the
         // basket-summary__price class every other summary row's price div
@@ -204,6 +213,9 @@ export const WatcoObjects = {
         // form with its own submit button.
         submitButton: (page: Page) => page.locator('form:has(#user_registration_email) button[type="submit"]'),
         vatNumberError: (page: Page) => page.locator('#user_registration_customer_vat_number ~ .alert-danger'),
+        // Same .vat-form-group__comment class as checkout — absent on
+        // UK/IE/FR, present on DE.
+        vatNumberComment: (page: Page) => page.locator('.vat-form-group__comment'),
     },
 
     // VERIFIED live (staging, 2026-08-05). Express Checkout is a third

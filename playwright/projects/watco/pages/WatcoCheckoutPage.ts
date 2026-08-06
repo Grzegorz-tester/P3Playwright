@@ -84,6 +84,7 @@ export class WatcoCheckoutPage extends CheckoutPage {
     readonly vatNumberInput = WatcoObjects.CheckoutPage.vatNumberInput(this.page);
     readonly vatApplyButton = WatcoObjects.CheckoutPage.vatApplyButton(this.page);
     readonly vatApplyError = WatcoObjects.CheckoutPage.vatApplyError(this.page);
+    readonly vatNumberComment = WatcoObjects.CheckoutPage.vatNumberComment(this.page);
     readonly vatFormGroup = WatcoObjects.CheckoutPage.vatFormGroup(this.page);
     readonly payByCardMethodRadio = WatcoObjects.CheckoutPage.payByCardMethodRadio(this.page);
     readonly payOnAccountMethodRadio = WatcoObjects.CheckoutPage.payOnAccountMethodRadio(this.page);
@@ -93,6 +94,7 @@ export class WatcoCheckoutPage extends CheckoutPage {
     readonly payOnAccountMinimumOrderNotice = WatcoObjects.CheckoutPage.payOnAccountMinimumOrderNotice(this.page);
 
     readonly summaryVatAmount = WatcoObjects.CheckoutPage.summaryVatAmount(this.page);
+    readonly summaryVatRow = WatcoObjects.CheckoutPage.summaryVatRow(this.page);
     readonly summaryOrderTotal = WatcoObjects.CheckoutPage.summaryOrderTotal(this.page);
 
     // checkoutBasePath defaults to the UK/IE English route — FR passes

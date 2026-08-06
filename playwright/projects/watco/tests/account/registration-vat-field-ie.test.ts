@@ -20,6 +20,7 @@ test('IE registration: VAT number field', async ({ page, registerPage }) => {
         await expect(registerPage.vatNumberInput).toHaveAttribute('placeholder', 'IE9999999L')
         await expect(page.getByText('VAT number', { exact: true })).toBeVisible()
         await expect(registerPage.vatNumberError).toBeHidden()
+        await expect(registerPage.vatNumberComment).toHaveCount(0)
     })
 
     await test.step('An invalid VAT number is rejected on submit with a validation error', async () => {

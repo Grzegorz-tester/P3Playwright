@@ -17,6 +17,10 @@ interface Envs {
         stageFr?: {
             url: string;
             api: string;
+        },
+        stageDe?: {
+            url: string;
+            api: string;
         }
     }
 }
@@ -87,6 +91,19 @@ export const envs: Envs = {
         stageFr:
             {
                 url: "https://staging-fr.watco.pub",
+                api: ""
+            },
+        // VERIFIED live (staging, 2026-08-06): localized paths like FR
+        // (/anmelden, /registrieren, /warenkorb, /kasse, /kundenkonto),
+        // PLUS genuinely different VAT behaviour from every other market
+        // checked so far — Pay on Account is hidden until a valid VAT
+        // number is applied, the field has a real explanatory comment,
+        // and VAT rate is delivery-country-aware (a DE VAT number
+        // zero-rates delivery to Austria). See the *-de.test.ts files'
+        // docblocks for what's actually verified.
+        stageDe:
+            {
+                url: "https://staging-de.watco.pub",
                 api: ""
             }
     },

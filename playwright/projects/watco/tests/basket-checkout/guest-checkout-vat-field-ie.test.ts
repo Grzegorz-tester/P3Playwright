@@ -38,6 +38,7 @@ test('IE guest checkout: VAT number field on payment step', async ({ page, homeP
         await expect(checkoutPage.vatNumberInput).toHaveAttribute('placeholder', 'IE9999999L')
         await expect(checkoutPage.page.getByText('VAT number', { exact: true })).toBeVisible()
         await expect(checkoutPage.vatApplyButton).toBeVisible()
+        await expect(checkoutPage.vatNumberComment).toHaveCount(0)
     })
 
     await test.step('Apply button starts disabled until a value is entered', async () => {
