@@ -25,6 +25,10 @@ interface Envs {
         stageNl?: {
             url: string;
             api: string;
+        },
+        stageBeNl?: {
+            url: string;
+            api: string;
         }
     }
 }
@@ -121,6 +125,16 @@ export const envs: Envs = {
         stageNl:
             {
                 url: "https://staging-nl.watco.pub",
+                api: ""
+            },
+        // VERIFIED live (staging, 2026-08-06): Belgium, Dutch-language
+        // storefront — same URL paths and VAT behaviour as NL (domestic
+        // zero-rating, VAT-gated Pay on Account, identical comment text),
+        // but its own VAT field label ("Btw-nummer" vs NL's "Belasting
+        // over de toegevoegde waarde") and format (BE1234567890).
+        stageBeNl:
+            {
+                url: "https://staging-benl.watco.pub",
                 api: ""
             }
     },

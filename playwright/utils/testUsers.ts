@@ -102,5 +102,21 @@ export const watcoNl = {
     }
 }
 
+// BE-NL market — Belgium, Dutch language (same Watco platform, own
+// domain/data — see testEnvs.ts watco.stageBeNl). Registered live
+// (staging, 2026-08-06); same staging test-data-reset caveat as
+// watco.accountTestUserWithVat above applies.
+export const watcoBeNl = {
+    accountTestUser_1: {
+        email: "grzegorz.hajduk+watcobenl@velstar.co.uk",
+        password: "Testing123!"
+    },
+    // Dedicated account with a saved VAT number (BE0123456749).
+    accountTestUserWithVat: {
+        email: "grzegorz.hajduk+watcobenl_hasvat_1786013489742@velstar.co.uk",
+        password: "Testing123!"
+    }
+}
+
 
 
