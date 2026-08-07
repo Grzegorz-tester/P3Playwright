@@ -28,8 +28,27 @@ import { insinkerator_eu } from '@utils/testUsers'
  * exercises the exact same form submission and success path without
  * ever putting the account on a different password - there's no
  * divergent state to revert from, even under a hard kill.
+ *
+ * SKIPPED (2026-08-07): temporarily disabled while the shared account's
+ * credentials are being sorted out again. Root-caused via the GitLab job
+ * trace for job 15769226108 (MR !16, commit fe8c1e95, the OLD pre-fix
+ * version of this test): its "Change password to a temporary value" step
+ * logged but "Verify the temporary password works..." never did, meaning
+ * the changePassword() call's own confirmation-text assertion failed
+ * AFTER the backend had already accepted the change - so the
+ * changedToTemporaryPassword flag never got set to true, and the
+ * try/finally revert (keyed off that flag) never ran. That's a sharper
+ * version of the "hard kill defeats finally" gap already documented
+ * above: a plain assertion timeout, not just a process kill, can skip
+ * the revert if the flag is set only after confirming success rather
+ * than after attempting the change. The account is now stuck on that
+ * unknown random temp password again and needs another manual reset.
+ * This test's OWN current logic isn't vulnerable to that specific gap
+ * (there's no flag to miss - new equals existing either way) but leave
+ * it skipped until the account is confirmed healthy again, to avoid
+ * adding another mutating call while things are still being sorted out.
  */
-test.describe('Account Change Password (Logged-in, Portugal)', () => {
+test.describe.skip('Account Change Password (Logged-in, Portugal)', () => {
     test('User can submit the change-password form with the existing password, and it still works afterwards', async ({
         page,
         homePage,
