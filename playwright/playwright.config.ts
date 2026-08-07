@@ -31,7 +31,19 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  // NOTE(INSINKERATOR EU): staging.insinkerator-eu.work doesn't reliably
+  // handle the default worker count under load - a full-suite run with 4
+  // parallel Chrome sessions produced widespread page.goto timeouts on
+  // completely unrelated tests (confirmed live, 2026-08-07: 14 failures
+  // out of 32 at the default worker count). Tried 2 workers next - still
+  // 4 failures, all a SEPARATE pre-existing networkidle-wait flakiness
+  // that also shows up (just less often) running fully serially, so it's
+  // not fixable via worker count alone. Serial (1 worker) was both the
+  // most reliable (31/32) and not meaningfully slower than 2 workers
+  // (14.4min vs 13.2min for the full suite) - use that rather than
+  // splitting the difference. Capped for this project rather than every
+  // storefront, since this instability hasn't been observed elsewhere.
+  workers: process.env.CI ? 1 : (process.env.PROJECT === "insinkeratoreu" ? 1 : undefined),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     [
