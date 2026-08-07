@@ -41,6 +41,13 @@ export default defineConfig({
         outputFolder: `./projects/${process.env.PROJECT}/html-report`,
       },
     ],
+    // JSON report parsed by ci/slack-payload.mjs to include pass/fail counts in the Slack notification.
+    [
+      "json",
+      {
+        outputFile: `./projects/${process.env.PROJECT}/results.json`,
+      },
+    ],
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
