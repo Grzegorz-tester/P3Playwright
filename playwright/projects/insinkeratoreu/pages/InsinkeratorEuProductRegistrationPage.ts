@@ -19,6 +19,7 @@ export class InsinkeratorEuProductRegistrationPage extends ProductRegistrationPa
     readonly submitButton = InsinkeratorEuObjects.ProductRegistrationPage.submitButton(this.page)
     readonly successIcon = InsinkeratorEuObjects.ProductRegistrationPage.successIcon(this.page)
     readonly successHeading = InsinkeratorEuObjects.ProductRegistrationPage.successHeading(this.page)
+    readonly cookieBannerAcceptButton = InsinkeratorEuObjects.Footer.cookieBannerAcceptButton(this.page)
 
     constructor(page: Page) {
         super(page)
@@ -43,11 +44,31 @@ export class InsinkeratorEuProductRegistrationPage extends ProductRegistrationPa
         await expect(label).toContainText('*')
     }
 
+    // CONFIRMED live (staging, 2026-08-07): at smaller viewports the
+    // OneTrust cookie-consent banner docks low enough on the page to
+    // overlap the date picker popup opened below, intercepting the click
+    // on today's day cell — same class of bug already documented on
+    // InsinkeratorEuHomePage.clickSitemapLink elsewhere in this project.
+    // Dismissing it first, only if actually present, avoids a hard
+    // dependency on it (a prior page visit in the same test may have
+    // already dismissed it).
+    private async dismissCookieBannerIfPresent(): Promise<void> {
+        const bannerPresent = await this.cookieBannerAcceptButton
+            .waitFor({ state: 'visible', timeout: 5000 })
+            .then(() => true)
+            .catch(() => false)
+        if (bannerPresent) {
+            await this.cookieBannerAcceptButton.click()
+        }
+    }
+
     // Picks today's date and a fixed model/installer — this project's
     // registration form doesn't need those to vary per test, only the
     // identity fields (lastName/serialNumber) that the warranty finder
     // later looks up.
     async fillRegistrationForm(data: WarrantyRegistrationData): Promise<void> {
+        await this.dismissCookieBannerIfPresent()
+
         await this.firstNameInput.fill(data.firstName)
         await this.lastNameInput.fill(data.lastName)
         await this.emailInput.fill(data.email)
