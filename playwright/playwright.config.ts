@@ -31,7 +31,17 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  // NOTE(RUSSELLS): staging.russells-parts.work doesn't reliably handle the
+  // default worker count under load - a full-suite run with the default
+  // parallelism produced widespread failures on completely unrelated tests,
+  // including the trivial health-check, while every individual file and
+  // small-batch run passed cleanly (confirmed live, 2026-08-07). Tried 2
+  // workers next - still one residual failure, a shared-account race
+  // between two checkout tests hitting the same logged-in account's
+  // billing step at once. Capped to 1 rather than splitting the
+  // difference, for this project rather than every storefront, since this
+  // instability hasn't been observed elsewhere on this branch.
+  workers: process.env.CI ? 1 : (process.env.PROJECT === 'russells' ? 1 : undefined),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [['html', { open: 'never', outputFolder: `./projects/${process.env.PROJECT}/html-report` }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

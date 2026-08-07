@@ -182,7 +182,13 @@ export class RussellsAccountPage extends AccountPage {
         }
         await this.fillDeliveryAddressForm(address)
         await expect(this.addDeliveryAddressButton).toBeVisible({ timeout: 35000 })
-        const newAddressNumber = countBefore + 1
+        // CONFIRMED live (staging, 2026-08-07): address-book-delivery__address-N
+        // is 0-indexed (verified: address-0 through address-5 for 6
+        // addresses) - the new address lands at index countBefore, not
+        // countBefore + 1. The prior +1 assumed 1-based indexing and had
+        // been silently wrong, leaking un-cleaned-up addresses onto this
+        // shared account every time this test ran (cleaned up 2026-08-07).
+        const newAddressNumber = countBefore
         await expect(RussellsObjects.AccountPage.deliveryAddressName(newAddressNumber)(this.page)).toBeVisible({ timeout: 35000 })
         return newAddressNumber
     }
@@ -224,7 +230,10 @@ export class RussellsAccountPage extends AccountPage {
         }
         await this.fillBillingAddressForm(address)
         await expect(this.addBillingAddressButton).toBeVisible({ timeout: 35000 })
-        const newAddressNumber = countBefore + 1
+        // See addDeliveryAddress above - address-book-billing__address-N is
+        // also 0-indexed, so the new address lands at countBefore, not
+        // countBefore + 1.
+        const newAddressNumber = countBefore
         await expect(RussellsObjects.AccountPage.billingAddressName(newAddressNumber)(this.page)).toBeVisible({ timeout: 35000 })
         return newAddressNumber
     }

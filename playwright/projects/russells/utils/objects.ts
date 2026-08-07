@@ -352,7 +352,21 @@ export const RussellsObjects = {
         guestAddressCity: (page: Page) => page.getByTestId('checkout-address-form__city'),
         guestAddressPostcode: (page: Page) => page.getByTestId('checkout-address-form__postcode'),
         guestAddressSubmitButton: (page: Page) => page.getByTestId('checkout-address-form__submit-button'),
-        loggedInAddressOptions: (page: Page) => page.locator('[data-testid="checkout-select-address__addresses"] [data-testid^="radio-select_option"]'),
+        // CONFIRMED live (staging, 2026-08-07): a new wrapper element with
+        // testid "radio-select_options" (PLURAL) now surrounds all the
+        // individual address options, and the prefix `radio-select_option`
+        // (no trailing hyphen) matches that wrapper too - `.first()` then
+        // resolved to the wrapper spanning ALL addresses, not any single
+        // one, breaking address selection wherever this is used. The
+        // trailing hyphen below scopes it back to individual options only,
+        // matching deliveryMethodRadioGroup's existing convention two
+        // lines down. Separately CONFIRMED: every individual option now
+        // renders the exact same testid, "radio-select_option-[object
+        // Object]" (a template-literal bug stringifying a whole address
+        // object instead of extracting its id) - worth flagging to devs,
+        // since it means options can no longer be distinguished by testid,
+        // only by DOM position.
+        loggedInAddressOptions: (page: Page) => page.locator('[data-testid="checkout-select-address__addresses"] [data-testid^="radio-select_option-"]'),
         loggedInAddressContinueButton: (page: Page) => page.getByTestId('checkout-select-address__continue-button'),
         deliveryMethodRadioGroup: (page: Page) => page.locator('[data-testid^="radio-select_option-"]'),
         deliveryMethodContinueButton: (page: Page) => page.getByTestId('delivery-methods__continue-button'),

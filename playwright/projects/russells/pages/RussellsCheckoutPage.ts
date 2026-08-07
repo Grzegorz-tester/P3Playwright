@@ -245,13 +245,23 @@ export class RussellsCheckoutPage extends CheckoutPage {
     // this deliberately verifies only that the button opens a popup
     // which lands on paypal.com, and stops there rather than
     // authenticating/completing a real payment.
+    //
+    // CONFIRMED live (staging, 2026-08-07): the PayPal SDK button
+    // intermittently doesn't open its popup on the first click - a
+    // genuine timing issue in the third-party SDK's own initialization,
+    // same class of flakiness already documented for Global Payments in
+    // payWithGlobalPaymentsTestCard below. Retried as a whole (fresh
+    // waitForEvent each attempt, since a stale promise can't be reused)
+    // rather than a one-shot click.
     async clickPayPalAndVerifyRedirectsToPayPal(): Promise<void> {
-        const popupPromise = this.page.context().waitForEvent('page')
-        await RussellsObjects.CheckoutPage.paypalButtonFrame(this.page).getByRole('link', { name: 'PayPal', exact: true }).click()
-        const popup = await popupPromise
-        await popup.waitForLoadState('domcontentloaded')
-        await expect(popup).toHaveURL(/paypal\.com/, { timeout: 20000 })
-        await popup.close()
+        await expect(async () => {
+            const popupPromise = this.page.context().waitForEvent('page', { timeout: 15000 })
+            await RussellsObjects.CheckoutPage.paypalButtonFrame(this.page).getByRole('link', { name: 'PayPal', exact: true }).click()
+            const popup = await popupPromise
+            await popup.waitForLoadState('domcontentloaded')
+            await expect(popup).toHaveURL(/paypal\.com/, { timeout: 20000 })
+            await popup.close()
+        }).toPass({ timeout: 60000 })
     }
 
     // CORRECTED (staging, 2026-07-31): this storefront's billing step shape
