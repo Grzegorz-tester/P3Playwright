@@ -1,6 +1,6 @@
 import test from '../../utils/Pages'
 import { selectCountryOnFreshLoad } from '../../utils/countrySelector'
-import { insinkeratoreu } from '@utils/testUsers'
+import { insinkerator_eu } from '@utils/testUsers'
 import { generateDeliveryAddress } from '@utils/fakeData'
 
 /**
@@ -34,7 +34,7 @@ test.describe('Account Address Book (Logged-in, Portugal)', () => {
         loginPage,
         accountPage,
     }) => {
-        const user = Object.assign({}, insinkeratoreu.accountTestUser_1)
+        const user = Object.assign({}, insinkerator_eu.accountTestUser_1)
         const newAddress = generateDeliveryAddress()
         const editedAddress = generateDeliveryAddress()
 
@@ -81,7 +81,7 @@ test.describe('Account Address Book (Logged-in, Portugal)', () => {
         loginPage,
         accountPage,
     }) => {
-        const user = Object.assign({}, insinkeratoreu.accountTestUser_1)
+        const user = Object.assign({}, insinkerator_eu.accountTestUser_1)
         const newAddress = generateDeliveryAddress()
         const editedAddress = generateDeliveryAddress()
 

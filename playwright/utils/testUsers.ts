@@ -20,7 +20,7 @@ export const kooltech = {
     password: "Test123$",
   },
 };
-export const insinkeratoreu = {
+export const insinkerator_eu = {
   accountTestUser_1: {
     email: "grzegorz.hajduk+insinkeratorEU_automation@velstar.co.uk",
     password: "Testing123!",

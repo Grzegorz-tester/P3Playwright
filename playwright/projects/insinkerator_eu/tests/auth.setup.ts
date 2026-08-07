@@ -1,5 +1,5 @@
 import { test as setup, expect } from '@playwright/test';
-import { insinkeratoreu } from '@utils/testUsers'
+import { insinkerator_eu } from '@utils/testUsers'
 import { testConfig } from '@utils/testConfig';
 
 // NOTE: UI login is VERIFIED working this session with these credentials
@@ -13,8 +13,8 @@ import { testConfig } from '@utils/testConfig';
 setup('authenticate as Account Insinkerator EU user 1', async ({ request }) => {
     const loginResponse = await request.post(`${testConfig.getApi(process.env.PROJECT)}/auth`, {
         data: {
-            'email': insinkeratoreu.accountTestUser_1.email,
-            'password': insinkeratoreu.accountTestUser_1.password
+            'email': insinkerator_eu.accountTestUser_1.email,
+            'password': insinkerator_eu.accountTestUser_1.password
         }, timeout: 20000
     });
     await expect(loginResponse).toBeOK();

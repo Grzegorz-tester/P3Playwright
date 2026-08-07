@@ -1,6 +1,6 @@
 import test from '../../utils/Pages'
 import { selectCountryOnFreshLoad } from '../../utils/countrySelector'
-import { insinkeratoreu } from '@utils/testUsers'
+import { insinkerator_eu } from '@utils/testUsers'
 
 /**
  * LOGIN & PASSWORD RESET
@@ -26,7 +26,7 @@ test.describe('Login & Password Reset (Portugal)', () => {
         homePage,
         loginPage,
     }) => {
-        const user = Object.assign({}, insinkeratoreu.accountTestUser_1)
+        const user = Object.assign({}, insinkerator_eu.accountTestUser_1)
 
         await test.step(`Navigate to Home Page and dismiss the country modal`, async () => {
             console.log(`[STEP] Navigate to Home Page and dismiss the country modal`)
@@ -52,7 +52,7 @@ test.describe('Login & Password Reset (Portugal)', () => {
         loginPage,
         resetPasswordPage,
     }) => {
-        const user = Object.assign({}, insinkeratoreu.accountTestUser_1)
+        const user = Object.assign({}, insinkerator_eu.accountTestUser_1)
 
         await test.step(`Navigate to Home Page and dismiss the country modal`, async () => {
             console.log(`[STEP] Navigate to Home Page and dismiss the country modal`)

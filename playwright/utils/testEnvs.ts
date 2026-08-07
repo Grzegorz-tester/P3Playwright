@@ -46,7 +46,7 @@ export const envs: Envs = {
       api: "https://staging-api.indespension.pub",
     },
   },
-  insinkeratoreu: {
+  insinkerator_eu: {
     stage: {
       url: "https://staging.insinkerator-eu.work",
       api: "https://staging-api.insinkerator-eu.work",

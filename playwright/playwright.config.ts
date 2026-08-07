@@ -43,7 +43,7 @@ export default defineConfig({
   // (14.4min vs 13.2min for the full suite) - use that rather than
   // splitting the difference. Capped for this project rather than every
   // storefront, since this instability hasn't been observed elsewhere.
-  workers: process.env.CI ? 1 : (process.env.PROJECT === "insinkeratoreu" ? 1 : undefined),
+  workers: process.env.CI ? 1 : (process.env.PROJECT === "insinkerator_eu" ? 1 : undefined),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     [
