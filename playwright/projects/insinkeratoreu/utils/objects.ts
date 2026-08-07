@@ -876,5 +876,108 @@ export const InsinkeratorEuObjects = {
         orderDeliveryMethod: (page: Page) => page.getByTestId('orders-details__order-delivery-method').last(),
         orderLinesList: (page: Page) => page.getByTestId('orders-details__order-lines-list'),
         errorHeading: (page: Page) => page.getByRole('heading', { name: 'Oops! Something Went Wrong' })
+    },
+
+    // VERIFIED — confirmed live on /warranty-finder (staging, 2026-08-07).
+    // No country gating and no login required — this page works the same
+    // regardless of the selected country, only the mandatory fresh-load
+    // country modal (see CountrySelector above) needs dismissing first.
+    // The page also embeds a reCAPTCHA badge that renders a permanent
+    // "ERROR for site owner: Invalid domain for site key" message —
+    // CONFIRMED live this does NOT block submission (both the not-found
+    // and success paths below completed normally with that error showing
+    // the whole time), so it's not asserted on here.
+    WarrantyFinderPage: {
+        form: (page: Page) => page.getByTestId('warranty-lookup-form'),
+        lastNameInput: (page: Page) => page.getByTestId('warranty-lookup-form__last-name'),
+        serialNumberInput: (page: Page) => page.getByTestId('warranty-lookup-form__serial-number'),
+        submitButton: (page: Page) => page.getByTestId('warranty-lookup-form__submit-button'),
+        // VERIFIED — shown when no registration matches the submitted
+        // last name + serial number pair.
+        notFoundAlert: (page: Page) => page.getByTestId('warranty-lookup-form__alert'),
+        // No testid on the link itself, but its href is stable and unique
+        // on this page — top-tier anchor per this project's locator
+        // preference order, no text needed.
+        getInTouchLink: (page: Page) => InsinkeratorEuObjects.WarrantyFinderPage.form(page).locator('a[href="/contact-us"]'),
+        // VERIFIED — shown when a match IS found, e.g. "Registered on
+        // 07/08/2026 for Standard 460, SN12345." A DIFFERENT testid from
+        // notFoundAlert above — the two outcomes are NOT the same reused
+        // element (unlike several other alert/result pairs elsewhere in
+        // this file).
+        successResult: (page: Page) => page.getByTestId('warranty-lookup-form__result')
+    },
+
+    // VERIFIED — confirmed live on /<locale>/product-registration (staging,
+    // 2026-08-07), checked on en-gb and de. Testids are identical across
+    // locales — only visible labels/copy are translated. Same reCAPTCHA
+    // badge/error as WarrantyFinderPage above, same confirmation it does
+    // NOT block submission.
+    //
+    // CORRECTED (staging, 2026-08-07): placeOfPurchase previously had a
+    // documented UI/backend mismatch (input not marked required in the UI
+    // but rejected by the backend when blank). Retested live: the input
+    // now renders with a required asterisk AND the submit button stays
+    // disabled while it's empty (confirmed on en-gb, with every other
+    // required field filled) — front end and backend now agree.
+    ProductRegistrationPage: {
+        form: (page: Page) => page.getByTestId('product-registration-form'),
+        firstNameInput: (page: Page) => page.getByTestId('product-registration-form__first-name'),
+        lastNameInput: (page: Page) => page.getByTestId('product-registration-form__last-name'),
+        emailInput: (page: Page) => page.getByTestId('product-registration-form__email'),
+        placeOfPurchaseInput: (page: Page) => page.getByTestId('product-registration-form__place-of-purchase'),
+        serialNumberInput: (page: Page) => page.getByTestId('product-registration-form__serial-number'),
+        // VERIFIED — no testid on this trigger, but it has a stable,
+        // unique id (it's a real <input type="button" id="dateOfPurchase">,
+        // not a wrapper) — id ranks above href/text in this project's
+        // locator preference order.
+        dateOfPurchaseButton: (page: Page) => page.locator('#dateOfPurchase'),
+        // TODO(INSE-764): the calendar's day cells (a Radix/react-day-picker
+        // grid) carry no testid, id, or any other non-text attribute
+        // distinguishing a real day from a disabled one — confirmed live
+        // by inspecting the DOM (only a Tailwind opacity-50 class marks
+        // adjacent-month overflow days, which CLAUDE.md rules out as a
+        // locator same as any other class chain). Matching by the day
+        // number's accessible name is the only anchor available; raise
+        // with the storefront devs for a stable per-cell attribute.
+        // .first() disambiguates same-numbered days that can appear twice
+        // in one 42-cell grid (a trailing/leading overflow day from the
+        // adjacent month) — the CURRENT month's occurrence always renders
+        // before any next-month overflow of the same number.
+        calendarDay: (day: number) => (page: Page) => page.getByRole('gridcell', { name: String(day), exact: true }).first(),
+        productModelCombobox: (page: Page) => InsinkeratorEuObjects.ProductRegistrationPage.form(page)
+            .getByTestId('product-registration-form__product-name-and-model').getByRole('combobox'),
+        // VERIFIED — options render in a portalled Radix listbox, outside
+        // the form's own DOM subtree, so these are NOT scoped to
+        // productRegistrationForm above.
+        productModelOption: (modelName: string) => (page: Page) => page.getByRole('option', { name: modelName, exact: true }),
+        installedByCombobox: (page: Page) => InsinkeratorEuObjects.ProductRegistrationPage.form(page)
+            .getByTestId('product-registration-form__who-installed').getByRole('combobox'),
+        installedByOption: (optionName: string) => (page: Page) => page.getByRole('option', { name: optionName, exact: true }),
+        // VERIFIED — the visible Radix listbox only exposes each option's
+        // TRANSLATED label (e.g. "Selbst installiert" on de vs "DIY" on
+        // en-gb), but the underlying native <select> this component syncs
+        // from keeps a stable, locale-invariant `value` per option
+        // (confirmed identical enum values across en-gb and de). Reading
+        // the label for a known value from this hidden select, THEN
+        // clicking the role="option" with that label, is what makes
+        // fillRegistrationForm() work on any locale without hardcoding
+        // translated text.
+        installedByNativeSelect: (page: Page) => InsinkeratorEuObjects.ProductRegistrationPage.form(page)
+            .getByTestId('product-registration-form__who-installed').locator('select'),
+        submitButton: (page: Page) => page.getByTestId('product-registration-form__submit-button'),
+        // No testid on the success confirmation (a plain heading +
+        // paragraph, no wrapping element carries one either), and its
+        // heading text is translated per locale ("Success" on en-gb,
+        // "Erfolg" on de, confirmed live) so it can't be matched by a
+        // fixed English string across locales. The FontAwesome
+        // "circle-check" icon next to the heading is the same SVG
+        // regardless of locale — data-icon is a stable, non-text anchor.
+        // TODO(INSE-764): ask the storefront devs for a testid on this block.
+        successIcon: (page: Page) => page.locator('svg[data-icon="circle-check"]'),
+        // A structural (tag-based, not text) fallback for reading the
+        // translated success heading's text when a test wants to log/
+        // report it — NOT used for locale-agnostic pass/fail assertions,
+        // that's successIcon above.
+        successHeading: (page: Page) => page.locator('main h1')
     }
 };

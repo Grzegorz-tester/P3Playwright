@@ -9,6 +9,8 @@ import { InsinkeratorEuCheckoutPage } from '../pages/InsinkeratorEuCheckoutPage'
 import { InsinkeratorEuCheckoutSuccessPage } from '../pages/InsinkeratorEuCheckoutSuccessPage'
 import { InsinkeratorEuResetPasswordPage } from '../pages/InsinkeratorEuResetPasswordPage'
 import { InsinkeratorEuSitemapPage } from '../pages/InsinkeratorEuSitemapPage'
+import { InsinkeratorEuWarrantyFinderPage } from '../pages/InsinkeratorEuWarrantyFinderPage'
+import { InsinkeratorEuProductRegistrationPage } from '../pages/InsinkeratorEuProductRegistrationPage'
 
 const test = baseTest.extend<{
     loginPage: InsinkeratorEuLoginPage
@@ -21,6 +23,8 @@ const test = baseTest.extend<{
     checkoutSuccessPage: InsinkeratorEuCheckoutSuccessPage
     resetPasswordPage: InsinkeratorEuResetPasswordPage
     sitemapPage: InsinkeratorEuSitemapPage
+    warrantyFinderPage: InsinkeratorEuWarrantyFinderPage
+    productRegistrationPage: InsinkeratorEuProductRegistrationPage
 }>({
     loginPage: async ({ page }, use) => {
         await use(new InsinkeratorEuLoginPage(page))
@@ -51,6 +55,12 @@ const test = baseTest.extend<{
     },
     sitemapPage: async ({ page }, use) => {
         await use(new InsinkeratorEuSitemapPage(page))
+    },
+    warrantyFinderPage: async ({ page }, use) => {
+        await use(new InsinkeratorEuWarrantyFinderPage(page))
+    },
+    productRegistrationPage: async ({ page }, use) => {
+        await use(new InsinkeratorEuProductRegistrationPage(page))
     },
 })
 
