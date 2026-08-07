@@ -20,6 +20,6 @@
     "test:mipa:stage": "ENV=stage PROJECT=mipa npx playwright test --project=Chrome",
     "test:keylite:stage": "ENV=stage PROJECT=keylite npx playwright test --project=Chrome",
     "test:indespension:stage": "ENV=stage PROJECT=indespension npx playwright test --project=Chrome",
-    "test:insinkerator:stage": "ENV=stage PROJECT=insinkerator npx playwright test --project=Chrome"
+    "test:insinkeratoreu:stage": "ENV=stage PROJECT=insinkeratoreu npx playwright test --project=Chrome"
   }
 }
