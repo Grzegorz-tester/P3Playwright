@@ -61,8 +61,6 @@ carbon-sanity-check:
 
 e2e_tests_kooltech_stage:
   extends: .e2e_tests
-  needs:
-    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: kooltech
@@ -83,8 +81,6 @@ e2e_tests_kooltech_stage:
 
 e2e_tests_keylite_stage:
   extends: .e2e_tests
-  needs:
-    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: keylite
@@ -105,8 +101,6 @@ e2e_tests_keylite_stage:
 
 e2e_tests_indespension_stage:
   extends: .e2e_tests
-  needs:
-    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: indespension
@@ -127,8 +121,6 @@ e2e_tests_indespension_stage:
 
 e2e_tests_mipa_stage:
   extends: .e2e_tests
-  needs:
-    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: mipa
@@ -149,8 +141,6 @@ e2e_tests_mipa_stage:
 
 e2e_tests_insinkerator_eu_stage:
   extends: .e2e_tests
-  needs:
-    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: insinkerator_eu
