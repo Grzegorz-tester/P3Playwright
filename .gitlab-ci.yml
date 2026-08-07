@@ -61,8 +61,8 @@ carbon-sanity-check:
 
 e2e_tests_kooltech_stage:
   extends: .e2e_tests
-  #needs:
-  #  - deploy-staging
+  needs:
+    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: kooltech
@@ -79,11 +79,12 @@ e2e_tests_kooltech_stage:
     expire_in: 5 days
   rules:
     - if: $UPSTREAM_PROJECT_NAME == "kooltech"
+    - when: manual
 
 e2e_tests_keylite_stage:
   extends: .e2e_tests
-  #needs:
-  #  - deploy-staging
+  needs:
+    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: keylite
@@ -100,11 +101,12 @@ e2e_tests_keylite_stage:
     expire_in: 5 days
   rules:
     - if: $UPSTREAM_PROJECT_NAME == "keylite"
+    - when: manual
 
 e2e_tests_indespension_stage:
   extends: .e2e_tests
-  #needs:
-  #  - deploy-staging
+  needs:
+    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: indespension
@@ -121,11 +123,12 @@ e2e_tests_indespension_stage:
     expire_in: 5 days
   rules:
     - if: $UPSTREAM_PROJECT_NAME == "indespension"
+    - when: manual
 
 e2e_tests_mipa_stage:
   extends: .e2e_tests
-  #needs:
-  #  - deploy-staging
+  needs:
+    - deploy-staging
   variables:
     ENV_STAGE: stage
     PROJECT_CLIENT: mipa
@@ -142,3 +145,26 @@ e2e_tests_mipa_stage:
     expire_in: 5 days
   rules:
     - if: $UPSTREAM_PROJECT_NAME == "mipa"
+    - when: manual
+
+e2e_tests_insinkerator_eu_stage:
+  extends: .e2e_tests
+  needs:
+    - deploy-staging
+  variables:
+    ENV_STAGE: stage
+    PROJECT_CLIENT: insinkerator_eu
+  script:
+    - cd playwright
+    - yarn install
+    - npx playwright install chrome
+    - echo "Running Playwright tests..."
+    - PROJECT=$PROJECT_CLIENT ENV=$ENV_STAGE npx playwright test --workers 3 --project=$PROJECT
+  artifacts:
+    paths:
+      - playwright/projects/$PROJECT_CLIENT/html-report/
+    when: always
+    expire_in: 5 days
+  rules:
+    - if: $UPSTREAM_PROJECT_NAME == "insinkerator_eu"
+    - when: manual
