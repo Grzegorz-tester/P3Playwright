@@ -19,6 +19,7 @@
     "test:kooltech:stage": "ENV=stage PROJECT=kooltech npx playwright test --project=Chrome",
     "test:mipa:stage": "ENV=stage PROJECT=mipa npx playwright test --project=Chrome",
     "test:keylite:stage": "ENV=stage PROJECT=keylite npx playwright test --project=Chrome",
-    "test:indespension:stage": "ENV=stage PROJECT=indespension npx playwright test --project=Chrome"
+    "test:indespension:stage": "ENV=stage PROJECT=indespension npx playwright test --project=Chrome",
+    "test:jtdove:stage": "ENV=stage PROJECT=jtdove npx playwright test --project=Chrome"
   }
 }

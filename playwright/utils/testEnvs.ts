@@ -51,5 +51,17 @@ export const envs: Envs = {
                 api: "https://staging-api.indespension.pub"
             }
     },
+    // TODO(JTD-325): api host follows the naming convention every other
+    // storefront uses, but is unverified - no client-side call to a
+    // separate API host was observed live (same situation as Russells),
+    // and no auth.setup.ts is planned yet (login looks UI-only, matching
+    // the "Sign In | Register" header link). Revisit if that changes.
+    jtdove: {
+        stage:
+            {
+                url: "https://staging.jtdove.pub",
+                api: "https://staging-api.jtdove.pub"
+            }
+    },
 }
 
