@@ -81,6 +81,13 @@ export const envs: Envs = {
                 api: "https://staging-api.indespension.pub"
             }
     },
+    insinkerator_eu: {
+        stage:
+            {
+                url: "https://staging.insinkerator-eu.work",
+                api: "https://staging-api.insinkerator-eu.work"
+            }
+    },
     russells: {
         stage:
             {
@@ -185,4 +192,3 @@ export const envs: Envs = {
             }
     },
 }
-

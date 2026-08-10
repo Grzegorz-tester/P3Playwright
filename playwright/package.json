@@ -8,7 +8,7 @@
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
     "@playwright/test": "^1.61.1",
-    "@types/node": "^26.0.1",
+    "@types/node": "^26.1.1",
     "dotenv": "^17.4.2",
     "lighthouse": "^13.4.0",
     "playwright-lighthouse": "^4.0.0",
@@ -20,6 +20,7 @@
     "test:mipa:stage": "ENV=stage PROJECT=mipa npx playwright test --project=Chrome",
     "test:keylite:stage": "ENV=stage PROJECT=keylite npx playwright test --project=Chrome",
     "test:indespension:stage": "ENV=stage PROJECT=indespension npx playwright test --project=Chrome",
+    "test:insinkerator_eu:stage": "ENV=stage PROJECT=insinkerator_eu npx playwright test --project=Chrome",
     "test:russells:stage": "ENV=stage PROJECT=russells npx playwright test --project=Chrome",
     "test:russells:prod": "ENV=prod PROJECT=russells npx playwright test --project=Chrome",
     "test:watco:stage": "ENV=stage PROJECT=watco npx playwright test --project=Chrome"

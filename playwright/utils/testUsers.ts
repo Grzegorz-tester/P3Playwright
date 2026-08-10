@@ -23,6 +23,13 @@ export const kooltech = {
     }
 }
 
+export const insinkerator_eu = {
+    accountTestUser_1: {
+        email: "grzegorz.hajduk+insinkeratorEU_automation@velstar.co.uk",
+        password: "Testing123!"
+    }
+}
+
 export const russells = {
     accountTestUser_1: {
         email: "grzegorz.hajduk+russells_automation@velstar.co.uk",
@@ -165,4 +172,3 @@ export const watcoPl = {
         password: "Testing123!"
     }
 }
-

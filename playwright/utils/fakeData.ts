@@ -33,3 +33,29 @@ export function generateDeliveryAddress(): AddressData {
 export function generateGuestEmail(label: string): string {
     return `grzegorz.hajduk+${label}_${Date.now()}@velstar.co.uk`
 }
+
+export type WarrantyRegistrationData = {
+    firstName: string
+    lastName: string
+    email: string
+    placeOfPurchase: string
+    serialNumber: string
+}
+
+/**
+ * Generates throwaway product-registration data for the Insinkerator
+ * warranty-finder flow. lastName and serialNumber are stamped with
+ * Date.now() so each run registers a fresh, unique record — the warranty
+ * finder looks records up by that exact pair, so reusing a prior run's
+ * values would risk colliding with (or silently reusing) an old one.
+ */
+export function generateWarrantyRegistration(label: string): WarrantyRegistrationData {
+    const uniqueSuffix = `${label}${Date.now()}`
+    return {
+        firstName: faker.person.firstName(),
+        lastName: `Warranty${uniqueSuffix}`,
+        email: `grzegorz.hajduk+${uniqueSuffix}@velstar.co.uk`,
+        placeOfPurchase: faker.company.name(),
+        serialNumber: `SN${uniqueSuffix}`,
+    }
+}

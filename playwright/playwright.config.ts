@@ -1,6 +1,6 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 import { testConfig } from "@utils/testConfig";
-require('dotenv').config()
+require("dotenv").config();
 
 /**
  * Read environment variables from file.
@@ -15,10 +15,10 @@ require('dotenv').config()
  */
 
 const userAgentStrings = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
 ];
 
 export default defineConfig({
@@ -41,9 +41,37 @@ export default defineConfig({
   // billing step at once. Capped to 1 rather than splitting the
   // difference, for this project rather than every storefront, since this
   // instability hasn't been observed elsewhere on this branch.
-  workers: process.env.CI ? 1 : (process.env.PROJECT === 'russells' ? 1 : undefined),
+  //
+  // NOTE(INSINKERATOR EU): staging.insinkerator-eu.work doesn't reliably
+  // handle the default worker count under load either - a full-suite run
+  // with 4 parallel Chrome sessions produced widespread page.goto timeouts
+  // on completely unrelated tests (confirmed live, 2026-08-07: 14 failures
+  // out of 32 at the default worker count). Tried 2 workers next - still
+  // 4 failures, all a SEPARATE pre-existing networkidle-wait flakiness
+  // that also shows up (just less often) running fully serially, so it's
+  // not fixable via worker count alone. Serial (1 worker) was both the
+  // most reliable (31/32) and not meaningfully slower than 2 workers
+  // (14.4min vs 13.2min for the full suite) - use that rather than
+  // splitting the difference. Both caps are per-project rather than
+  // global, since neither instability has been observed elsewhere.
+  workers: process.env.CI ? 1 : (["russells", "insinkerator_eu"].includes(process.env.PROJECT ?? "") ? 1 : undefined),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { open: 'never', outputFolder: `./projects/${process.env.PROJECT}/html-report` }]],
+  reporter: [
+    [
+      "html",
+      {
+        open: "never",
+        outputFolder: `./projects/${process.env.PROJECT}/html-report`,
+      },
+    ],
+    // JSON report parsed by ci/slack-payload.mjs to include pass/fail counts in the Slack notification.
+    [
+      "json",
+      {
+        outputFile: `./projects/${process.env.PROJECT}/results.json`,
+      },
+    ],
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     navigationTimeout: 90000,
@@ -51,17 +79,18 @@ export default defineConfig({
     // baseURL: 'http://localhost:3000',
     baseURL: testConfig.getUrl(process.env.PROJECT),
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on',
+    trace: "on",
   },
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    { name: "setup", testMatch: /.*\.setup\.ts/ },
     {
       name: `Chrome`,
       use: {
         // Configure the browser to use.
         browserName: `chromium`,
 
-        userAgent: userAgentStrings[Math.floor(Math.random() * userAgentStrings.length)],
+        userAgent:
+          userAgentStrings[Math.floor(Math.random() * userAgentStrings.length)],
 
         //Chrome Browser Config
         channel: `chrome`,
@@ -90,22 +119,22 @@ export default defineConfig({
         },
       },
       timeout: 160000,
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     },
 
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     /* Test against mobile viewports. */
