@@ -155,7 +155,11 @@ e2e_tests_jtdove_stage:
     - yarn install
     - npx playwright install chrome
     - echo "Running Playwright tests..."
-    - PROJECT=$PROJECT_CLIENT ENV=$ENV_STAGE npx playwright test --workers 3 --project=$PROJECT
+    # staging.jtdove.pub doesn't reliably handle concurrent Chrome sessions
+    # (confirmed 2026-08-10) - --workers 1 overrides playwright.config.ts's
+    # own project-scoped cap, which would otherwise be masked by this
+    # job's default worker count.
+    - PROJECT=$PROJECT_CLIENT ENV=$ENV_STAGE npx playwright test --workers 1 --project=$PROJECT
   artifacts:
     paths:
       - playwright/projects/$PROJECT_CLIENT/html-report/
@@ -163,4 +167,5 @@ e2e_tests_jtdove_stage:
     expire_in: 5 days
   rules:
     - if: $UPSTREAM_PROJECT_NAME == "jtdove"
+    - when: manual
     - when: manual

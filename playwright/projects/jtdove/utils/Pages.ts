@@ -1,12 +1,27 @@
 import { test as baseTest } from '@playwright/test'
 import { JTDoveHomePage } from "../pages/JTDoveHomePage";
+import { JTDovePDPage } from "../pages/JTDovePDPage";
+import { JTDoveBasketPage } from "../pages/JTDoveBasketPage";
+import { JTDoveProductListPage } from "../pages/JTDoveProductListPage";
 import { JTDoveObjects } from "./objects";
 
 const test = baseTest.extend<{
     homePage: JTDoveHomePage
+    productDetailPage: JTDovePDPage
+    basketPage: JTDoveBasketPage
+    productListPage: JTDoveProductListPage
 }>({
     homePage: async ({ page }, use) => {
         await use(new JTDoveHomePage(page))
+    },
+    productDetailPage: async ({ page }, use) => {
+        await use(new JTDovePDPage(page))
+    },
+    basketPage: async ({ page }, use) => {
+        await use(new JTDoveBasketPage(page))
+    },
+    productListPage: async ({ page }, use) => {
+        await use(new JTDoveProductListPage(page))
     },
 })
 
