@@ -41,4 +41,43 @@ export class JTDovePDPage extends ProductDetailPage {
     async getBasketCount(): Promise<string> {
         return this.basketLinkText.textContent().then(text => (text ?? '').replace(/\D/g, ''))
     }
+
+    readonly clickAndCollectButton = JTDoveObjects.ProductDetailPage.clickAndCollectAddToBasketButton(this.page);
+
+    // VERIFIED live (staging, 2026-08-10): collection-only, per-length
+    // products (e.g. C16 Carcassing) require a non-zero length quantity
+    // before either add-to-basket action enables - there is no direct
+    // numeric input, only +/- steppers per length option. lengthIndex
+    // matches the on-page order (0 = the first length option, e.g.
+    // "3.6m"). Clicking clickAndCollectButton opens the branch
+    // stock-availability dialog (see JTDoveBasketPage) rather than adding
+    // straight to basket.
+    async addToBasketViaClickAndCollect(lengthIndex: number, clicks: number = 1): Promise<void> {
+        const plusButton = this.page.getByTestId('quantity-picker__plus-button').nth(lengthIndex)
+        for (let i = 0; i < clicks; i++) {
+            await plusButton.click()
+        }
+        await expect(this.clickAndCollectButton).toBeEnabled({ timeout: 10000 })
+        await this.clickAndCollectButton.click()
+    }
+
+    // VERIFIED live (staging, 2026-08-11): the length-based product's
+    // "DELIVERY" action shares the regular product-add-to-basket__button
+    // testid with simple quantity-based products, but has no direct
+    // numeric quantityInput to fill - addToBasket() would misbehave here,
+    // hence this separate method using the same length steppers as
+    // addToBasketViaClickAndCollect.
+    async addToBasketViaDelivery(lengthIndex: number, clicks: number = 1): Promise<void> {
+        const plusButton = this.page.getByTestId('quantity-picker__plus-button').nth(lengthIndex)
+        for (let i = 0; i < clicks; i++) {
+            await plusButton.click()
+        }
+        const countBefore = Number(await this.getBasketCount())
+        await expect(this.basketButton.first()).toBeEnabled({ timeout: 10000 })
+        await this.basketButton.first().click()
+        await expect(async () => {
+            const countAfter = Number(await this.getBasketCount())
+            expect(countAfter).toBeGreaterThan(countBefore)
+        }).toPass({ timeout: 15000 })
+    }
 }

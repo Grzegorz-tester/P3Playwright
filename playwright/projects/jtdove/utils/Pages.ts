@@ -3,6 +3,8 @@ import { JTDoveHomePage } from "../pages/JTDoveHomePage";
 import { JTDovePDPage } from "../pages/JTDovePDPage";
 import { JTDoveBasketPage } from "../pages/JTDoveBasketPage";
 import { JTDoveProductListPage } from "../pages/JTDoveProductListPage";
+import { JTDoveCheckoutPage } from "../pages/JTDoveCheckoutPage";
+import { JTDoveCheckoutSuccessPage } from "../pages/JTDoveCheckoutSuccessPage";
 import { JTDoveObjects } from "./objects";
 
 const test = baseTest.extend<{
@@ -10,6 +12,8 @@ const test = baseTest.extend<{
     productDetailPage: JTDovePDPage
     basketPage: JTDoveBasketPage
     productListPage: JTDoveProductListPage
+    checkoutPage: JTDoveCheckoutPage
+    checkoutSuccessPage: JTDoveCheckoutSuccessPage
 }>({
     homePage: async ({ page }, use) => {
         await use(new JTDoveHomePage(page))
@@ -22,6 +26,12 @@ const test = baseTest.extend<{
     },
     productListPage: async ({ page }, use) => {
         await use(new JTDoveProductListPage(page))
+    },
+    checkoutPage: async ({ page }, use) => {
+        await use(new JTDoveCheckoutPage(page))
+    },
+    checkoutSuccessPage: async ({ page }, use) => {
+        await use(new JTDoveCheckoutSuccessPage(page))
     },
 })
 

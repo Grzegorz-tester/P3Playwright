@@ -21,3 +21,16 @@ export function generateDeliveryAddress(): AddressData {
         postcode: faker.location.zipCode(),
     }
 }
+
+/**
+ * A unique guest checkout email per test run. CONFIRMED live (JTDove
+ * staging, 2026-08-11): re-using the same fixed guest email across many
+ * repeated checkout attempts eventually left a real checkout step stuck
+ * disabled with no visible error - some backend anti-abuse/duplicate
+ * check tied to the email itself, not a locator problem. `label` keeps
+ * the address human-identifiable (e.g. in order confirmations) while
+ * staying unique per run.
+ */
+export function generateGuestEmail(label: string): string {
+    return `${label}+${faker.string.alphanumeric(10)}@example.com`
+}
