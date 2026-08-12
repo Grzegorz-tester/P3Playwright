@@ -5,6 +5,14 @@ import { JTDoveBasketPage } from "../pages/JTDoveBasketPage";
 import { JTDoveProductListPage } from "../pages/JTDoveProductListPage";
 import { JTDoveCheckoutPage } from "../pages/JTDoveCheckoutPage";
 import { JTDoveCheckoutSuccessPage } from "../pages/JTDoveCheckoutSuccessPage";
+import { JTDoveBranchFinderPage } from "../pages/JTDoveBranchFinderPage";
+import { JTDoveLoginPage } from "../pages/JTDoveLoginPage";
+import { JTDoveAccountDashboardPage } from "../pages/JTDoveAccountDashboardPage";
+import { JTDoveProfilePage } from "../pages/JTDoveProfilePage";
+import { JTDoveAddressBookPage } from "../pages/JTDoveAddressBookPage";
+import { JTDoveInvoicesPage } from "../pages/JTDoveInvoicesPage";
+import { JTDoveWishlistsPage } from "../pages/JTDoveWishlistsPage";
+import { JTDoveMakeAPaymentPage } from "../pages/JTDoveMakeAPaymentPage";
 import { JTDoveObjects } from "./objects";
 
 const test = baseTest.extend<{
@@ -14,6 +22,14 @@ const test = baseTest.extend<{
     productListPage: JTDoveProductListPage
     checkoutPage: JTDoveCheckoutPage
     checkoutSuccessPage: JTDoveCheckoutSuccessPage
+    branchFinderPage: JTDoveBranchFinderPage
+    loginPage: JTDoveLoginPage
+    accountDashboardPage: JTDoveAccountDashboardPage
+    profilePage: JTDoveProfilePage
+    addressBookPage: JTDoveAddressBookPage
+    invoicesPage: JTDoveInvoicesPage
+    wishlistsPage: JTDoveWishlistsPage
+    makeAPaymentPage: JTDoveMakeAPaymentPage
 }>({
     homePage: async ({ page }, use) => {
         await use(new JTDoveHomePage(page))
@@ -32,6 +48,30 @@ const test = baseTest.extend<{
     },
     checkoutSuccessPage: async ({ page }, use) => {
         await use(new JTDoveCheckoutSuccessPage(page))
+    },
+    branchFinderPage: async ({ page }, use) => {
+        await use(new JTDoveBranchFinderPage(page))
+    },
+    loginPage: async ({ page }, use) => {
+        await use(new JTDoveLoginPage(page))
+    },
+    accountDashboardPage: async ({ page }, use) => {
+        await use(new JTDoveAccountDashboardPage(page))
+    },
+    profilePage: async ({ page }, use) => {
+        await use(new JTDoveProfilePage(page))
+    },
+    addressBookPage: async ({ page }, use) => {
+        await use(new JTDoveAddressBookPage(page))
+    },
+    invoicesPage: async ({ page }, use) => {
+        await use(new JTDoveInvoicesPage(page))
+    },
+    wishlistsPage: async ({ page }, use) => {
+        await use(new JTDoveWishlistsPage(page))
+    },
+    makeAPaymentPage: async ({ page }, use) => {
+        await use(new JTDoveMakeAPaymentPage(page))
     },
 })
 

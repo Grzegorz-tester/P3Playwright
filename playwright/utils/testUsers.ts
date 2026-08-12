@@ -23,6 +23,16 @@ export const kooltech = {
     }
 }
 
-
+// Linked to real trade account 103128 (a live account with genuine
+// invoice history, needed for the "My DOVE Account" invoices/dashboard
+// tests) via JTDove's "Existing Account Online Access" registration -
+// this storefront has no self-service signup, only linking a new online
+// login to an already-existing back-office account number.
+export const jtdove = {
+    accountTestUser_1: {
+        email: "velstar.test.jtdove@example.com",
+        password: "VelstarTest123!"
+    }
+}
 
 

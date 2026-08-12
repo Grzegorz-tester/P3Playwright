@@ -52,6 +52,12 @@ export const JTDoveObjects = {
         // unscoped lookup resolves to 5 elements.
         clickAndCollectAddToBasketButton: (page: Page) =>
             page.getByTestId('product-add-to-basket').getByTestId('product-card__add-to-basket').first(),
+        // VERIFIED live (staging, 2026-08-11): opens the "Add to
+        // Wishlist" modal (see AddToWishlistModal below) - requires being
+        // logged in. No testid (TODO: JTD-325 - text locator, no testid
+        // available) - duplicated mobile/desktop like every other PDP
+        // action, hence .first().
+        addToListButton: (page: Page) => page.getByRole('button', { name: /add to list/i }).first(),
         // VERIFIED live (staging, 2026-08-10): a same-page colour/size
         // variant dropdown (e.g. Scruffs Bobble Hat's "Colour: Black") -
         // pre-selected with a valid default, so selecting an option is
@@ -256,5 +262,239 @@ export const JTDoveObjects = {
         orderLines: (page: Page) => page.getByTestId('order-product-card'),
         orderLinesContainer: (page: Page) => page.getByTestId('orders-details__order-lines'),
         paymentDetails: (page: Page) => page.getByTestId('orders-details__order-payment-details'),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /branches. The "Branch Finder"
+    // widget (search box + results) sits above a separate, always-present
+    // "All Branches" section (A-Z letter filter + full list). CONFIRMED
+    // live: the Google Places Autocomplete predictions dropdown never
+    // renders (a genuine "Google script not loaded" console error on this
+    // storefront), but free-text submission via the search button still
+    // works correctly (geocodes the typed text server-side and returns
+    // real, distance-sorted results) - not a blocker for this feature.
+    BranchFinderPage: {
+        branchFinder: (page: Page) => page.getByTestId('branch-finder'),
+        // No testid (TODO: JTD-325 - text locator, no testid available,
+        // raised with devs) - located by its own stable third-party
+        // widget id instead (react-google-places-autocomplete's own).
+        searchInput: (page: Page) => page.locator('#react-google-places-autocomplete-input'),
+        // The lone plain button in this widget (icon-only, no
+        // aria-label/testid - TODO: JTD-325) - scoped to branchFinder so
+        // it can't collide with the A-Z filter buttons below.
+        searchButton: (page: Page) => JTDoveObjects.BranchFinderPage.branchFinder(page).locator('button'),
+        // Each search result is a plain `<a href="/branches/<slug>">` -
+        // matched by that stable href pattern rather than by visible
+        // text/position.
+        searchResultLinks: (page: Page) => JTDoveObjects.BranchFinderPage.branchFinder(page).locator('a[href^="/branches/"]'),
+        // "View all branches" - matched by its stable href (a same-page
+        // anchor), not by its visible text.
+        viewAllBranchesLink: (page: Page) => JTDoveObjects.BranchFinderPage.branchFinder(page).locator('a[href="#all-branches"]'),
+        // .first() - CONFIRMED live (staging, 2026-08-11): the same
+        // mobile/desktop duplicate pattern documented on ProductDetailPage
+        // above applies here too.
+        allBranchesSection: (page: Page) => page.getByTestId('all-branches').first(),
+        filterButtonByLetter: (letter: string) => (page: Page) => page.getByTestId(`branches_filter-bar_btn--${letter}`),
+        filterAllButton: (page: Page) => page.getByTestId('branches_filter-bar_btn--All'),
+        branchListItems: (page: Page) => page.getByTestId('branches_section__branch'),
+        branchListItemLinks: (page: Page) => JTDoveObjects.BranchFinderPage.allBranchesSection(page).locator('a[href^="/branches/"]'),
+    },
+
+    BranchDetailPage: {
+        heading: (page: Page) => page.getByTestId('branch__heading'),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /login. On success, navigates
+    // to /account. On failure (e.g. a disabled account), re-renders the
+    // same page with an "Error" banner instead of navigating.
+    LoginPage: {
+        emailInput: (page: Page) => page.getByTestId('login-form__email-input'),
+        passwordInput: (page: Page) => page.getByTestId('login-form__password-input'),
+        submitButton: (page: Page) => page.getByTestId('login-form__submit-button'),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): shared across every /account/*
+    // page - a welcome message, account number, Sign Out, and 6 nav
+    // items each with a stable `data-value` attribute (Dashboard,
+    // Profile, Address Book, Invoices, My Lists, Make a Payment) and a
+    // real `href` - used instead of visible text.
+    AccountMenu: {
+        welcome: (page: Page) => page.getByTestId('account-menu__welcome'),
+        logoutButton: (page: Page) => page.getByTestId('account-menu__logout'),
+        itemByValue: (value: string) => (page: Page) => page.locator(`[data-testid="account-menu__item"][data-value="${value}"]`),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /account dashboard - three
+    // account-card sections (Delivery Address, Billing Address, Recent
+    // Orders), each with a "View all" link and either address fields or
+    // an empty-state message.
+    AccountDashboardPage: {
+        cards: (page: Page) => page.getByTestId('account-card'),
+        cardByTitle: (title: string) => (page: Page) => page.getByTestId('account-card').filter({ has: page.getByTestId('account-card__title').getByText(title, { exact: true }) }),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /account/profile - "My
+    // Details" form, pre-filled with the logged-in user's data. "Reset
+    // Password" is a plain text link with no testid (TODO: JTD-325).
+    AccountProfilePage: {
+        emailInput: (page: Page) => page.getByTestId('account-profile__email-input'),
+        titleInput: (page: Page) => page.getByTestId('account-profile__title-input'),
+        firstNameInput: (page: Page) => page.getByTestId('account-profile__first-name-input'),
+        lastNameInput: (page: Page) => page.getByTestId('account-profile__last-name-input'),
+        contactNumberInput: (page: Page) => page.getByTestId('account-profile__contact-number-input'),
+        saveChangesButton: (page: Page) => page.getByTestId('account-profile__save-changes-button--header'),
+        // TODO: JTD-325 - text locator, no testid available (see above).
+        // CONFIRMED live (staging, 2026-08-11): a plain <button>, not a
+        // link - clicking it toggles an inline "Change Password" form in
+        // place (Existing/New/Repeat New Password fields, "Back to User
+        // Form" link) rather than navigating to a separate route.
+        resetPasswordButton: (page: Page) => page.getByRole('button', { name: 'Reset Password' }),
+        changePasswordHeading: (page: Page) => page.getByRole('heading', { name: 'Change Password' }),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /account/address-book - two
+    // independent sections (delivery, billing), each with its own
+    // "Add new address" action and its own 0-indexed address list -
+    // CONFIRMED live: when a section has zero addresses, the add-address
+    // form itself renders inline instead of behind a button, so
+    // `addAddressButton` is only meaningful once at least one address
+    // already exists. Reuses the same `checkout-address-form` component
+    // as guest checkout (see CheckoutPage above), but this rendering
+    // does NOT carry the `__submit-button` testid - CONFIRMED live: the
+    // visible text is "SAVE ADDRESS" (TODO: JTD-325 - text locator, no
+    // testid available).
+    AddressBookPage: {
+        deliveryAddresses: (page: Page) => page.getByTestId('address-book-delivery__addresses'),
+        deliveryAddAddressButton: (page: Page) => page.getByTestId('address-book-delivery__add-address-button'),
+        deliveryAddressByIndex: (index: number) => (page: Page) => page.getByTestId(`address-book-delivery__address-${index}`),
+        billingAddresses: (page: Page) => page.getByTestId('address-book-billing__addresses'),
+        billingAddAddressButton: (page: Page) => page.getByTestId('address-book-billing__add-address-button'),
+        billingAddressByIndex: (index: number) => (page: Page) => page.getByTestId(`address-book-billing__address-${index}`),
+        addressFormFirstName: (page: Page) => page.getByTestId('checkout-address-form__first-name'),
+        addressFormLastName: (page: Page) => page.getByTestId('checkout-address-form__last-name'),
+        addressFormSaveAsDefaultCheckbox: (page: Page) => page.getByTestId('checkout-address-form__save-as-default'),
+        // No testid (TODO: JTD-325) - located by its own stable id
+        // instead (this rendering's id, distinct from checkout's
+        // `checkout-address-form__address-line-1`).
+        addressFormLoqateSearchInput: (page: Page) => page.locator('#address-form-loqate-input'),
+        addressFormLoqateFirstResult: (page: Page) => page.locator('.pca .pcaitem').first(),
+        // CONFIRMED live (staging, 2026-08-11): editing an EXISTING
+        // address renders these plain fields directly (pre-filled),
+        // with no Loqate search box at all - the Loqate autocomplete
+        // above is only for the "Add new address" flow.
+        addressFormAddressLine1: (page: Page) => page.getByTestId('checkout-address-form__address-line-1'),
+        addressFormCity: (page: Page) => page.getByTestId('checkout-address-form__city'),
+        addressFormCounty: (page: Page) => page.getByTestId('checkout-address-form__county'),
+        addressFormPostcode: (page: Page) => page.getByTestId('checkout-address-form__postcode'),
+        // TODO: JTD-325 - text locator, no testid available (see above).
+        addressFormSaveButton: (page: Page) => page.getByRole('button', { name: 'Save Address' }),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /account/invoices - a real
+    // trade account's paginated order/invoice history. Every data cell
+    // has a stable testid; the filter controls and pagination buttons do
+    // not (TODO: JTD-325 - text locators, no testids available).
+    InvoicesPage: {
+        rowByIndex: (index: number) => (page: Page) => page.getByTestId(`account-invoices-row-${index}`),
+        cellByIndexAndName: (index: number, cellName: string) => (page: Page) => page.getByTestId(`account-orders-row-${index}-cell-${cellName}`),
+        documentNumberFilter: (page: Page) => page.getByTestId('account-orders-documentNumber-filter'),
+        // No testid (see above) - located by its own stable id.
+        dateFilter: (page: Page) => page.locator('#date'),
+        statusFilterCombobox: (page: Page) => page.getByRole('combobox').filter({ hasText: 'Status' }),
+        statusFilterOption: (status: string) => (page: Page) => page.getByRole('option', { name: status, exact: true }),
+        filterResetButton: (page: Page) => page.getByTestId('account-orders-filter-reset'),
+        prevPageButton: (page: Page) => page.getByRole('button', { name: /^prev$/i }).first(),
+        nextPageButton: (page: Page) => page.getByRole('button', { name: /^next$/i }).first(),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /account/wishlists (list) and
+    // VERIFIED live (staging, 2026-08-11): opened from a PDP's "Add to
+    // list" button - pre-selects the account's only/most-recent wishlist
+    // in the dropdown if one exists.
+    AddToWishlistModal: {
+        dialog: (page: Page) => page.getByRole('dialog').filter({ hasText: 'Add to Wishlist' }),
+        wishlistSelect: (page: Page) => page.getByTestId('add-wishlist__wishlist-select'),
+        addButton: (page: Page) => page.getByTestId('add-wishlist__add-to-wishlist-btn'),
+        createNewWishlistLink: (page: Page) => JTDoveObjects.AddToWishlistModal.dialog(page).getByText('or create a new wishlist'),
+        // CONFIRMED live (staging, 2026-08-12): clicking Add does NOT
+        // close the dialog - it swaps to a success confirmation inside
+        // the SAME dialog ("Successfully added to wishlist: ...") with
+        // Continue Shopping/View Wishlist/Close buttons, which must be
+        // dismissed explicitly. No testid on these buttons (TODO:
+        // JTD-325) - located by text.
+        successMessage: (page: Page) => page.getByText(/successfully added to wishlist/i),
+        closeButton: (page: Page) => JTDoveObjects.AddToWishlistModal.dialog(page).getByRole('button', { name: 'Close', exact: true }),
+    },
+
+    // /account/wishlists/<id> (details). The list's own row actions have
+    // no "Share" column despite the source test case describing one -
+    // CONFIRMED live: each row only has an edit-pencil link (opens the
+    // details page, where Share/Edit Name/Delete Wishlist actually live)
+    // and a Delete action. Almost nothing on the details page carries a
+    // testid (TODO: JTD-325 for all of them) - located by role/text.
+    WishlistsPage: {
+        createNewWishlistButton: (page: Page) => page.getByRole('button', { name: 'Create a new Wishlist' }),
+        // The create/edit modal's name input shares this id in both
+        // flows (CONFIRMED live) - scope by the currently-open dialog if
+        // ever both could be relevant.
+        modalNameInput: (page: Page) => page.locator('#modal-quote-name'),
+        modalCreateButton: (page: Page) => page.getByRole('dialog').getByRole('button', { name: 'Create Wishlist' }),
+        nameFilterInput: (page: Page) => page.getByTestId('account-wishlists-name-filter'),
+        filterResetButton: (page: Page) => page.getByTestId('account-wishlists-filter-reset'),
+        rowByIndex: (index: number) => (page: Page) => page.getByTestId(`account-wishlists-row-${index}`),
+        rowNameCellByIndex: (index: number) => (page: Page) => page.getByTestId(`account-wishlists-row-${index}-cell-name`),
+        rowEditLinkByIndex: (index: number) => (page: Page) => page.getByTestId(`account-wishlists-row-${index}-cell-edit`).locator('a'),
+        rowDeleteButtonByIndex: (index: number) => (page: Page) => page.getByTestId(`account-wishlists-row-${index}-cell-delete`).getByRole('button').first(),
+        // Details page.
+        quickAddSearchInput: (page: Page) => page.getByTestId('basket-quick-buy').getByTestId('algolia-autocomplete__input'),
+        quickAddHitProducts: (page: Page) => page.getByTestId('basket-quick-buy').getByTestId('algolia-autocomplete-hit-product'),
+        // VERIFIED live (staging, 2026-08-11): the wishlist name is a
+        // `<p>` two levels up from the Share button (both children of
+        // the same flex row) - not a heading element.
+        detailsHeading: (page: Page) => page.getByRole('button', { name: 'Share', exact: true }).locator('xpath=../../p'),
+        shareButton: (page: Page) => page.getByRole('button', { name: 'Share', exact: true }),
+        editNameButton: (page: Page) => page.getByRole('button', { name: 'Edit Name' }),
+        deleteWishlistButton: (page: Page) => page.getByRole('button', { name: 'Delete Wishlist' }),
+        shareModalDialog: (page: Page) => page.getByRole('dialog').filter({ hasText: 'Share Wishlist' }),
+        shareModalEmailInput: (page: Page) => page.getByRole('dialog').filter({ hasText: 'Share Wishlist' }).getByPlaceholder('Enter an email address'),
+        shareModalShareButton: (page: Page) => page.getByRole('dialog').filter({ hasText: 'Share Wishlist' }).getByRole('button', { name: 'SHARE' }),
+        // CONFIRMED live (staging, 2026-08-12): clicking Share does NOT
+        // close this dialog (no success message either, unlike the Add
+        // to Wishlist modal) - it just sits there with the email tag
+        // still shown, so it has to be dismissed explicitly. Two
+        // buttons are both literally named "Close" - the first (a
+        // primary-style button) does NOTHING when clicked (confirmed
+        // live, twice); only the second (the corner X icon) actually
+        // dismisses the dialog, hence .last() rather than .first().
+        shareModalCloseButton: (page: Page) => JTDoveObjects.WishlistsPage.shareModalDialog(page).getByRole('button', { name: 'Close' }).last(),
+        deleteConfirmDialog: (page: Page) => page.getByRole('dialog').filter({ hasText: 'Are you sure you want to delete this wishlist' }),
+        deleteConfirmCancelButton: (page: Page) => JTDoveObjects.WishlistsPage.deleteConfirmDialog(page).getByRole('button', { name: 'Close' }),
+        // Test scenarios only ever add one product to a wishlist, so
+        // these target the single line directly rather than needing a
+        // per-row scope - .first() guards against the mobile/desktop
+        // duplicate pattern if it applies here too.
+        lineQuantityInput: (page: Page) => page.getByTestId('quantity-picker__input').first(),
+        lineQuantityPlusButton: (page: Page) => page.getByTestId('quantity-picker__plus-button').first(),
+        lineQuantityMinusButton: (page: Page) => page.getByTestId('quantity-picker__minus-button').first(),
+        lineUpdateButton: (page: Page) => page.getByRole('button', { name: 'Update' }).first(),
+        lineRemoveButton: (page: Page) => page.getByRole('button', { name: 'Remove' }).first(),
+        addItemToBasketButton: (page: Page) => page.getByRole('button', { name: 'Add item to basket' }).first(),
+        addWishlistToBasketButton: (page: Page) => page.getByRole('button', { name: 'Add wishlist to basket', exact: false }),
+        // VERIFIED live (staging, 2026-08-11): "Wishlist Total" is an
+        // `<h3>` with the total price as its very next `<p>` sibling.
+        wishlistTotal: (page: Page) => page.getByRole('heading', { name: 'Wishlist Total' }).locator('xpath=following-sibling::p[1]'),
+    },
+
+    // VERIFIED live (staging, 2026-08-11): /account/make-a-payment - an
+    // online payment section (amount validated against the real
+    // outstanding balance - CONFIRMED live: an amount greater than the
+    // balance is rejected with a visible message, not silently) and a
+    // static BACS details section.
+    MakeAPaymentPage: {
+        onlineSection: (page: Page) => page.getByTestId('make-a-payment-online'),
+        defaultBillingAddress: (page: Page) => JTDoveObjects.MakeAPaymentPage.onlineSection(page).getByTestId('address-book-address'),
+        // No testid (TODO: JTD-325) - located by its own stable id.
+        amountInput: (page: Page) => page.locator('#currency'),
+        makePaymentButton: (page: Page) => JTDoveObjects.MakeAPaymentPage.onlineSection(page).getByRole('button', { name: 'Make a Payment' }),
+        balanceErrorMessage: (page: Page) => page.getByText('The amount you are trying to pay is greater than your account balance.'),
     },
 }

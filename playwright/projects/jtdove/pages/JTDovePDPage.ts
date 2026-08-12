@@ -80,4 +80,33 @@ export class JTDovePDPage extends ProductDetailPage {
             expect(countAfter).toBeGreaterThan(countBefore)
         }).toPass({ timeout: 15000 })
     }
+
+    readonly addToListButton = JTDoveObjects.ProductDetailPage.addToListButton(this.page);
+    readonly addToWishlistModal = JTDoveObjects.AddToWishlistModal.dialog(this.page);
+    readonly addToWishlistSelect = JTDoveObjects.AddToWishlistModal.wishlistSelect(this.page);
+    readonly addToWishlistAddButton = JTDoveObjects.AddToWishlistModal.addButton(this.page);
+    readonly addToWishlistSuccessMessage = JTDoveObjects.AddToWishlistModal.successMessage(this.page);
+    readonly addToWishlistCloseButton = JTDoveObjects.AddToWishlistModal.closeButton(this.page);
+
+    // VERIFIED live (staging, 2026-08-11) end-to-end: requires being
+    // logged in. The dropdown pre-selects the account's existing
+    // wishlist if there's exactly one, otherwise it must be chosen
+    // explicitly - wishlistName lets a caller pick a specific one when
+    // more than one exists.
+    //
+    // CONFIRMED live (staging, 2026-08-12): clicking Add does NOT close
+    // the dialog - it swaps to a success message in the same dialog,
+    // which has to be dismissed explicitly via Close.
+    async addToWishlist(wishlistName?: string): Promise<void> {
+        await this.addToListButton.click()
+        await expect(this.addToWishlistModal).toBeVisible({ timeout: 15000 })
+        if (wishlistName) {
+            await this.addToWishlistSelect.click()
+            await this.page.getByRole('option', { name: wishlistName, exact: true }).click()
+        }
+        await this.addToWishlistAddButton.click()
+        await expect(this.addToWishlistSuccessMessage).toBeVisible({ timeout: 15000 })
+        await this.addToWishlistCloseButton.click()
+        await expect(this.addToWishlistModal).toBeHidden({ timeout: 15000 })
+    }
 }
