@@ -54,7 +54,14 @@ export default defineConfig({
   // (14.4min vs 13.2min for the full suite) - use that rather than
   // splitting the difference. Both caps are per-project rather than
   // global, since neither instability has been observed elsewhere.
-  workers: process.env.CI ? 1 : (["russells", "insinkerator_eu"].includes(process.env.PROJECT ?? "") ? 1 : undefined),
+  //
+  // NOTE(JTDOVE): staging.jtdove.pub doesn't reliably handle the default
+  // worker count under load either - a full-suite run with the default
+  // parallelism produced widespread failures on completely unrelated
+  // tests, including the trivial health-check, while running fully
+  // serially (1 worker) passed cleanly and was notably faster overall
+  // too (confirmed live, 2026-08-10).
+  workers: process.env.CI ? 1 : (["russells", "insinkerator_eu", "jtdove"].includes(process.env.PROJECT ?? "") ? 1 : undefined),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     [

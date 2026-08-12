@@ -23,6 +23,7 @@
     "test:insinkerator_eu:stage": "ENV=stage PROJECT=insinkerator_eu npx playwright test --project=Chrome",
     "test:russells:stage": "ENV=stage PROJECT=russells npx playwright test --project=Chrome",
     "test:russells:prod": "ENV=prod PROJECT=russells npx playwright test --project=Chrome",
-    "test:watco:stage": "ENV=stage PROJECT=watco npx playwright test --project=Chrome"
+    "test:watco:stage": "ENV=stage PROJECT=watco npx playwright test --project=Chrome",
+    "test:jtdove:stage": "ENV=stage PROJECT=jtdove npx playwright test --project=Chrome"
   }
 }

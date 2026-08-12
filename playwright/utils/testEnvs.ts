@@ -191,4 +191,17 @@ export const envs: Envs = {
                 api: ""
             }
     },
+    // TODO(JTD-325): api host follows the naming convention every other
+    // storefront uses, but is unverified - no client-side call to a
+    // separate API host was observed live (same situation as Russells).
+    // auth.setup.ts logs in via the UI (not this API) since the /auth
+    // API's cookies don't carry over to the web domain here - see
+    // JTDoveLoginPage/auth.setup.ts.
+    jtdove: {
+        stage:
+            {
+                url: "https://staging.jtdove.pub",
+                api: "https://staging-api.jtdove.pub"
+            }
+    },
 }
