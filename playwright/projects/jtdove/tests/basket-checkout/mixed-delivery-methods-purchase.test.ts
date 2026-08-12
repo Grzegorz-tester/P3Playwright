@@ -28,7 +28,7 @@ const MOBILE_NUMBER = '07700900000'
 const DELIVERY_NOTE = 'Velstar test'
 const CUSTOMER_NAME = { firstName: 'Velstar', lastName: 'Test' }
 // A real UK postcode, resolved live via Loqate's own address lookup.
-const ADDRESS_SEARCH_TEXT = 'NE1 4ST'
+const ADDRESS_SEARCH_TEXT = 'NE15 8SF'
 // Opayo's own published sandbox test Visa card.
 const OPAYO_TEST_CARD = { number: '4929000000006', expiryMonth: '12', expiryYear: '30', cvc: '123' }
 
