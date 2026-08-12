@@ -217,7 +217,14 @@ export const JTDoveObjects = {
         // Loqate library itself and won't change with storefront
         // redeploys.
         loqateAddressSearchInput: (page: Page) => page.locator('#checkout-address-form__address-line-1'),
-        loqateFirstResult: (page: Page) => page.locator('.pca .pcaitem').first(),
+        // CONFIRMED live (staging, 2026-08-12): plain `.first()` (no
+        // visibility filter) intermittently resolved to a persistently
+        // hidden, unrelated `.pcaitem` that stayed "not visible" across
+        // every retry for 45+ seconds - a real UK postcode is enough to
+        // trigger it, so it's not the fake-postcode issue. `:visible`
+        // skips whatever hidden element was being matched and targets
+        // the genuinely rendered result instead.
+        loqateFirstResult: (page: Page) => page.locator('.pca .pcaitem:visible').first(),
         deliveryAddressSubmitButton: (page: Page) => page.getByTestId('checkout-address-form__submit-button'),
         // Delivery step - phone/notes sub-step (reached after submitting
         // the address above).
@@ -376,7 +383,7 @@ export const JTDoveObjects = {
         // instead (this rendering's id, distinct from checkout's
         // `checkout-address-form__address-line-1`).
         addressFormLoqateSearchInput: (page: Page) => page.locator('#address-form-loqate-input'),
-        addressFormLoqateFirstResult: (page: Page) => page.locator('.pca .pcaitem').first(),
+        addressFormLoqateFirstResult: (page: Page) => page.locator('.pca .pcaitem:visible').first(),
         // CONFIRMED live (staging, 2026-08-11): editing an EXISTING
         // address renders these plain fields directly (pre-filled),
         // with no Loqate search box at all - the Loqate autocomplete

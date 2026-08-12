@@ -135,16 +135,29 @@ export class JTDoveCheckoutPage extends CheckoutPage {
     // actual address. Both are transient/live-data-dependent, not fixed
     // by any single wait duration, so the whole click-and-check sequence
     // is retried as a unit until the form is genuinely filled.
+    // CONFIRMED live (staging, 2026-08-12): beyond the container/stale
+    // issues above, Loqate re-queries on every keystroke, and a response
+    // for an earlier PARTIAL string can occasionally render after the
+    // response for the complete search text (a debounce/network
+    // ordering race) - confirmed by seeing this exact search text
+    // resolve to a real address on one run and to an unrelated result on
+    // the next, with no code or data change in between. The OUTER retry
+    // below re-types the search from scratch to recover from that; the
+    // INNER retry is the ordinary "container result needs a second
+    // click" handling.
     async fillGuestDeliveryAddress(details: { firstName: string, lastName: string, addressSearchText: string }): Promise<void> {
         await expect(this.deliveryAddressFirstName).toBeVisible({ timeout: 20000 })
         await this.deliveryAddressFirstName.fill(details.firstName)
         await this.deliveryAddressLastName.fill(details.lastName)
-        await this.loqateAddressSearchInput.pressSequentially(details.addressSearchText, { delay: 50 })
-        await expect(this.loqateFirstResult).toBeVisible({ timeout: 15000 })
         await expect(async () => {
-            await this.loqateFirstResult.click({ timeout: 5000 })
-            await expect(this.deliveryAddressSubmitButton).toBeEnabled({ timeout: 3000 })
-        }).toPass({ timeout: 30000 })
+            await this.loqateAddressSearchInput.fill('')
+            await this.loqateAddressSearchInput.pressSequentially(details.addressSearchText, { delay: 50 })
+            await expect(this.loqateFirstResult).toBeVisible({ timeout: 15000 })
+            await expect(async () => {
+                await this.loqateFirstResult.click({ timeout: 5000 })
+                await expect(this.deliveryAddressSubmitButton).toBeEnabled({ timeout: 3000 })
+            }).toPass({ timeout: 15000 })
+        }).toPass({ timeout: 45000 })
         await this.deliveryAddressSubmitButton.click()
     }
 

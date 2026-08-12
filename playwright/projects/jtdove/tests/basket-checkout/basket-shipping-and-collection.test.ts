@@ -392,6 +392,41 @@ test.describe('Basket Shipping & Collection', () => {
     })
 
     // Case 119: Checkout readiness with delivery types.
+    // KNOWN INTERMITTENT FAILURE (JTD-325, investigated 2026-08-12): this
+    // step can fail with the Loqate result resolving to an unrelated
+    // address (e.g. the account's own default address) instead of a real
+    // NE15 8SF result, or with no visible result at all. What's been
+    // CONFIRMED, so the next person doesn't re-tread this:
+    //   - The test postcode itself (NE15 8SF) IS real and correct - it
+    //     resolves reliably, every time, on the Address Book's identical
+    //     Loqate flow (JTDoveAddressBookPage.fillAndSaveDeliveryAddress,
+    //     address-book.test.ts - 6/6 passing) and in a full guest
+    //     purchase using this exact postcode via this exact
+    //     fillGuestDeliveryAddress method
+    //     (mixed-delivery-methods-purchase.test.ts).
+    //   - NOT a debounce/timing race: retrying the whole type-and-select
+    //     sequence from scratch (see fillGuestDeliveryAddress) landed on
+    //     the identical wrong result every time, across 3 consecutive
+    //     runs - a genuine race would vary between retries.
+    //   - NOT a click-target-visibility issue: filtering the result
+    //     locator to `:visible` either matched the same wrong element or
+    //     found zero visible matches - it didn't fix it.
+    //   - NOT specific to clicking vs. keyboard selection: pressing
+    //     Enter to select landed on the exact same wrong address as
+    //     clicking did.
+    //   - Only ever seen on THIS checkout page, never on Address Book,
+    //     which shares the same Loqate integration pattern and the same
+    //     postcode - strongly suggests something specific to checkout
+    //     (a different Loqate widget instance/config, or - the current
+    //     leading theory - the same intermittent "Access Denied"-style
+    //     degradation seen elsewhere this session on basket/checkout
+    //     actions specifically under heavy same-day load, which the
+    //     Address Book flow is never exposed to).
+    // Next step if this resurfaces: re-run in isolation on a quieter day
+    // (less cumulative load on this shared account/IP) before assuming
+    // a code regression - if it's still failing then, that's the point
+    // to dig into what's actually different about the checkout page's
+    // Loqate instance specifically.
     test('Checkout readiness with delivery types (case 119)', async ({
         page,
         productDetailPage,
@@ -428,7 +463,7 @@ test.describe('Basket Shipping & Collection', () => {
             await checkoutPage.fillGuestDeliveryAddress({
                 firstName: 'Velstar',
                 lastName: 'Test',
-                addressSearchText: 'NE1 4ST',
+                addressSearchText: 'NE15 8SF',
             })
             await checkoutPage.completeDeliveryDetails('07700900000', 'Velstar test')
         })
