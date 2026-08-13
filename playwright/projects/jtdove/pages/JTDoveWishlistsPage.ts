@@ -193,8 +193,13 @@ export class JTDoveWishlistsPage {
     // clicking Share sends a real POST to /account/wishlists/<id> that
     // returns 200, with no error shown to the user. Written against the
     // expected/correct behaviour (an invalid format should be rejected
-    // before or during submission) on purpose, so this shows up as a
-    // red test until fixed, rather than silently accepting the bug.
+    // before or during submission) on purpose.
+    //
+    // DEPRIORITISED (2026-08-13): per explicit instruction this is low
+    // priority and unlikely to be fixed soon, so its caller in case 164
+    // (wishlists.test.ts) is commented out rather than left permanently
+    // red. Method kept as-is so it's a one-line re-enable once the fix
+    // is scheduled.
     async verifyInvalidEmailRejected(invalidEmail: string): Promise<void> {
         await this.shareModalEmailInput.fill(invalidEmail)
         await this.page.keyboard.press('Enter')

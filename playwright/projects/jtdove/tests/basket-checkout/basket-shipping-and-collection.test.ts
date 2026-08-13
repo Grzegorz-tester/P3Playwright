@@ -463,7 +463,10 @@ test.describe('Basket Shipping & Collection', () => {
             await checkoutPage.fillGuestDeliveryAddress({
                 firstName: 'Velstar',
                 lastName: 'Test',
-                addressSearchText: 'NE15 8SF',
+                addressLine1: '1 Riversdale Way, Newburn Haugh Industrial Estate',
+                city: 'Newcastle Upon Tyne',
+                county: 'Tyne & Wear',
+                postcode: 'NE15 8SF',
             })
             await checkoutPage.completeDeliveryDetails('07700900000', 'Velstar test')
         })

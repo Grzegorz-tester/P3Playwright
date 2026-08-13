@@ -108,7 +108,7 @@ export default defineConfig({
         headless: true,
 
         //Browser height and width
-        viewport: { width: 2560, height: 1440 },
+        viewport: { width: 1440, height: 960 },
         ignoreHTTPSErrors: true,
 
         //Enable File Downloads in Chrome

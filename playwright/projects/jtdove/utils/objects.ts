@@ -226,6 +226,20 @@ export const JTDoveObjects = {
         // the genuinely rendered result instead.
         loqateFirstResult: (page: Page) => page.locator('.pca .pcaitem:visible').first(),
         deliveryAddressSubmitButton: (page: Page) => page.getByTestId('checkout-address-form__submit-button'),
+        // CONFIRMED live (staging, 2026-08-12): once an address has been
+        // accepted, the summary view shows a "Change address" control -
+        // clicking it reveals the SAME checkout-address-form fields as
+        // the initial Loqate flow, but as plain editable text inputs
+        // (address-line-1 is the very same #checkout-address-form__
+        // address-line-1 element the Loqate widget was attached to,
+        // which reverts to a normal input once a selection has been
+        // made). Used to overwrite Loqate's often-unreliable selection
+        // with the actual intended address directly - see
+        // fillGuestDeliveryAddress.
+        changeAddressButton: (page: Page) => page.getByTestId('checkout-current-address__edit-address-button'),
+        deliveryAddressCity: (page: Page) => page.getByTestId('checkout-address-form__city'),
+        deliveryAddressCounty: (page: Page) => page.getByTestId('checkout-address-form__county'),
+        deliveryAddressPostcode: (page: Page) => page.getByTestId('checkout-address-form__postcode'),
         // Delivery step - phone/notes sub-step (reached after submitting
         // the address above).
         deliveryContactMobileInput: (page: Page) => page.locator('[id="Enter your contact mobile"]'),
