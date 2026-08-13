@@ -113,51 +113,79 @@ export class JTDoveCheckoutPage extends CheckoutPage {
     readonly loqateAddressSearchInput = JTDoveObjects.CheckoutPage.loqateAddressSearchInput(this.page);
     readonly loqateFirstResult = JTDoveObjects.CheckoutPage.loqateFirstResult(this.page);
     readonly deliveryAddressSubmitButton = JTDoveObjects.CheckoutPage.deliveryAddressSubmitButton(this.page);
+    readonly changeAddressButton = JTDoveObjects.CheckoutPage.changeAddressButton(this.page);
+    readonly deliveryAddressCity = JTDoveObjects.CheckoutPage.deliveryAddressCity(this.page);
+    readonly deliveryAddressCounty = JTDoveObjects.CheckoutPage.deliveryAddressCounty(this.page);
+    readonly deliveryAddressPostcode = JTDoveObjects.CheckoutPage.deliveryAddressPostcode(this.page);
     readonly deliveryContactMobileInput = JTDoveObjects.CheckoutPage.deliveryContactMobileInput(this.page);
     readonly deliveryNotesInput = JTDoveObjects.CheckoutPage.deliveryNotesInput(this.page);
     readonly deliveryServiceRadio = JTDoveObjects.CheckoutPage.deliveryServiceRadio(this.page);
     readonly deliveryContinueButton = JTDoveObjects.CheckoutPage.deliveryContinueButton(this.page);
 
-    // VERIFIED live (staging, 2026-08-10): fills the guest delivery
-    // address via Loqate's real UK address lookup (postcode/street text
-    // in, pick the first live suggestion, which resolves into a full
-    // editable address) - not a plain blank form like Russells. The
-    // resolved address's exact street/city/postcode is whatever Loqate
-    // returns for the search text, so callers should only assert against
-    // the name they pass in, not the resulting address content.
+    // RETIRED (JTD-325, 2026-08-12): the original approach searched a
+    // specific postcode and tried to select the matching CORRECT
+    // suggestion - this was the source of case 119's known-intermittent
+    // failure (see the investigation history in
+    // basket-shipping-and-collection.test.ts). Every fix attempt at the
+    // SELECTION itself (retrying the whole type-and-select sequence,
+    // filtering for :visible, even keyboard selection instead of
+    // clicking) hit the identical issue, while the exact same Loqate
+    // flow is 100% reliable on the Address Book page. Kept here,
+    // commented out, for reference rather than deleted outright:
     //
-    // CONFIRMED live (staging, 2026-08-11): Loqate's live dropdown
-    // re-renders on its own debounce as it re-queries per keystroke,
-    // which has caused two distinct failures under automation: the
-    // "first result" going stale/detaching right as it's clicked, and a
-    // "container" result (e.g. a business park or building with multiple
-    // units) needing a SECOND click on its own follow-up list to reach an
-    // actual address. Both are transient/live-data-dependent, not fixed
-    // by any single wait duration, so the whole click-and-check sequence
-    // is retried as a unit until the form is genuinely filled.
-    // CONFIRMED live (staging, 2026-08-12): beyond the container/stale
-    // issues above, Loqate re-queries on every keystroke, and a response
-    // for an earlier PARTIAL string can occasionally render after the
-    // response for the complete search text (a debounce/network
-    // ordering race) - confirmed by seeing this exact search text
-    // resolve to a real address on one run and to an unrelated result on
-    // the next, with no code or data change in between. The OUTER retry
-    // below re-types the search from scratch to recover from that; the
-    // INNER retry is the ordinary "container result needs a second
-    // click" handling.
-    async fillGuestDeliveryAddress(details: { firstName: string, lastName: string, addressSearchText: string }): Promise<void> {
+    // async fillGuestDeliveryAddress(details: { firstName: string, lastName: string, addressSearchText: string }): Promise<void> {
+    //     await expect(this.deliveryAddressFirstName).toBeVisible({ timeout: 20000 })
+    //     await this.deliveryAddressFirstName.fill(details.firstName)
+    //     await this.deliveryAddressLastName.fill(details.lastName)
+    //     await expect(async () => {
+    //         await this.loqateAddressSearchInput.fill('')
+    //         await this.loqateAddressSearchInput.pressSequentially(details.addressSearchText, { delay: 50 })
+    //         await expect(this.loqateFirstResult).toBeVisible({ timeout: 15000 })
+    //         await expect(async () => {
+    //             await this.loqateFirstResult.click({ timeout: 5000 })
+    //             await expect(this.deliveryAddressSubmitButton).toBeEnabled({ timeout: 3000 })
+    //         }).toPass({ timeout: 15000 })
+    //     }).toPass({ timeout: 45000 })
+    //     await this.deliveryAddressSubmitButton.click()
+    // }
+
+    // CONFIRMED live (staging, 2026-08-12): once ANY address has been
+    // accepted, a "Change address" control appears that reveals the
+    // same checkout-address-form fields as plain editable text inputs
+    // (address-line-1 is literally the same #checkout-address-form__
+    // address-line-1 element the Loqate widget was attached to, which
+    // reverts to a normal input once a selection has been made) - the
+    // same mechanism Address Book's own "Edit an existing address" uses.
+    // Since it's never been unreliable, the robust approach is: let
+    // Loqate resolve to WHATEVER it resolves to first (don't care if
+    // it's right - it's about to be overwritten anyway, so there's
+    // nothing left to retry for correctness), then set every field to
+    // the actual intended address directly via Change address.
+    async fillGuestDeliveryAddress(details: { firstName: string, lastName: string, addressLine1: string, city: string, postcode: string, county?: string }): Promise<void> {
         await expect(this.deliveryAddressFirstName).toBeVisible({ timeout: 20000 })
         await this.deliveryAddressFirstName.fill(details.firstName)
         await this.deliveryAddressLastName.fill(details.lastName)
+        await this.loqateAddressSearchInput.pressSequentially(details.postcode, { delay: 50 })
+        await expect(this.loqateFirstResult).toBeVisible({ timeout: 15000 })
         await expect(async () => {
-            await this.loqateAddressSearchInput.fill('')
-            await this.loqateAddressSearchInput.pressSequentially(details.addressSearchText, { delay: 50 })
-            await expect(this.loqateFirstResult).toBeVisible({ timeout: 15000 })
-            await expect(async () => {
-                await this.loqateFirstResult.click({ timeout: 5000 })
-                await expect(this.deliveryAddressSubmitButton).toBeEnabled({ timeout: 3000 })
-            }).toPass({ timeout: 15000 })
-        }).toPass({ timeout: 45000 })
+            await this.loqateFirstResult.click({ timeout: 5000 })
+            await expect(this.deliveryAddressSubmitButton).toBeEnabled({ timeout: 3000 })
+        }).toPass({ timeout: 30000 })
+        await this.deliveryAddressSubmitButton.click()
+
+        // Overwrite with the actual intended address.
+        await expect(this.changeAddressButton).toBeVisible({ timeout: 15000 })
+        await this.changeAddressButton.click()
+        await expect(this.deliveryAddressFirstName).toBeVisible({ timeout: 15000 })
+        await this.deliveryAddressFirstName.fill(details.firstName)
+        await this.deliveryAddressLastName.fill(details.lastName)
+        await this.loqateAddressSearchInput.fill(details.addressLine1)
+        await this.deliveryAddressCity.fill(details.city)
+        if (details.county !== undefined) {
+            await this.deliveryAddressCounty.fill(details.county)
+        }
+        await this.deliveryAddressPostcode.fill(details.postcode)
+        await expect(this.deliveryAddressSubmitButton).toBeEnabled({ timeout: 10000 })
         await this.deliveryAddressSubmitButton.click()
     }
 
