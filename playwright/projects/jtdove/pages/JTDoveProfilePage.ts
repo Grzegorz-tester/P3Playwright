@@ -45,33 +45,37 @@ export class JTDoveProfilePage {
         }).toPass({ timeout: 15000 })
     }
 
-    // CONFIRMED live (staging, 2026-08-11): right after a reload, the
-    // form can briefly show a stale/cached value before the real
-    // persisted value hydrates in - a one-shot read of inputValue() can
-    // land in that window and wrongly look like the save didn't take.
-    // toHaveValue() is a web-first assertion that polls until it
-    // matches (or times out), which actually waits the hydration out
-    // instead of sampling it once.
+    // CORRECTED (JTD-325, staging, 2026-08-13): originally documented as
+    // "toHaveValue polls it out", but that's not what's actually
+    // happening. Confirmed directly by capturing the save request: the
+    // POST returns 200 immediately, yet a reload straight after can still
+    // render the OLD value for roughly a second afterwards (a server-side
+    // cache/propagation delay, not a client hydration flash) - and once
+    // that stale HTML has loaded, the input's value is fixed for the rest
+    // of that page load, so polling the SAME loaded DOM can never resolve
+    // it no matter how long the timeout is. Only a fresh navigation gets
+    // the updated render once the delay has passed, so this retries the
+    // reload itself, not just the assertion.
     async verifyFirstNameValue(expected: string): Promise<void> {
-        await expect(this.firstNameInput).toHaveValue(expected, { timeout: 20000 })
+        await expect(async () => {
+            await this.navigateToProfilePage()
+            expect(await this.firstNameInput.inputValue()).toBe(expected)
+        }).toPass({ timeout: 20000 })
     }
 
-    // CONFIRMED SITE BUG (JTD-325, staging, 2026-08-11): the Save
-    // Changes request for this field POSTs {"telephone": "<value>"} to
-    // /account/profile and gets a 200 back, but the user record it
-    // actually reads from only has "mobile" and
-    // "businessTelephoneNumber" fields (both null) - there is no
-    // "telephone" field on the backend model, so the new number is
-    // silently dropped despite the "successful" response. Confirmed by
-    // inspecting the request/response payloads directly: the field
-    // never changes on reload, however long you wait. firstName saves
-    // correctly via the same form, so this is specific to this field,
-    // not a general persistence race. Written against the expected
-    // (correct) behaviour on purpose - see verifyContactNumberValue's
-    // caller - so this shows up as a red test until devs fix the
-    // payload key, not as a silently-passing bug.
+    // CORRECTED (JTD-325, staging, 2026-08-13): previously logged here as
+    // a confirmed backend bug (telephone POSTed but not persisted). That
+    // diagnosis was wrong on two counts: (1) updateContactNumberAndSave
+    // used a plain fill() with no retry, hitting the same late-hydration
+    // overwrite race fillFirstNameStable already guards against (fixed via
+    // fillContactNumberStable); (2) the SAME reload-propagation delay
+    // documented on verifyFirstNameValue applies here too - see that
+    // method's comment. No backend fix needed.
     async verifyContactNumberValue(expected: string): Promise<void> {
-        await expect(this.contactNumberInput).toHaveValue(expected, { timeout: 20000 })
+        await expect(async () => {
+            await this.navigateToProfilePage()
+            expect(await this.contactNumberInput.inputValue()).toBe(expected)
+        }).toPass({ timeout: 20000 })
     }
 
     async getFieldValues(): Promise<{ email: string, firstName: string, lastName: string, contactNumber: string }> {
@@ -102,12 +106,22 @@ export class JTDoveProfilePage {
     }
 
     async updateContactNumberAndSave(contactNumber: string): Promise<void> {
-        await this.contactNumberInput.fill(contactNumber)
+        await this.fillContactNumberStable(contactNumber)
         await this.saveChanges()
     }
 
     async clearFirstName(): Promise<void> {
         await this.firstNameInput.fill('')
+    }
+
+    // Same late-hydration overwrite race as fillFirstNameStable - retry
+    // until the fill verifiably sticks before saving.
+    async fillContactNumberStable(value: string): Promise<void> {
+        await expect(async () => {
+            await this.contactNumberInput.fill(value)
+            await this.page.waitForTimeout(300)
+            expect(await this.contactNumberInput.inputValue()).toBe(value)
+        }).toPass({ timeout: 10000 })
     }
 
     // CONFIRMED live (staging, 2026-08-11): a plain fill() right after
